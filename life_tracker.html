@@ -230,7 +230,11 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
   <div class="view" id="view-daily">
     <div class="done-badge" id="dDone" style="display:none">✅ 今日紀錄完成</div>
     <div class="card">
-      <div class="ctitle">每日紀錄 — 約 7-10 分鐘</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="ctitle" style="margin-bottom:0">每日紀錄</div>
+        <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:#64748b">今天</div>
+      </div>
+      <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
 
       <!-- 健康 -->
       <div class="fblock">
@@ -335,7 +339,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
       </div>
 
-      <button class="btn-save" onclick="saveDaily()">完成今日紀錄</button>
+      <button class="btn-save" id="btnSaveDaily" onclick="saveDaily()">完成今日紀錄</button>
     </div>
     <div class="card">
       <div class="ctitle">本週打卡紀錄</div>
@@ -647,11 +651,12 @@ function calcWeek(wkey){
   const data=db();
   const days=wDays(wkey);
   const mkey=getMk(wkey),ykey=getYk(wkey);
-  const logs=days.map(d=>data.daily[d]).filter(Boolean);
-  const exDays=logs.filter(l=>l.exercise).length;
-  const slDays=logs.filter(l=>l.sleep).length;
-  const moods=logs.filter(l=>l.mood).map(l=>l.mood);
-  const moodAvg=moods.length?moods.reduce((a,b)=>a+b,0)/moods.length:0;
+  const mult=l=>l&&l.retroactive?0.8:1;
+  const exDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.exercise?s+mult(l):s;},0);
+  const slDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.sleep?s+mult(l):s;},0);
+  const moodEntries=days.map(d=>data.daily[d]).filter(l=>l&&l.mood);
+  const moodWCount=moodEntries.reduce((s,l)=>s+mult(l),0);
+  const moodAvg=moodWCount>0?moodEntries.reduce((s,l)=>s+l.mood*mult(l),0)/moodWCount:0;
   const W=data.weekly[wkey]||{};
   const M=data.monthly[mkey]||{};
   const Y=data.yearly[ykey]||{};
@@ -662,8 +667,9 @@ function calcWeek(wkey){
   days.forEach(d=>{
     const log=data.daily[d];
     if(!log||log.overBudget===undefined)return;
-    if(log.overBudget){spendSum-=1.5;overDays++;}
-    else{spendSum+=1;underDays++;}
+    const m=mult(log);
+    if(log.overBudget){spendSum-=1.5*m;overDays++;}
+    else{spendSum+=1*m;underDays++;}
   });
   const spendScore=(spendSum+10.5)/17.5*5;
 
@@ -778,60 +784,61 @@ function renderHome(){
 // RENDER DAILY
 // ════════════════════════════════
 function renderDaily(){
-  const data=db();const today=dk();const todayLog=data.daily[today]||{};
+  const data=db();
+  const today=dk();
+  const targetDay=editDay;
+  const isRetro=targetDay<today;
+  const todayLog=data.daily[targetDay]||{};
 
-  // Done badge — full record includes workDone
+  // Retro banner + labels
+  document.getElementById('retroBanner').style.display=isRetro?'block':'none';
+  document.getElementById('editDayInfo').textContent=isRetro?targetDay:'今天';
+  document.getElementById('btnSaveDaily').textContent=isRetro?'儲存補救紀錄':'完成今日紀錄';
+
+  // Done badge
   const isComplete=todayLog.exercise!==undefined&&todayLog.mood&&todayLog.workDone!==undefined;
   document.getElementById('dDone').style.display=isComplete?'flex':'none';
 
-  // Health
+  // Reset all inputs to neutral before loading
+  DS.exercise=null;DS.sleep=null;DS.mood=null;
+  ['dey','den','dsy','dsn','doy','don'].forEach(id=>document.getElementById(id).className='ynb');
+  for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.remove('active');
+  ['gr1','gr2','gr3','discomfort','dSpendWhat','workDone','workTomorrow'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('spendDetail').style.display='none';
+  selMoodTags=[];selWorkState=null;selOverBudget=null;selCat=null;
+
+  // Load existing data
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
-  fill('dey','den',todayLog.exercise);
-  fill('dsy','dsn',todayLog.sleep);
-
-  // Mood score
-  if(todayLog.mood)for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===todayLog.mood);
-
-  // Mood tags (always render chips even if empty)
+  if(todayLog.exercise!==undefined){DS.exercise=todayLog.exercise;fill('dey','den',todayLog.exercise);}
+  if(todayLog.sleep!==undefined){DS.sleep=todayLog.sleep;fill('dsy','dsn',todayLog.sleep);}
+  if(todayLog.mood){DS.mood=todayLog.mood;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===todayLog.mood);}
   selMoodTags=todayLog.moodTags||[];
   renderMoodTags();
-
-  // Gratitude
-  if(todayLog.gratitude){
-    document.getElementById('gr1').value=todayLog.gratitude[0]||'';
-    document.getElementById('gr2').value=todayLog.gratitude[1]||'';
-    document.getElementById('gr3').value=todayLog.gratitude[2]||'';
-  }
-
-  // Discomfort
+  if(todayLog.gratitude){document.getElementById('gr1').value=todayLog.gratitude[0]||'';document.getElementById('gr2').value=todayLog.gratitude[1]||'';document.getElementById('gr3').value=todayLog.gratitude[2]||'';}
   if(todayLog.discomfort)document.getElementById('discomfort').value=todayLog.discomfort;
-
-  // Over budget
   selOverBudget=todayLog.overBudget!==undefined?todayLog.overBudget:null;
-  if(selOverBudget!==null){
-    document.getElementById('doy').className='ynb'+(selOverBudget?' yn-y':'');
-    document.getElementById('don').className='ynb'+(selOverBudget?'':' yn-n');
-    document.getElementById('spendDetail').style.display=selOverBudget?'block':'none';
-  }
+  if(selOverBudget!==null){fill('doy','don',selOverBudget);document.getElementById('spendDetail').style.display=selOverBudget?'block':'none';}
   if(todayLog.spendDetail)document.getElementById('dSpendWhat').value=todayLog.spendDetail;
   selCat=todayLog.spendCategory||null;
   renderCatBtns();
-
-  // Work
   if(todayLog.workDone)document.getElementById('workDone').value=todayLog.workDone;
   selWorkState=todayLog.workState||null;
   renderWorkState();
   if(todayLog.workTomorrow)document.getElementById('workTomorrow').value=todayLog.workTomorrow;
 
-  // Week grid
+  // Week grid — all non-future days clickable
   const days=wDays(wk());const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
   let html='<div class="day-grid">';
   days.forEach((day,i)=>{
-    const log=data.daily[day]||null;const isTd=day===today,isPast=day<today;
+    const log=data.daily[day]||null;
+    const isTd=day===today,isPast=day<today,isFuture=day>today;
+    const isEditing=day===targetDay&&isRetro;
     const full=log&&log.workDone!==undefined;
-    const bg=isTd?'#eef2ff':(full?'#f0fdf4':(log?'#fffbeb':(isPast?'#fef2f2':'#f8fafc')));
-    const border=isTd?'#4f46e5':(full?'#10b981':(log?'#f59e0b':(isPast?'#fca5a5':'#e2e8f0')));
-    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border}">${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div>`:(isPast?'<div style="opacity:.2">—</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
+    const bg=isEditing?'#ede9fe':(isTd?'#eef2ff':(full?'#f0fdf4':(log?'#fffbeb':(isPast?'#fef2f2':'#f8fafc'))));
+    const border=isEditing?'#7c3aed':(isTd?'#4f46e5':(full?'#10b981':(log?'#f59e0b':(isPast?'#fca5a5':'#e2e8f0'))));
+    const clickFn=isFuture?'':(isTd?`onclick="backToToday()"`:`onclick="editPastDay('${day}')"`);
+    const retro=log&&log.retroactive?`<div style="font-size:.45rem;color:#f59e0b;font-weight:700">補</div>`:'';
+    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border};cursor:${isFuture?'default':'pointer'}" ${clickFn}>${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div>${retro}`:(isPast?'<div style="opacity:.3;font-size:.6rem">補?</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
   });
   html+='</div>';
   document.getElementById('wGrid').innerHTML=html;
@@ -1008,7 +1015,7 @@ function renderHistory(){
 const DS={exercise:null,sleep:null,mood:null};
 const WS={learning:null,contact:null,reflection:null};
 const MS={saving:null,finance_report:null,monthly_review:null};
-let selMoodTags=[],selWorkState=null,selOverBudget=null,selCat=null;
+let selMoodTags=[],selWorkState=null,selOverBudget=null,selCat=null,editDay=dk();
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
@@ -1042,6 +1049,8 @@ function setWorkState(s){
 function renderWorkState(){
   document.querySelectorAll('.wst-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.ws===selWorkState));
 }
+function editPastDay(day){editDay=day;renderDaily();}
+function backToToday(){editDay=dk();renderDaily();}
 
 // ════════════════════════════════
 // SAVE
@@ -1065,9 +1074,13 @@ function saveDaily(){
   if(!document.getElementById('workTomorrow').value.trim())errs.push('工作：明日優先');
   if(errs.length){showToast('⚠️ 未填：'+errs[0]);return;}
 
-  const data=db();const today=dk();
-  data.daily[today]={
-    ...data.daily[today],
+  const data=db();
+  const today=dk();
+  const targetDay=editDay;
+  const isRetro=targetDay<today;
+  const existing=data.daily[targetDay]||{};
+  data.daily[targetDay]={
+    ...existing,
     exercise:DS.exercise,sleep:DS.sleep,mood:DS.mood,
     moodTags:selMoodTags,
     gratitude:[gr1,gr2,gr3],
@@ -1077,9 +1090,13 @@ function saveDaily(){
     workDone:document.getElementById('workDone').value.trim(),
     workState:selWorkState,
     workTomorrow:document.getElementById('workTomorrow').value.trim(),
+    retroactive:isRetro&&!existing.savedAt?true:(existing.retroactive||false),
     savedAt:new Date().toISOString()
   };
-  dbS(data);renderDaily();renderHome();showToast('☀️ 今日紀錄完成！');
+  dbS(data);
+  if(isRetro)editDay=today;
+  renderDaily();renderHome();
+  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！');
 }
 
 function saveWeekly(){
@@ -1106,6 +1123,7 @@ function saveYearly(){
 // ════════════════════════════════
 const TABS=['home','daily','tasks','settle','history'];
 function go(tab){
+  if(tab!=='daily')editDay=dk();
   TABS.forEach(t=>{document.getElementById(`view-${t}`).classList.toggle('active',t===tab);document.getElementById(`n-${t}`).classList.toggle('active',t===tab);});
   if(tab==='home')renderHome();
   if(tab==='daily')renderDaily();
