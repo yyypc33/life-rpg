@@ -162,6 +162,20 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
 .ei{font-size:2.5rem;margin-bottom:10px}
 .empty p{font-size:.84rem;line-height:1.5}
 
+/* Daily journal extended */
+.txt-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;outline:none;background:#fff;font-family:inherit;color:#1e293b}
+.txt-input:focus{border-color:#4f46e5}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag-chip{padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.tag-chip.on{border-color:#8b5cf6;background:#f5f3ff;color:#6d28d9}
+.cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.cat-btn{padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.cat-btn.on{border-color:#f59e0b;background:#fffbeb;color:#92400e}
+.work-state-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.wst-btn{padding:8px 12px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.wst-btn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
+.gr-inputs{display:flex;flex-direction:column;gap:6px}
+.spend-expand{background:#f8fafc;border-radius:12px;padding:12px;margin-top:8px;border:1px solid #e2e8f0}
 @media(min-width:480px){.rwrap{height:320px}}
 </style>
 </head>
@@ -214,9 +228,11 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
 
   <!-- ── DAILY ── -->
   <div class="view" id="view-daily">
-    <div class="done-badge" id="dDone" style="display:none">✅ 今日打卡完成</div>
+    <div class="done-badge" id="dDone" style="display:none">✅ 今日紀錄完成</div>
     <div class="card">
-      <div class="ctitle">每日打卡 — 約 20 秒</div>
+      <div class="ctitle">每日紀錄 — 約 7-10 分鐘</div>
+
+      <!-- 健康 -->
       <div class="fblock">
         <div class="fbtitle">🏃 健康</div>
         <div class="frow">
@@ -234,8 +250,40 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
           </div>
         </div>
       </div>
+      <hr>
+
+      <!-- 記帳 -->
       <div class="fblock">
-        <div class="fbtitle">🧠 心理</div>
+        <div class="fbtitle">💰 記帳</div>
+        <div class="frow">
+          <div class="flbl">今天單日消費有超過 NT$1,000？</div>
+          <div class="yn">
+            <button class="ynb" id="doy" onclick="setOverBudget(true)">💸 有</button>
+            <button class="ynb" id="don" onclick="setOverBudget(false)">✅ 沒有</button>
+          </div>
+        </div>
+        <div id="spendDetail" class="spend-expand" style="display:none">
+          <div class="frow" style="margin-bottom:10px">
+            <div class="flbl" style="margin-bottom:6px">主要花在什麼？</div>
+            <input type="text" class="txt-input" id="dSpendWhat" placeholder="例：晚餐聚餐、買衣服、添購器材…">
+          </div>
+          <div class="frow" style="margin-bottom:0">
+            <div class="flbl">消費類別</div>
+            <div class="cat-row">
+              <button class="cat-btn" data-cat="飲食" onclick="setCat('飲食')">🍴 飲食</button>
+              <button class="cat-btn" data-cat="交通" onclick="setCat('交通')">🚌 交通</button>
+              <button class="cat-btn" data-cat="購物" onclick="setCat('購物')">🛍️ 購物</button>
+              <button class="cat-btn" data-cat="娛樂" onclick="setCat('娛樂')">🎮 娛樂</button>
+              <button class="cat-btn" data-cat="其他" onclick="setCat('其他')">📦 其他</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr>
+
+      <!-- 心情紀錄 -->
+      <div class="fblock">
+        <div class="fbtitle">🧠 心情紀錄</div>
         <div class="frow">
           <div class="flbl">今天心情如何？</div>
           <div class="mood-row">
@@ -246,8 +294,48 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
             <div><button class="mood-btn" id="m5" onclick="setMood(5)">😄</button><div class="mood-lbl">很好</div></div>
           </div>
         </div>
+        <div class="frow">
+          <div class="flbl">今天的心情關鍵詞（可多選）</div>
+          <div class="tag-row" id="moodTags"></div>
+        </div>
+        <div class="frow">
+          <div class="flbl">今天的感恩三件事</div>
+          <div class="gr-inputs">
+            <input type="text" class="txt-input" id="gr1" placeholder="1. ">
+            <input type="text" class="txt-input" id="gr2" placeholder="2. ">
+            <input type="text" class="txt-input" id="gr3" placeholder="3. ">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">今天有什麼讓你不舒服？</div>
+          <input type="text" class="txt-input" id="discomfort" placeholder="可以是任何事，說給自己聽">
+        </div>
       </div>
-      <button class="btn-save" onclick="saveDaily()">打卡</button>
+      <hr>
+
+      <!-- 工作回顧 -->
+      <div class="fblock">
+        <div class="fbtitle">💼 工作回顧</div>
+        <div class="frow">
+          <div class="flbl">今天完成的最重要一件事</div>
+          <input type="text" class="txt-input" id="workDone" placeholder="一句話就好">
+        </div>
+        <div class="frow">
+          <div class="flbl">今天的工作狀態</div>
+          <div class="work-state-row">
+            <button class="wst-btn" data-ws="🔥" onclick="setWorkState('🔥')">🔥 很有能量</button>
+            <button class="wst-btn" data-ws="😐" onclick="setWorkState('😐')">😐 普通</button>
+            <button class="wst-btn" data-ws="😴" onclick="setWorkState('😴')">😴 有點混</button>
+            <button class="wst-btn" data-ws="😵" onclick="setWorkState('😵')">😵 壓力大</button>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">明天最優先一件事</div>
+          <input type="text" class="txt-input" id="workTomorrow" placeholder="讓明天的自己有個開始方向">
+        </div>
+      </div>
+
+      <button class="btn-save" onclick="saveDaily()">完成今日紀錄</button>
     </div>
     <div class="card">
       <div class="ctitle">本週打卡紀錄</div>
@@ -442,6 +530,8 @@ const KW={
   social: '朋友 家人 聚餐 見面 聯繫 約會 社區 志工 社交 關係 父母 家庭 同事 拜訪 活動 聚會 關心 問候 電話 視訊 LINE 訊息'.split(' '),
   mental: '冥想 日記 反思 心情 感恩 閱讀 靜心 放鬆 壓力 情緒 自我 成長 療癒 正念 休息 旅行 創作 藝術 音樂 寫作 哲學 散步 呼吸 思考'.split(' '),
 };
+
+const MOOD_TAGS=['開心','平靜','焦慮','疲憊','充實','無聊','感恩','沮喪'];
 
 const XP_LEVELS=[
   [0,'Lv.1 初學者'],[100,'Lv.2 見習生'],[300,'Lv.3 實踐者'],
@@ -679,16 +769,58 @@ function renderHome(){
 // ════════════════════════════════
 function renderDaily(){
   const data=db();const today=dk();const todayLog=data.daily[today]||{};
-  document.getElementById('dDone').style.display=(todayLog.exercise!==undefined||todayLog.mood)?'flex':'none';
-  const fill=(yid,nid,val)=>{if(val===undefined)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
-  fill('dey','den',todayLog.exercise);fill('dsy','dsn',todayLog.sleep);
+
+  // Done badge — full record includes workDone
+  const isComplete=todayLog.exercise!==undefined&&todayLog.mood&&todayLog.workDone!==undefined;
+  document.getElementById('dDone').style.display=isComplete?'flex':'none';
+
+  // Health
+  const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
+  fill('dey','den',todayLog.exercise);
+  fill('dsy','dsn',todayLog.sleep);
+
+  // Mood score
   if(todayLog.mood)for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===todayLog.mood);
+
+  // Mood tags (always render chips even if empty)
+  selMoodTags=todayLog.moodTags||[];
+  renderMoodTags();
+
+  // Gratitude
+  if(todayLog.gratitude){
+    document.getElementById('gr1').value=todayLog.gratitude[0]||'';
+    document.getElementById('gr2').value=todayLog.gratitude[1]||'';
+    document.getElementById('gr3').value=todayLog.gratitude[2]||'';
+  }
+
+  // Discomfort
+  if(todayLog.discomfort)document.getElementById('discomfort').value=todayLog.discomfort;
+
+  // Over budget
+  selOverBudget=todayLog.overBudget!==undefined?todayLog.overBudget:null;
+  if(selOverBudget!==null){
+    document.getElementById('doy').className='ynb'+(selOverBudget?' yn-y':'');
+    document.getElementById('don').className='ynb'+(selOverBudget?'':' yn-n');
+    document.getElementById('spendDetail').style.display=selOverBudget?'block':'none';
+  }
+  if(todayLog.spendDetail)document.getElementById('dSpendWhat').value=todayLog.spendDetail;
+  selCat=todayLog.spendCategory||null;
+  renderCatBtns();
+
+  // Work
+  if(todayLog.workDone)document.getElementById('workDone').value=todayLog.workDone;
+  selWorkState=todayLog.workState||null;
+  renderWorkState();
+  if(todayLog.workTomorrow)document.getElementById('workTomorrow').value=todayLog.workTomorrow;
+
+  // Week grid
   const days=wDays(wk());const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
   let html='<div class="day-grid">';
   days.forEach((day,i)=>{
     const log=data.daily[day]||null;const isTd=day===today,isPast=day<today;
-    const bg=isTd?'#eef2ff':(log?'#f0fdf4':(isPast?'#fef2f2':'#f8fafc'));
-    const border=isTd?'#4f46e5':(log?'#10b981':(isPast?'#fca5a5':'#e2e8f0'));
+    const full=log&&log.workDone!==undefined;
+    const bg=isTd?'#eef2ff':(full?'#f0fdf4':(log?'#fffbeb':(isPast?'#fef2f2':'#f8fafc')));
+    const border=isTd?'#4f46e5':(full?'#10b981':(log?'#f59e0b':(isPast?'#fca5a5':'#e2e8f0')));
     html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border}">${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div>`:(isPast?'<div style="opacity:.2">—</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
   });
   html+='</div>';
@@ -866,20 +998,78 @@ function renderHistory(){
 const DS={exercise:null,sleep:null,mood:null};
 const WS={budget:null,learning:null,contact:null,reflection:null};
 const MS={saving:null,finance_report:null,monthly_review:null};
+let selMoodTags=[],selWorkState=null,selOverBudget=null,selCat=null;
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
 function setW(k,v){WS[k]=v;const m={budget:['wby','wbn'],learning:['wly','wln'],contact:['wcy','wcn'],reflection:['wry','wrn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],monthly_review:['mrvy','mrvn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 
+function renderMoodTags(){
+  document.getElementById('moodTags').innerHTML=MOOD_TAGS.map(tag=>`<button class="tag-chip${selMoodTags.includes(tag)?' on':''}" onclick="toggleMoodTag('${tag}')">${tag}</button>`).join('');
+}
+function toggleMoodTag(tag){
+  selMoodTags=selMoodTags.includes(tag)?selMoodTags.filter(t=>t!==tag):[...selMoodTags,tag];
+  renderMoodTags();
+}
+function setOverBudget(v){
+  selOverBudget=v;
+  document.getElementById('doy').className='ynb'+(v?' yn-y':'');
+  document.getElementById('don').className='ynb'+(v?'':' yn-n');
+  document.getElementById('spendDetail').style.display=v?'block':'none';
+}
+function setCat(c){
+  selCat=c;
+  renderCatBtns();
+}
+function renderCatBtns(){
+  document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.cat===selCat));
+}
+function setWorkState(s){
+  selWorkState=s;
+  renderWorkState();
+}
+function renderWorkState(){
+  document.querySelectorAll('.wst-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.ws===selWorkState));
+}
+
 // ════════════════════════════════
 // SAVE
 // ════════════════════════════════
 function saveDaily(){
-  if(DS.exercise===null&&DS.mood===null){showToast('⚠️ 請至少選擇一項');return;}
+  const gr1=document.getElementById('gr1').value.trim();
+  const gr2=document.getElementById('gr2').value.trim();
+  const gr3=document.getElementById('gr3').value.trim();
+  const errs=[];
+  if(DS.exercise===null)errs.push('健康：運動');
+  if(DS.sleep===null)errs.push('健康：睡眠');
+  if(DS.mood===null)errs.push('心情分數');
+  if(!selMoodTags.length)errs.push('心情關鍵詞');
+  if(!gr1||!gr2||!gr3)errs.push('感恩三件事（三項都要填）');
+  if(!document.getElementById('discomfort').value.trim())errs.push('不舒服的事');
+  if(selOverBudget===null)errs.push('記帳：消費問題');
+  if(selOverBudget&&!document.getElementById('dSpendWhat').value.trim())errs.push('記帳：花費內容');
+  if(selOverBudget&&!selCat)errs.push('記帳：消費類別');
+  if(!document.getElementById('workDone').value.trim())errs.push('工作：完成事項');
+  if(!selWorkState)errs.push('工作：工作狀態');
+  if(!document.getElementById('workTomorrow').value.trim())errs.push('工作：明日優先');
+  if(errs.length){showToast('⚠️ 未填：'+errs[0]);return;}
+
   const data=db();const today=dk();
-  data.daily[today]={...data.daily[today],...(DS.exercise!==null?{exercise:DS.exercise}:{}),...(DS.sleep!==null?{sleep:DS.sleep}:{}),...(DS.mood!==null?{mood:DS.mood}:{}),savedAt:new Date().toISOString()};
-  dbS(data);renderDaily();renderHome();showToast('☀️ 今日打卡完成！');
+  data.daily[today]={
+    ...data.daily[today],
+    exercise:DS.exercise,sleep:DS.sleep,mood:DS.mood,
+    moodTags:selMoodTags,
+    gratitude:[gr1,gr2,gr3],
+    discomfort:document.getElementById('discomfort').value.trim(),
+    overBudget:selOverBudget,
+    ...(selOverBudget?{spendDetail:document.getElementById('dSpendWhat').value.trim(),spendCategory:selCat}:{}),
+    workDone:document.getElementById('workDone').value.trim(),
+    workState:selWorkState,
+    workTomorrow:document.getElementById('workTomorrow').value.trim(),
+    savedAt:new Date().toISOString()
+  };
+  dbS(data);renderDaily();renderHome();showToast('☀️ 今日紀錄完成！');
 }
 
 function saveWeekly(){
