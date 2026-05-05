@@ -386,10 +386,10 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
       <div class="card">
         <div class="ctitle">每週結算 <span class="fbadge fb-w">週日</span></div>
         <div class="fblock">
-          <div class="fbtitle">💰 財務 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔財務 5分</span></div>
-          <div class="frow">
-            <div class="flbl">本週有控制在預算內嗎？</div>
-            <div class="yn"><button class="ynb" id="wby" onclick="setW('budget',true)">✅ 有</button><button class="ynb yn-n" id="wbn" onclick="setW('budget',false)">❌ 沒有</button></div>
+          <div class="fbtitle">💰 財務消費 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
+          <div style="font-size:.8rem;color:#64748b;background:#f8fafc;border-radius:10px;padding:10px 12px;line-height:1.6">
+            未超過 NT$1,000 <b style="color:#10b981">+1</b>　超過 NT$1,000 <b style="color:#ef4444">−1.5</b><br>
+            <span style="font-size:.72rem;color:#94a3b8">每天打卡時填寫，週分數自動加總</span>
           </div>
         </div>
         <hr>
@@ -657,13 +657,23 @@ function calcWeek(wkey){
   const Y=data.yearly[ykey]||{};
   const bonus=getTaskBonus(wkey);
 
+  // Daily spending: under 1000=+1, over 1000=-1.5; range -10.5~+7 → 0-5
+  let spendSum=0,underDays=0,overDays=0;
+  days.forEach(d=>{
+    const log=data.daily[d];
+    if(!log||log.overBudget===undefined)return;
+    if(log.overBudget){spendSum-=1.5;overDays++;}
+    else{spendSum+=1;underDays++;}
+  });
+  const spendScore=(spendSum+10.5)/17.5*5;
+
   const health =r(Math.min(10,(exDays/7)*4+(slDays/7)*4+((M.health_goal||0)/10)*2+(bonus.health||0)));
-  const finance=r(Math.min(10,(W.budget?5:0)+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
+  const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
   const work   =r(Math.min(10,((W.work_completion||0)/10)*5+(W.learning?2:0)+((M.work_goal||0)/10)*2+((Y.career_goal||0)/10)*1+(bonus.work||0)));
   const social =r(Math.min(10,(W.contact?3:0)+Math.min(5,((M.deep_social||0)/3)*5)+((Y.relationships||0)/10)*2+(bonus.social||0)));
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+(W.reflection?3:0)+(M.monthly_review?2:0)+(bonus.mental||0)));
   const total  =r((health+finance+work+social+mental)/5);
-  return{health,finance,work,social,mental,total,_ex:exDays,_sl:slDays,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus};
+  return{health,finance,work,social,mental,total,_ex:exDays,_sl:slDays,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_under:underDays,_over:overDays};
 }
 
 function calcMonth(mkey){
@@ -740,7 +750,7 @@ function renderHome(){
     const b=ws._bonus,W=ws._W,M=ws._M;
     const t={
       health:`日 運動${ws._ex}天 睡眠${ws._sl}天 | 月 健康目標${M.health_goal??'未填'}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
-      finance:`週 預算${W.budget!==undefined?(W.budget?'✓':'✗'):'未填'} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
+      finance:`日 未超支${ws._under}天 超支${ws._over}天 | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
       work:`週 完成${W.work_completion??'未填'}/10 學習${W.learning!==undefined?(W.learning?'✓':'✗'):'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
       social:`週 聯繫${W.contact!==undefined?(W.contact?'✓':'✗'):'未填'} | 月 深度${M.deep_social??0}次${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
       mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週 反思${W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填'}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
@@ -967,7 +977,7 @@ function renderSettle(){
   document.getElementById('wDone').style.display=data.weekly[curWk]?'flex':'none';
   document.getElementById('mDone').style.display=data.monthly[curMk]?'flex':'none';
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
-  fill('wby','wbn',W.budget);fill('wly','wln',W.learning);fill('wcy','wcn',W.contact);fill('wry','wrn',W.reflection);
+  fill('wly','wln',W.learning);fill('wcy','wcn',W.contact);fill('wry','wrn',W.reflection);
   if(W.work_completion!==undefined){document.getElementById('wki').value=W.work_completion;document.getElementById('wkv').textContent=W.work_completion+' / 10';}
   fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);fill('mrvy','mrvn',M.monthly_review);
   if(M.health_goal!==undefined){document.getElementById('mhi').value=M.health_goal;document.getElementById('mhv').textContent=M.health_goal+' / 10';}
@@ -996,13 +1006,13 @@ function renderHistory(){
 // FORM STATE
 // ════════════════════════════════
 const DS={exercise:null,sleep:null,mood:null};
-const WS={budget:null,learning:null,contact:null,reflection:null};
+const WS={learning:null,contact:null,reflection:null};
 const MS={saving:null,finance_report:null,monthly_review:null};
 let selMoodTags=[],selWorkState=null,selOverBudget=null,selCat=null;
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
-function setW(k,v){WS[k]=v;const m={budget:['wby','wbn'],learning:['wly','wln'],contact:['wcy','wcn'],reflection:['wry','wrn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setW(k,v){WS[k]=v;const m={learning:['wly','wln'],contact:['wcy','wcn'],reflection:['wry','wrn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],monthly_review:['mrvy','mrvn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 
 function renderMoodTags(){
@@ -1075,7 +1085,7 @@ function saveDaily(){
 function saveWeekly(){
   const wc=parseInt(document.getElementById('wki').value);
   const data=db();
-  data.weekly[wk()]={budget:WS.budget??false,work_completion:wc,learning:WS.learning??false,contact:WS.contact??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
+  data.weekly[wk()]={work_completion:wc,learning:WS.learning??false,contact:WS.contact??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
   dbS(data);renderSettle();go('home');showToast('📅 本週結算已儲存');
 }
 
