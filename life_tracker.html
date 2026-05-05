@@ -505,6 +505,19 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
   <!-- ── HISTORY ── -->
   <div class="view" id="view-history">
     <div class="card">
+      <div class="ctitle">資料備份</div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)" onclick="exportBackup()">📦 匯出 JSON</button>
+        <label class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          📂 匯入還原
+          <input type="file" accept=".json" style="display:none" onchange="importBackup(this)">
+        </label>
+      </div>
+      <div style="font-size:.75rem;color:#94a3b8;margin-top:10px;line-height:1.6">
+        包含所有每日紀錄、結算資料與自訂任務。建議每週備份一次，存到 iCloud / OneDrive。
+      </div>
+    </div>
+    <div class="card">
       <div class="ctitle">週歷史紀錄</div>
       <div id="hist"></div>
     </div>
@@ -1130,6 +1143,34 @@ function saveYearly(){
   const data=db();
   data.yearly[yk()]={health_achievement:parseInt(document.getElementById('yhi').value),finance_goal:parseInt(document.getElementById('yfi').value),career_goal:parseInt(document.getElementById('yci').value),relationships:parseInt(document.getElementById('yri').value),personal_growth:parseInt(document.getElementById('ygi').value),savedAt:new Date().toISOString()};
   dbS(data);showToast('🎯 年度設定已儲存');
+}
+
+// ════════════════════════════════
+// BACKUP
+// ════════════════════════════════
+function exportBackup(){
+  const json=JSON.stringify(db(),null,2);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.download=`life_rpg_backup_${dk()}.json`;
+  a.click();
+  showToast('📦 備份已下載');
+}
+
+function importBackup(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.daily||!data.weekly)throw new Error();
+      if(!confirm('確定匯入備份？現有資料將被完整覆蓋。'))return;
+      dbS(data);renderHome();renderHistory();
+      showToast('✅ 備份還原成功');
+    }catch{showToast('❌ 匯入失敗：檔案格式不符');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
 }
 
 // ════════════════════════════════
