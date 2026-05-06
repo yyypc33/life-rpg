@@ -515,16 +515,21 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
   <!-- ── HISTORY ── -->
   <div class="view" id="view-history">
     <div class="card">
-      <div class="ctitle">資料備份</div>
-      <div style="display:flex;gap:10px">
-        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)" onclick="exportBackup()">📦 匯出 JSON</button>
+      <div class="ctitle">資料備份 & 匯出</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)" onclick="exportBackup()">📦 JSON 備份</button>
         <label class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">
           📂 匯入還原
           <input type="file" accept=".json" style="display:none" onchange="importBackup(this)">
         </label>
       </div>
-      <div style="font-size:.75rem;color:#94a3b8;margin-top:10px;line-height:1.6">
-        包含所有每日紀錄、結算資料與自訂任務。建議每週備份一次，存到 iCloud / OneDrive。
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)" onclick="exportDailyCSV()">📊 每日紀錄 CSV</button>
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed)" onclick="exportWeeklyCSV()">📈 週分數 CSV</button>
+      </div>
+      <div style="font-size:.75rem;color:#94a3b8;line-height:1.6">
+        JSON：完整備份含任務，建議每週存 iCloud / OneDrive。<br>
+        CSV：可直接用 Excel / Google Sheets 開啟分析。
       </div>
     </div>
     <div class="card">
@@ -1251,6 +1256,58 @@ function importBackup(e){
   };
   reader.readAsText(file);
   e.target.value='';
+}
+
+function csvEsc(v){
+  if(v===undefined||v===null||v==='')return'';
+  const s=String(v);
+  return(s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
+}
+
+function exportDailyCSV(){
+  const data=db();
+  const days=Object.keys(data.daily).sort();
+  if(!days.length){showToast('⚠️ 尚無每日紀錄');return;}
+  const WD=['日','一','二','三','四','五','六'];
+  const yn=v=>v===true?'是':v===false?'否':'';
+  const headers=['日期','週次','星期','運動','睡眠','未吃炸物','心情(1-5)','心情關鍵詞','感恩1','感恩2','感恩3','不舒服','超支','花費內容','消費類別','工作完成','工作狀態','明日優先','補救紀錄'];
+  const rows=days.map(day=>{
+    const l=data.daily[day];
+    const d=new Date(day+'T12:00:00');
+    return[
+      day,wk(d),WD[d.getDay()],
+      yn(l.exercise),yn(l.sleep),
+      l.fried===false?'是':l.fried===true?'否':'',
+      l.mood||'',
+      csvEsc((l.moodTags||[]).join('、')),
+      csvEsc((l.gratitude||[])[0]),csvEsc((l.gratitude||[])[1]),csvEsc((l.gratitude||[])[2]),
+      csvEsc(l.discomfort),
+      yn(l.overBudget),csvEsc(l.spendDetail),csvEsc(l.spendCategory),
+      csvEsc(l.workDone),l.workState||'',csvEsc(l.workTomorrow),
+      l.retroactive?'是':'否'
+    ].join(',');
+  });
+  const blob=new Blob(['﻿'+[headers.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`life_rpg_daily_${dk()}.csv`;a.click();
+  showToast(`📊 每日紀錄 CSV 已下載（${days.length} 筆）`);
+}
+
+function exportWeeklyCSV(){
+  const data=db();
+  const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d+'T12:00:00')))])].sort().reverse();
+  if(!allWks.length){showToast('⚠️ 尚無週紀錄');return;}
+  const headers=['週次','日期區間','健康','財務','工作','社交','心理','總分','獎懲'];
+  const rows=allWks.map(w=>{
+    const s=calcWeek(w);const days=wDays(w);
+    const range=`${days[0].slice(5)}~${days[6].slice(5)}`;
+    const badge=s.total>=8?'達標':s.total>=5?'普通':'懲罰';
+    return[w,range,s.health.toFixed(1),s.finance.toFixed(1),s.work.toFixed(1),s.social.toFixed(1),s.mental.toFixed(1),s.total.toFixed(1),badge].join(',');
+  });
+  const blob=new Blob(['﻿'+[headers.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`life_rpg_weekly_${dk()}.csv`;a.click();
+  showToast(`📈 週分數 CSV 已下載（${allWks.length} 週）`);
 }
 
 // ════════════════════════════════
