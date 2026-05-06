@@ -575,7 +575,7 @@ function dbS(d){localStorage.setItem(SK,JSON.stringify(d))}
 // ════════════════════════════════
 // DATE HELPERS
 // ════════════════════════════════
-function dk(d=new Date()){return d.toISOString().split('T')[0]}
+function dk(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
 function mk(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
 function yk(d=new Date()){return String(d.getFullYear())}
 function wk(d=new Date()){
@@ -842,7 +842,7 @@ function renderDaily(){
   if(todayLog.gratitude){document.getElementById('gr1').value=todayLog.gratitude[0]||'';document.getElementById('gr2').value=todayLog.gratitude[1]||'';document.getElementById('gr3').value=todayLog.gratitude[2]||'';}
   if(todayLog.discomfort)document.getElementById('discomfort').value=todayLog.discomfort;
   selOverBudget=todayLog.overBudget!==undefined?todayLog.overBudget:null;
-  if(selOverBudget!==null){fill('doy','don',selOverBudget);document.getElementById('spendDetail').style.display=selOverBudget?'block':'none';}
+  if(selOverBudget!==null)setOverBudget(selOverBudget);
   if(todayLog.spendDetail)document.getElementById('dSpendWhat').value=todayLog.spendDetail;
   selCat=todayLog.spendCategory||null;
   renderCatBtns();
@@ -1057,8 +1057,8 @@ function toggleMoodTag(tag){
 }
 function setOverBudget(v){
   selOverBudget=v;
-  document.getElementById('doy').className='ynb'+(v?' yn-y':'');
-  document.getElementById('don').className='ynb'+(v?'':' yn-n');
+  document.getElementById('doy').className='ynb'+(v?' yn-n':'');
+  document.getElementById('don').className='ynb'+(v?'':' yn-y');
   document.getElementById('spendDetail').style.display=v?'block':'none';
 }
 function setCat(c){
