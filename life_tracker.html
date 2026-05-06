@@ -103,7 +103,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
 .day-grid{display:flex;gap:4px;justify-content:center;margin-top:4px}
 .day-col{text-align:center}
 .day-lbl{font-size:.6rem;color:#94a3b8;font-weight:700;margin-bottom:4px}
-.day-box{width:38px;height:54px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;gap:1px;border:2px solid transparent}
+.day-box{width:38px;height:68px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;gap:1px;border:2px solid transparent}
 
 /* ── TASK STYLES ── */
 .task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
@@ -176,6 +176,16 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
 .wst-btn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
 .gr-inputs{display:flex;flex-direction:column;gap:6px}
 .spend-expand{background:#f8fafc;border-radius:12px;padding:12px;margin-top:8px;border:1px solid #e2e8f0}
+/* History expandable rows */
+.week-row{padding:4px 0;cursor:pointer;transition:background .1s}
+.week-row:hover{background:#fafafe}
+.week-row+.week-row{border-top:1px solid #f1f5f9}
+.wk-detail{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:6px}
+.wk-summary{border-left:3px solid #4f46e5;padding-left:10px;margin-bottom:12px}
+.wk-day-tbl{width:100%;border-collapse:collapse;font-size:.74rem}
+.wk-day-tbl th{color:#94a3b8;font-weight:700;padding:4px 3px;border-bottom:1px solid #e2e8f0;font-size:.65rem;text-align:center}
+.wk-day-tbl td{padding:5px 3px;text-align:center;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.wk-day-tbl td:first-child{text-align:left}
 @media(min-width:480px){.rwrap{height:320px}}
 </style>
 </head>
@@ -695,7 +705,8 @@ function calcWeek(wkey){
     if(log.overBudget){spendSum-=1.5*m;overDays++;}
     else{spendSum+=1*m;underDays++;}
   });
-  const spendScore=(spendSum+10.5)/17.5*5;
+  const recordedDays=underDays+overDays;
+  const spendScore=recordedDays===0?0:Math.max(0,Math.min(5,(spendSum+10.5)/17.5*5));
 
   const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+((M.health_goal||0)/10)*2+(bonus.health||0)));
   const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
@@ -863,7 +874,7 @@ function renderDaily(){
     const border=isEditing?'#7c3aed':(isTd?'#4f46e5':(full?'#10b981':(log?'#f59e0b':(isPast?'#fca5a5':'#e2e8f0'))));
     const clickFn=isFuture?'':(isTd?`onclick="backToToday()"`:`onclick="editPastDay('${day}')"`);
     const retro=log&&log.retroactive?`<div style="font-size:.45rem;color:#f59e0b;font-weight:700">補</div>`:'';
-    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border};cursor:${isFuture?'default':'pointer'}" ${clickFn}>${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div>${retro}`:(isPast?'<div style="opacity:.3;font-size:.6rem">補?</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
+    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border};cursor:${isFuture?'default':'pointer'}" ${clickFn}>${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div><div style="font-size:.62rem">${log.overBudget===false?'💰':log.overBudget===true?'💸':'—'}</div>${retro}`:(isPast?'<div style="opacity:.3;font-size:.6rem">補?</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
   });
   html+='</div>';
   document.getElementById('wGrid').innerHTML=html;
@@ -1025,13 +1036,69 @@ function renderSettle(){
 // ════════════════════════════════
 // RENDER HISTORY
 // ════════════════════════════════
+let expandedWeek=null;
+function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;renderHistory();}
+
+function genWeeklySummary(wkey){
+  const data=db();const days=wDays(wkey);
+  const logs=days.map(d=>data.daily[d]).filter(Boolean);
+  if(!logs.length)return'<span style="color:#94a3b8;font-size:.8rem">本週無打卡紀錄</span>';
+  const exDays=logs.filter(l=>l.exercise).length;
+  const slDays=logs.filter(l=>l.sleep).length;
+  const friedDays=logs.filter(l=>l.fried===true).length;
+  const moodLogs=logs.filter(l=>l.mood);
+  const moodAvg=moodLogs.length?moodLogs.reduce((s,l)=>s+l.mood,0)/moodLogs.length:0;
+  const MJ=['','😔','😕','😐','😊','😄'];
+  const moodE=MJ[Math.round(moodAvg)]||'';
+  const overCnt=logs.filter(l=>l.overBudget===true).length;
+  const underCnt=logs.filter(l=>l.overBudget===false).length;
+  const workDones=logs.map(l=>l.workDone).filter(Boolean);
+  const wStates=logs.map(l=>l.workState).filter(Boolean);
+  const topState=wStates.length?Object.entries(wStates.reduce((a,s)=>{a[s]=(a[s]||0)+1;return a;},{})).sort((a,b)=>b[1]-a[1])[0][0]:null;
+  const grList=logs.flatMap(l=>l.gratitude||[]).filter(Boolean);
+  const discList=logs.map(l=>l.discomfort).filter(Boolean);
+  const lines=[];
+  lines.push(`<b>📅 打卡 ${logs.length}/7 天</b>${moodAvg>0?`　平均心情 ${moodAvg.toFixed(1)}/5 ${moodE}`:''}`);
+  lines.push(`🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃炸物 ${friedDays}天`:''}`);
+  if(underCnt+overCnt>0)lines.push(`💰 未超支 ${underCnt}天　超支 ${overCnt}天`);
+  if(topState||workDones.length)lines.push(`💼 最多狀態 ${topState||'—'}${workDones.length?`　完成 ${workDones.length} 件`:''}`);
+  if(workDones.length)lines.push(`<span style="color:#475569">✅ ${workDones.slice(0,3).join('　')}</span>`);
+  if(grList.length)lines.push(`<span style="color:#64748b">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
+  if(discList.length)lines.push(`<span style="color:#94a3b8">💭 ${discList.slice(0,2).map(d=>`「${d}」`).join(' ')}</span>`);
+  return lines.map(l=>`<div style="margin-bottom:5px;font-size:.8rem;line-height:1.5">${l}</div>`).join('');
+}
+
 function renderHistory(){
   const data=db();
   const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d)))])].sort().reverse();
   const el=document.getElementById('hist');
   if(!allWks.length){el.innerHTML=`<div class="empty"><div class="ei">📅</div><p>還沒有任何紀錄</p></div>`;return;}
-  const rows=allWks.map(w=>{const s=calcWeek(w);const st=s.total>=8?'🏆':s.total>=5?'💪':'🤲';return`<tr><td>${wkLabel(w)}</td><td>${s.health.toFixed(1)}</td><td>${s.finance.toFixed(1)}</td><td>${s.work.toFixed(1)}</td><td>${s.social.toFixed(1)}</td><td>${s.mental.toFixed(1)}</td><td class="hv">${s.total.toFixed(1)} ${st}</td></tr>`;}).join('');
-  el.innerHTML=`<table class="htbl"><thead><tr><th style="text-align:left">週次</th><th>🏃</th><th>💰</th><th>💼</th><th>🤝</th><th>🧠</th><th>總分</th></tr></thead><tbody>${rows}</tbody></table>`;
+  const MJ=['','😔','😕','😐','😊','😄'];
+  const DLBLS=['一','二','三','四','五','六','日'];
+  el.innerHTML=allWks.map(w=>{
+    const s=calcWeek(w);const st=s.total>=8?'🏆':s.total>=5?'💪':'🤲';
+    const isExp=expandedWeek===w;
+    const dimBar=DIMS.map(d=>`<span style="font-size:.65rem;font-weight:700;color:${d.color}">${d.icon}${s[d.key].toFixed(1)}</span>`).join(' ');
+    let detail='';
+    if(isExp){
+      const days=wDays(w);
+      const dayRows=days.map((day,i)=>{
+        const log=data.daily[day];
+        if(!log)return`<tr><td style="color:#94a3b8"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:#d1d5db;font-size:.7rem">未打卡</td></tr>`;
+        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:#94a3b8">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.overBudget===false?'✅':log.overBudget===true?'💸':'—'}</td><td style="max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569;font-size:.72rem">${log.workDone||'—'}</td></tr>`;
+      }).join('');
+      detail=`<div class="wk-detail" onclick="event.stopPropagation()">
+        <div class="wk-summary">${genWeeklySummary(w)}</div>
+        <table class="wk-day-tbl"><thead><tr><th style="text-align:left">日期</th><th>運動</th><th>睡眠</th><th>心情</th><th>記帳</th><th style="text-align:left;padding-left:6px">工作成就</th></tr></thead><tbody>${dayRows}</tbody></table>
+      </div>`;
+    }
+    return`<div class="week-row" onclick="toggleWeekDetail('${w}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px">
+        <div><div style="font-size:.84rem;font-weight:700">${wkLabel(w)}</div><div style="margin-top:4px">${dimBar}</div></div>
+        <div style="text-align:right"><div style="font-size:1.1rem;font-weight:800;color:#4f46e5">${s.total.toFixed(1)} ${st}</div><div style="font-size:.7rem;color:#94a3b8;margin-top:2px">${isExp?'▲ 收合':'▼ 展開'}</div></div>
+      </div>${detail}
+    </div>`;
+  }).join('');
 }
 
 // ════════════════════════════════
