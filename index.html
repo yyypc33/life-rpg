@@ -1,0 +1,1598 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>YU's Life RPG</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh;padding-bottom:72px}
+
+/* Toast */
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1e293b;color:#fff;padding:11px 20px;border-radius:20px;font-size:.85rem;font-weight:700;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,#1e1b4b,#4338ca);color:#fff;padding:20px 16px 16px}
+.hdr-top{display:flex;justify-content:space-between;align-items:flex-start}
+.hdr-title{font-size:1.1rem;font-weight:800}
+.hdr-sub{font-size:.72rem;opacity:.6;margin-top:2px}
+.hdr-lv{background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:700;cursor:pointer}
+.stats{display:flex;margin-top:14px}
+.stat{flex:1;text-align:center}
+.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.15)}
+.sv{font-size:1.5rem;font-weight:800;color:#fde68a}
+.sl{font-size:.65rem;opacity:.6;margin-top:1px}
+
+/* XP bar */
+.xp-bar-wrap{margin:10px 0 2px;background:rgba(255,255,255,.15);border-radius:4px;height:5px;overflow:hidden}
+.xp-bar-fill{height:100%;background:#fde68a;border-radius:4px;transition:width .5s}
+
+/* Bottom nav */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.ni{flex:1;padding:9px 4px 7px;text-align:center;cursor:pointer;color:#94a3b8;position:relative}
+.ni.active{color:#4f46e5}
+.ni-icon{font-size:1.2rem;line-height:1}
+.ni-lbl{font-size:.58rem;margin-top:3px;font-weight:600}
+.dot-badge{position:absolute;top:7px;right:calc(50% - 14px);width:7px;height:7px;background:#ef4444;border-radius:50%;border:1.5px solid #fff}
+
+/* Container */
+.wrap{max-width:580px;margin:0 auto;padding:14px}
+.view{display:none}.view.active{display:block}
+
+/* Card */
+.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.ctitle{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:14px}
+
+/* Radar */
+.rwrap{position:relative;height:265px}
+.rtoggle,.stabs{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:12px}
+.rtab,.stab{flex:1;padding:6px;text-align:center;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;color:#94a3b8;transition:all .15s}
+.rtab.active,.stab.active{background:#fff;color:#4f46e5;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.rlegend{display:flex;justify-content:center;gap:16px;margin-top:8px}
+.rleg-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:#64748b}
+.rleg-dot{width:9px;height:9px;border-radius:50%}
+
+/* Dim list */
+.dim-list{display:flex;flex-direction:column;gap:12px}
+.dim-row{display:flex;align-items:center;gap:10px}
+.dim-ico{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
+.dim-body{flex:1;min-width:0}
+.dim-name{font-size:.86rem;font-weight:700}
+.dim-src{font-size:.67rem;color:#94a3b8;margin-top:2px;line-height:1.3}
+.dim-bar{height:5px;background:#f1f5f9;border-radius:3px;margin-top:5px;overflow:hidden}
+.dim-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.dim-right{text-align:right;flex-shrink:0}
+.dim-score{font-size:1.05rem;font-weight:800}
+.dim-diff{font-size:.7rem;margin-top:1px}
+.total-row{display:flex;align-items:center;justify-content:space-between;padding-top:12px;margin-top:12px;border-top:1px solid #f1f5f9}
+.total-lbl{font-size:.86rem;font-weight:700;color:#475569}
+.total-val{font-size:1.35rem;font-weight:800;color:#4f46e5}
+
+/* Reward */
+.rbox{border-radius:14px;padding:18px;text-align:center}
+.rico{font-size:2rem;margin-bottom:6px}
+.rtitle{font-size:.95rem;font-weight:800}
+.rbody{font-size:.82rem;margin-top:5px;opacity:.85;line-height:1.45}
+
+/* Form elements */
+.fblock{margin-bottom:18px}
+.fbtitle{font-size:.9rem;font-weight:800;margin-bottom:11px;display:flex;align-items:center;gap:7px;color:#1e293b}
+.frow{margin-bottom:13px}
+.flbl{font-size:.82rem;color:#64748b;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;line-height:1.3}
+.fval{font-weight:700;color:#1e293b;white-space:nowrap;margin-left:8px}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:#e2e8f0;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#4f46e5;cursor:pointer;box-shadow:0 2px 6px rgba(79,70,229,.3)}
+.yn{display:flex;gap:8px}
+.ynb{flex:1;padding:11px 8px;border:2px solid #e2e8f0;background:#fff;border-radius:12px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;color:#94a3b8}
+.yn-y{border-color:#10b981;background:#f0fdf4;color:#065f46}
+.yn-n{border-color:#f87171;background:#fef2f2;color:#991b1b}
+.btn-save{width:100%;padding:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,.3);transition:transform .15s;margin-top:4px}
+.btn-save:active{transform:scale(.98)}
+.done-badge{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:#f0fdf4;color:#065f46;border-radius:12px;font-weight:700;font-size:.88rem;margin-bottom:12px}
+hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
+
+/* Mood */
+.mood-row{display:flex;gap:6px}
+.mood-btn{flex:1;padding:10px 2px;border:2px solid #e2e8f0;background:#fff;border-radius:12px;font-size:1.3rem;cursor:pointer;text-align:center;transition:all .15s}
+.mood-btn.active{border-color:#4f46e5;background:#eef2ff;transform:scale(1.08)}
+.mood-lbl{font-size:.58rem;color:#94a3b8;margin-top:2px;text-align:center;font-weight:600}
+
+/* Daily grid */
+.day-grid{display:flex;gap:4px;justify-content:center;margin-top:4px}
+.day-col{text-align:center}
+.day-lbl{font-size:.6rem;color:#94a3b8;font-weight:700;margin-bottom:4px}
+.day-box{width:38px;height:68px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;gap:1px;border:2px solid transparent}
+
+/* ── TASK STYLES ── */
+.task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.task-group-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#94a3b8}
+.btn-add-task{padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer}
+
+/* Add task form */
+.add-form{background:#f8fafc;border-radius:14px;padding:16px;margin-bottom:14px;border:1.5px dashed #c7d2fe}
+.add-form input[type=text]{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;outline:none;background:#fff;margin-bottom:10px}
+.add-form input[type=text]:focus{border-color:#4f46e5}
+.dim-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.dim-chip{padding:5px 10px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.78rem;font-weight:600;cursor:pointer;color:#94a3b8;transition:all .15s;display:flex;align-items:center;gap:4px}
+.dim-chip.on{color:#fff}
+.freq-row{display:flex;gap:6px;margin-bottom:10px}
+.freq-btn{flex:1;padding:8px;border:1.5px solid #e2e8f0;background:#fff;border-radius:10px;font-size:.8rem;font-weight:600;cursor:pointer;color:#94a3b8;text-align:center;transition:all .15s}
+.freq-btn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
+.pts-preview{font-size:.8rem;color:#64748b;margin-bottom:10px;text-align:center;min-height:18px}
+.btn-add-confirm{width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:11px;font-size:.88rem;font-weight:800;cursor:pointer}
+
+/* Task item */
+.task-section{margin-bottom:16px}
+.task-section-title{font-size:.72rem;font-weight:700;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.task-count{background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
+.task-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f8fafc}
+.task-item:last-child{border-bottom:none}
+.task-item.done .task-title{text-decoration:line-through;color:#94a3b8}
+.task-check{width:24px;height:24px;border-radius:50%;border:2px solid #d1d5db;background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .2s}
+.task-check.done{background:#10b981;border-color:#10b981;color:#fff}
+.task-body{flex:1;min-width:0}
+.task-title{font-size:.88rem;font-weight:600;color:#1e293b;margin-bottom:4px}
+.task-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.task-dim{font-size:.7rem;padding:2px 6px;border-radius:8px;font-weight:700}
+.task-pts{font-size:.68rem;color:#64748b;font-weight:600}
+.task-xp{font-size:.68rem;color:#f59e0b;font-weight:700}
+.task-del{padding:4px 8px;background:none;border:none;color:#d1d5db;cursor:pointer;font-size:.9rem;flex-shrink:0}
+.task-del:hover{color:#ef4444}
+
+/* Settle sub-views */
+.stview{display:none}.stview.active{display:block}
+
+/* Freq badges */
+.fbadge{font-size:.64rem;padding:2px 7px;border-radius:8px;font-weight:700;margin-left:6px}
+.fb-w{background:#e0e7ff;color:#3730a3}
+.fb-m{background:#fce7f3;color:#9d174d}
+.fb-y{background:#fef3c7;color:#92400e}
+
+/* History table */
+.htbl{width:100%;border-collapse:collapse}
+.htbl th,.htbl td{padding:8px 4px;text-align:center;font-size:.75rem}
+.htbl th{color:#94a3b8;font-weight:700;border-bottom:1px solid #f1f5f9}
+.htbl td:first-child{text-align:left;font-weight:600;font-size:.72rem;color:#475569}
+.htbl .hv{font-weight:800;color:#4f46e5}
+
+/* Empty */
+.empty{text-align:center;padding:28px 16px;color:#94a3b8}
+.ei{font-size:2.5rem;margin-bottom:10px}
+.empty p{font-size:.84rem;line-height:1.5}
+
+/* Daily journal extended */
+.txt-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;outline:none;background:#fff;font-family:inherit;color:#1e293b}
+.txt-input:focus{border-color:#4f46e5}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag-chip{padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.tag-chip.on{border-color:#8b5cf6;background:#f5f3ff;color:#6d28d9}
+.cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.cat-btn{padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.cat-btn.on{border-color:#f59e0b;background:#fffbeb;color:#92400e}
+.work-state-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.wst-btn{padding:8px 12px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
+.wst-btn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
+.gr-inputs{display:flex;flex-direction:column;gap:6px}
+.spend-expand{background:#f8fafc;border-radius:12px;padding:12px;margin-top:8px;border:1px solid #e2e8f0}
+/* Achievement rows */
+.ach-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9}
+.ach-row:last-child{border-bottom:none}
+
+/* History expandable rows */
+.week-row{padding:4px 0;cursor:pointer;transition:background .1s}
+.week-row:hover{background:#fafafe}
+.week-row+.week-row{border-top:1px solid #f1f5f9}
+.wk-detail{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:6px}
+.wk-summary{border-left:3px solid #4f46e5;padding-left:10px;margin-bottom:12px}
+.wk-day-tbl{width:100%;border-collapse:collapse;font-size:.74rem}
+.wk-day-tbl th{color:#94a3b8;font-weight:700;padding:4px 3px;border-bottom:1px solid #e2e8f0;font-size:.65rem;text-align:center}
+.wk-day-tbl td{padding:5px 3px;text-align:center;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.wk-day-tbl td:first-child{text-align:left}
+@media(min-width:480px){.rwrap{height:320px}}
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-top">
+    <div>
+      <div class="hdr-title">YU's Life RPG</div>
+      <div class="hdr-sub" id="hWk">—</div>
+    </div>
+    <div class="hdr-lv" id="hLv" title="點擊查看 XP">Lv.1</div>
+  </div>
+  <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
+  <div class="stats">
+    <div class="stat"><div class="sv" id="hScore">—</div><div class="sl">本週總分</div></div>
+    <div class="stat"><div class="sv" id="hXP">0</div><div class="sl">總 XP</div></div>
+    <div class="stat"><div class="sv" id="hStreak">0W</div><div class="sl">連勝週數</div></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ── HOME ── -->
+  <div class="view active" id="view-home">
+    <div class="card">
+      <div class="ctitle">五維成長雷達圖</div>
+      <div class="rtoggle">
+        <div class="rtab active" onclick="setRV('week')">本週</div>
+        <div class="rtab" onclick="setRV('month')">本月</div>
+      </div>
+      <div class="rwrap"><canvas id="rc"></canvas></div>
+      <div class="rlegend">
+        <div class="rleg-item"><div class="rleg-dot" style="background:rgba(79,70,229,.85)"></div><span id="curLbl">本週</span></div>
+        <div class="rleg-item"><div class="rleg-dot" style="background:rgba(148,163,184,.6)"></div><span id="prvLbl">上週</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">維度明細</div>
+      <div class="dim-list" id="dimList"></div>
+    </div>
+    <div class="card" id="rwCard" style="display:none">
+      <div class="ctitle">本週狀態</div>
+      <div class="rbox" id="rwBox"></div>
+    </div>
+  </div>
+
+  <!-- ── DAILY ── -->
+  <div class="view" id="view-daily">
+    <div class="done-badge" id="dDone" style="display:none">✅ 今日紀錄完成</div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div class="ctitle" style="margin-bottom:0">每日紀錄</div>
+        <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:#64748b">今天</div>
+      </div>
+      <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
+
+      <!-- 健康 -->
+      <div class="fblock">
+        <div class="fbtitle">🏃 健康</div>
+        <div class="frow">
+          <div class="flbl">今天有完成運動嗎？</div>
+          <div class="yn">
+            <button class="ynb" id="dey" onclick="setD('exercise',true)">✅ 有</button>
+            <button class="ynb yn-n" id="den" onclick="setD('exercise',false)">❌ 沒有</button>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">昨晚睡足 7 小時了嗎？</div>
+          <div class="yn">
+            <button class="ynb" id="dsy" onclick="setD('sleep',true)">✅ 有</button>
+            <button class="ynb yn-n" id="dsn" onclick="setD('sleep',false)">❌ 沒有</button>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">今天有吃炸物嗎？</div>
+          <div class="yn">
+            <button class="ynb" id="dfy" onclick="setFried(true)">🍟 有吃</button>
+            <button class="ynb" id="dfn" onclick="setFried(false)">✅ 沒有</button>
+          </div>
+        </div>
+      </div>
+      <hr>
+
+      <!-- 記帳 -->
+      <div class="fblock">
+        <div class="fbtitle">💰 記帳</div>
+        <div class="frow">
+          <div class="flbl">今天單日消費有超過 NT$1,000？</div>
+          <div class="yn">
+            <button class="ynb" id="doy" onclick="setOverBudget(true)">💸 有</button>
+            <button class="ynb" id="don" onclick="setOverBudget(false)">✅ 沒有</button>
+          </div>
+        </div>
+        <div id="spendDetail" class="spend-expand" style="display:none">
+          <div class="frow" style="margin-bottom:10px">
+            <div class="flbl" style="margin-bottom:6px">主要花在什麼？</div>
+            <input type="text" class="txt-input" id="dSpendWhat" placeholder="例：晚餐聚餐、買衣服、添購器材…">
+          </div>
+          <div class="frow" style="margin-bottom:0">
+            <div class="flbl">消費類別</div>
+            <div class="cat-row">
+              <button class="cat-btn" data-cat="飲食" onclick="setCat('飲食')">🍴 飲食</button>
+              <button class="cat-btn" data-cat="交通" onclick="setCat('交通')">🚌 交通</button>
+              <button class="cat-btn" data-cat="購物" onclick="setCat('購物')">🛍️ 購物</button>
+              <button class="cat-btn" data-cat="娛樂" onclick="setCat('娛樂')">🎮 娛樂</button>
+              <button class="cat-btn" data-cat="其他" onclick="setCat('其他')">📦 其他</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <hr>
+
+      <!-- 心情紀錄 -->
+      <div class="fblock">
+        <div class="fbtitle">🧠 心情紀錄</div>
+        <div class="frow">
+          <div class="flbl">今天心情如何？</div>
+          <div class="mood-row">
+            <div><button class="mood-btn" id="m1" onclick="setMood(1)">😔</button><div class="mood-lbl">很差</div></div>
+            <div><button class="mood-btn" id="m2" onclick="setMood(2)">😕</button><div class="mood-lbl">差</div></div>
+            <div><button class="mood-btn" id="m3" onclick="setMood(3)">😐</button><div class="mood-lbl">普通</div></div>
+            <div><button class="mood-btn" id="m4" onclick="setMood(4)">😊</button><div class="mood-lbl">好</div></div>
+            <div><button class="mood-btn" id="m5" onclick="setMood(5)">😄</button><div class="mood-lbl">很好</div></div>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">今天的心情關鍵詞（可多選）</div>
+          <div class="tag-row" id="moodTags"></div>
+        </div>
+        <div class="frow">
+          <div class="flbl">今天的感恩三件事</div>
+          <div class="gr-inputs">
+            <input type="text" class="txt-input" id="gr1" placeholder="1. ">
+            <input type="text" class="txt-input" id="gr2" placeholder="2. ">
+            <input type="text" class="txt-input" id="gr3" placeholder="3. ">
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">今天有什麼讓你不舒服？<span style="color:#94a3b8;font-size:.72rem;font-weight:400">（選填）</span></div>
+          <input type="text" class="txt-input" id="discomfort" placeholder="可以是任何事，說給自己聽">
+        </div>
+      </div>
+      <hr>
+
+      <!-- 工作回顧 -->
+      <div class="fblock">
+        <div class="fbtitle">💼 工作回顧</div>
+        <div class="frow">
+          <div class="flbl">今天完成的最重要一件事</div>
+          <input type="text" class="txt-input" id="workDone" placeholder="一句話就好">
+        </div>
+        <div class="frow">
+          <div class="flbl">今天的工作狀態</div>
+          <div class="work-state-row">
+            <button class="wst-btn" data-ws="🔥" onclick="setWorkState('🔥')">🔥 很有能量</button>
+            <button class="wst-btn" data-ws="😐" onclick="setWorkState('😐')">😐 普通</button>
+            <button class="wst-btn" data-ws="😴" onclick="setWorkState('😴')">😴 有點混</button>
+            <button class="wst-btn" data-ws="😵" onclick="setWorkState('😵')">😵 壓力大</button>
+          </div>
+        </div>
+        <div class="frow">
+          <div class="flbl">明天最優先一件事</div>
+          <input type="text" class="txt-input" id="workTomorrow" placeholder="讓明天的自己有個開始方向">
+        </div>
+      </div>
+
+      <button class="btn-save" id="btnSaveDaily" onclick="saveDaily()">完成今日紀錄</button>
+    </div>
+    <div class="card">
+      <div class="ctitle">本週打卡紀錄</div>
+      <div id="wGrid"></div>
+    </div>
+  </div>
+
+  <!-- ── TASKS ── -->
+  <div class="view" id="view-tasks">
+    <div class="card">
+      <div class="task-header">
+        <div class="task-group-lbl">自訂任務</div>
+        <button class="btn-add-task" onclick="toggleAddForm()">＋ 新增任務</button>
+      </div>
+
+      <!-- Add form -->
+      <div id="addForm" class="add-form" style="display:none">
+        <input type="text" id="taskInput" placeholder="輸入任務名稱，例如：游泳 30 分鐘" oninput="autoClassify()">
+        <div style="font-size:.72rem;color:#94a3b8;margin-bottom:6px">領域（自動偵測，點選可調整）</div>
+        <div class="dim-chips" id="dimChips"></div>
+        <div class="freq-row">
+          <button class="freq-btn on" id="fq-w" onclick="setFreq('weekly')">每週</button>
+          <button class="freq-btn" id="fq-m" onclick="setFreq('monthly')">每月</button>
+          <button class="freq-btn" id="fq-y" onclick="setFreq('yearly')">每年</button>
+        </div>
+        <div class="pts-preview" id="ptsPreview">請輸入任務名稱</div>
+        <button class="btn-add-confirm" onclick="submitTask()">新增</button>
+      </div>
+
+      <!-- Task list -->
+      <div id="taskList"></div>
+    </div>
+  </div>
+
+  <!-- ── SETTLE ── -->
+  <div class="view" id="view-settle">
+    <div class="card" style="padding:14px 14px 0">
+      <div class="stabs" style="margin-bottom:0">
+        <div class="stab active" onclick="setST('w')">每週</div>
+        <div class="stab" onclick="setST('m')">每月</div>
+        <div class="stab" onclick="setST('y')">每年</div>
+      </div>
+    </div>
+
+    <!-- Weekly -->
+    <div class="stview active" id="st-w">
+      <div class="done-badge" id="wDone" style="display:none">✅ 本週結算已完成</div>
+      <div class="card">
+        <div class="ctitle">每週結算 <span class="fbadge fb-w">週日</span></div>
+        <div class="fblock">
+          <div class="fbtitle">💰 財務消費 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
+          <div style="font-size:.8rem;color:#64748b;background:#f8fafc;border-radius:10px;padding:10px 12px;line-height:1.6">
+            未超過 NT$1,000 <b style="color:#10b981">+1</b>　超過 NT$1,000 <b style="color:#ef4444">−1.5</b><br>
+            <span style="font-size:.72rem;color:#94a3b8">每天打卡時填寫，週分數自動加總</span>
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔工作 7分</span></div>
+          <div class="frow">
+            <div class="flbl"><span>本週工作目標完成度</span><span class="fval" id="wkv">5 / 10</span></div>
+            <input type="range" min="0" max="10" value="5" id="wki" oninput="document.getElementById('wkv').textContent=this.value+' / 10'">
+          </div>
+          <div class="frow">
+            <div class="flbl">本週有主動學習新東西嗎？</div>
+            <div class="yn"><button class="ynb" id="wly" onclick="setW('learning',true)">✅ 有</button><button class="ynb yn-n" id="wln" onclick="setW('learning',false)">❌ 沒有</button></div>
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔社交 3分（月任務占 5分）</span></div>
+          <div class="frow">
+            <div class="flbl">本週主動聯繫朋友或家人了嗎？</div>
+            <div class="yn"><button class="ynb" id="wcy" onclick="setW('contact',true)">✅ 有</button><button class="ynb yn-n" id="wcn" onclick="setW('contact',false)">❌ 沒有</button></div>
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔心理 3分</span></div>
+          <div class="frow">
+            <div class="flbl">本週有完成週反思嗎？</div>
+            <div class="yn"><button class="ynb" id="wry" onclick="setW('reflection',true)">✅ 有</button><button class="ynb yn-n" id="wrn" onclick="setW('reflection',false)">❌ 沒有</button></div>
+          </div>
+        </div>
+        <button class="btn-save" onclick="saveWeekly()">儲存本週結算</button>
+      </div>
+    </div>
+
+    <!-- Monthly -->
+    <div class="stview" id="st-m">
+      <div class="done-badge" id="mDone" style="display:none">✅ 本月結算已完成</div>
+      <div class="card">
+        <div class="ctitle">每月結算 <span class="fbadge fb-m">月底</span></div>
+        <div class="fblock">
+          <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔健康 2分</span></div>
+          <div class="frow">
+            <div class="flbl"><span>本月體能 / 健康目標達成度</span><span class="fval" id="mhv">5 / 10</span></div>
+            <input type="range" min="0" max="10" value="5" id="mhi" oninput="document.getElementById('mhv').textContent=this.value+' / 10'">
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">💰 財務 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔財務 3分</span></div>
+          <div class="frow">
+            <div class="flbl">本月有儲蓄或投資行動嗎？</div>
+            <div class="yn"><button class="ynb" id="msy" onclick="setM('saving',true)">✅ 有</button><button class="ynb yn-n" id="msn" onclick="setM('saving',false)">❌ 沒有</button></div>
+          </div>
+          <div class="frow">
+            <div class="flbl">本月有整理財務報告嗎？</div>
+            <div class="yn"><button class="ynb" id="mfry" onclick="setM('finance_report',true)">✅ 有</button><button class="ynb yn-n" id="mfrn" onclick="setM('finance_report',false)">❌ 沒有</button></div>
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔工作 2分</span></div>
+          <div class="frow">
+            <div class="flbl"><span>本月最重要工作目標完成度</span><span class="fval" id="mwv">5 / 10</span></div>
+            <input type="range" min="0" max="10" value="5" id="mwi" oninput="document.getElementById('mwv').textContent=this.value+' / 10'">
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔社交 5分（最重要）</span></div>
+          <div class="frow">
+            <div class="flbl"><span>本月深度社交幾次？（真正見面 / 深聊）</span><span class="fval" id="mdv">0 次</span></div>
+            <input type="range" min="0" max="6" value="0" id="mdi" oninput="document.getElementById('mdv').textContent=this.value+' 次'">
+          </div>
+        </div>
+        <hr>
+        <div class="fblock">
+          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔心理 2分</span></div>
+          <div class="frow">
+            <div class="flbl">本月有完成月度回顧嗎？</div>
+            <div class="yn"><button class="ynb" id="mrvy" onclick="setM('monthly_review',true)">✅ 有</button><button class="ynb yn-n" id="mrvn" onclick="setM('monthly_review',false)">❌ 沒有</button></div>
+          </div>
+        </div>
+        <button class="btn-save" onclick="saveMonthly()">儲存本月結算</button>
+      </div>
+    </div>
+
+    <!-- Yearly -->
+    <div class="stview" id="st-y">
+      <div class="card">
+        <div class="ctitle">每年設定 <span class="fbadge fb-y">年初填 / 年底更新</span></div>
+        <p style="font-size:.8rem;color:#94a3b8;margin-bottom:14px;line-height:1.4">年度目標為各維度提供基礎加分，代表長期方向。</p>
+        <div class="frow"><div class="flbl"><span>🏃 年度健康成就</span><span class="fval" id="yhv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yhi" oninput="document.getElementById('yhv').textContent=this.value+' / 10'"></div>
+        <div class="frow"><div class="flbl"><span>💰 年度財務目標進展</span><span class="fval" id="yfv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yfi" oninput="document.getElementById('yfv').textContent=this.value+' / 10'"></div>
+        <div class="frow"><div class="flbl"><span>💼 年度職涯 / 技能目標</span><span class="fval" id="ycv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yci" oninput="document.getElementById('ycv').textContent=this.value+' / 10'"></div>
+        <div class="frow"><div class="flbl"><span>🤝 重要關係維護</span><span class="fval" id="yrv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yri" oninput="document.getElementById('yrv').textContent=this.value+' / 10'"></div>
+        <div class="frow"><div class="flbl"><span>🧠 個人成長里程碑</span><span class="fval" id="ygv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="ygi" oninput="document.getElementById('ygv').textContent=this.value+' / 10'"></div>
+        <button class="btn-save" onclick="saveYearly()">儲存年度設定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HISTORY ── -->
+  <div class="view" id="view-history">
+    <div class="card">
+      <div class="ctitle">資料備份 & 匯出</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)" onclick="exportBackup()">📦 JSON 備份</button>
+        <label class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          📂 匯入還原
+          <input type="file" accept=".json" style="display:none" onchange="importBackup(this)">
+        </label>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:10px">
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)" onclick="exportDailyCSV()">📊 每日紀錄 CSV</button>
+        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed)" onclick="exportWeeklyCSV()">📈 週分數 CSV</button>
+      </div>
+      <div style="font-size:.75rem;color:#94a3b8;line-height:1.6">
+        JSON：完整備份含任務，建議每週存 iCloud / OneDrive。<br>
+        CSV：可直接用 Excel / Google Sheets 開啟分析。
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle">趨勢分析</div>
+      <div class="rtoggle" id="trendToggle" style="margin-bottom:12px">
+        <div class="rtab active" onclick="setTrendView('month')">月趨勢（週）</div>
+        <div class="rtab" onclick="setTrendView('year')">年趨勢（月）</div>
+      </div>
+      <div id="trendWrap" style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">成就系統 🏅</div>
+      <div id="achList"><div class="empty" style="padding:16px 0"><p style="font-size:.84rem">載入中…</p></div></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">週歷史紀錄</div>
+      <div id="hist"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <div class="ni active" id="n-home" onclick="go('home')"><div class="ni-icon">📊</div><div class="ni-lbl">首頁</div></div>
+  <div class="ni" id="n-daily" onclick="go('daily')"><div class="ni-icon">☀️</div><div class="ni-lbl">每日</div><div class="dot-badge" id="dBadge" style="display:none"></div></div>
+  <div class="ni" id="n-tasks" onclick="go('tasks')"><div class="ni-icon">✅</div><div class="ni-lbl">任務</div></div>
+  <div class="ni" id="n-settle" onclick="go('settle')"><div class="ni-icon">📋</div><div class="ni-lbl">結算</div><div class="dot-badge" id="sBadge" style="display:none"></div></div>
+  <div class="ni" id="n-history" onclick="go('history')"><div class="ni-icon">📈</div><div class="ni-lbl">歷史</div></div>
+</div>
+
+<script>
+// ════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════
+const DIMS=[
+  {key:'health', label:'健康',icon:'🏃',color:'#10b981'},
+  {key:'finance',label:'財務',icon:'💰',color:'#f59e0b'},
+  {key:'work',   label:'工作',icon:'💼',color:'#6366f1'},
+  {key:'social', label:'社交',icon:'🤝',color:'#ec4899'},
+  {key:'mental', label:'心理',icon:'🧠',color:'#8b5cf6'},
+];
+
+// Keyword classifier
+const KW={
+  health: '運動 健身 跑步 走路 游泳 騎車 爬山 瑜伽 睡眠 飲食 健康 看診 體重 伸展 訓練 重訓 體能 慢跑 鍛鍊 蛋白質 蔬菜 水分 減重 增肌 拉伸 深蹲 棒式 重量 有氧'.split(' '),
+  finance:'存錢 儲蓄 投資 預算 記帳 財務 花費 消費 省錢 收入 薪水 股票 基金 理財 保險 貸款 報稅 節省 資產 帳單 現金 零用 支出'.split(' '),
+  work:   '工作 學習 讀書 課程 技能 專案 報告 職涯 升遷 履歷 面試 簡報 專業 研究 開發 設計 行銷 產品 英文 語言 程式 效率 規劃 準備 筆記 整理 進度'.split(' '),
+  social: '朋友 家人 聚餐 見面 聯繫 約會 社區 志工 社交 關係 父母 家庭 同事 拜訪 活動 聚會 關心 問候 電話 視訊 LINE 訊息'.split(' '),
+  mental: '冥想 日記 反思 心情 感恩 閱讀 靜心 放鬆 壓力 情緒 自我 成長 療癒 正念 休息 旅行 創作 藝術 音樂 寫作 哲學 散步 呼吸 思考'.split(' '),
+};
+
+const MOOD_TAGS=['開心','平靜','焦慮','疲憊','充實','無聊','感恩','沮喪'];
+
+const XP_LEVELS=[
+  [0,'Lv.1 初學者'],[100,'Lv.2 見習生'],[300,'Lv.3 實踐者'],
+  [600,'Lv.4 探索者'],[1000,'Lv.5 成長者'],[2000,'Lv.6 熟練者'],
+  [4000,'Lv.7 精英'],[8000,'Lv.8 大師'],
+];
+
+const XP_NEXT=[100,300,600,1000,2000,4000,8000,Infinity];
+
+// ════════════════════════════════
+// DATA
+// ════════════════════════════════
+const SK='life_rpg_yu3';
+function db(){return JSON.parse(localStorage.getItem(SK)||'{"daily":{},"weekly":{},"monthly":{},"yearly":{},"tasks":[]}')}
+function dbS(d){localStorage.setItem(SK,JSON.stringify(d))}
+
+// ════════════════════════════════
+// DATE HELPERS
+// ════════════════════════════════
+function dk(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function mk(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`}
+function yk(d=new Date()){return String(d.getFullYear())}
+function wk(d=new Date()){
+  const dt=new Date(d);dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate()+3-(dt.getDay()+6)%7);
+  const w1=new Date(dt.getFullYear(),0,4);
+  const n=1+Math.round(((dt-w1)/86400000-3+(w1.getDay()+6)%7)/7);
+  return `${dt.getFullYear()}-W${String(n).padStart(2,'0')}`;
+}
+function wDays(wkey){
+  const[yr,w]=wkey.split('-W');
+  const j4=new Date(parseInt(yr),0,4);
+  const dow=(j4.getDay()+6)%7;
+  const mon=new Date(j4);mon.setDate(j4.getDate()-dow+(parseInt(w)-1)*7);
+  return Array.from({length:7},(_,i)=>{const d=new Date(mon);d.setDate(mon.getDate()+i);return dk(d)});
+}
+function weeksOfMonth(mkey){
+  const[yr,mo]=mkey.split('-').map(Number);
+  const s=new Date(yr,mo-1,1),e=new Date(yr,mo,0);
+  const set=new Set();
+  for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1))set.add(wk(d));
+  return[...set];
+}
+function prevWk(w){const[yr,n]=w.split('-W');return parseInt(n)===1?`${parseInt(yr)-1}-W52`:`${yr}-W${String(parseInt(n)-1).padStart(2,'0')}`}
+function prevMk(m){const[yr,mo]=m.split('-').map(Number);return mo===1?`${yr-1}-12`:`${yr}-${String(mo-1).padStart(2,'0')}`}
+function getMk(wkey){const days=wDays(wkey);const t=new Date(days[3]);return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`}
+function getYk(wkey){return new Date(wDays(wkey)[3]).getFullYear().toString()}
+function wkLabel(w){const[y,n]=w.split('-W');return `${y}年 第${parseInt(n)}週`}
+
+// ════════════════════════════════
+// TASK SYSTEM
+// ════════════════════════════════
+function classify(title){
+  const found=[];
+  for(const[dim,kws]of Object.entries(KW)){
+    if(kws.some(kw=>title.includes(kw)))found.push(dim);
+  }
+  return found;
+}
+
+function taskPtsPerDim(dims){
+  if(dims.length<=1)return 1.5;
+  if(dims.length===2)return 1.0;
+  return 0.7;
+}
+
+function taskXPVal(freq){return{weekly:20,monthly:50,yearly:150}[freq]||20}
+
+function uid(){return 't_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+
+function getPeriodKey(freq){
+  if(freq==='weekly')return wk();
+  if(freq==='monthly')return mk();
+  return yk();
+}
+
+function getTaskBonus(wkey){
+  const data=db();
+  const tasks=data.tasks||[];
+  const mkey=getMk(wkey),ykey=getYk(wkey);
+  const bonus={health:0,finance:0,work:0,social:0,mental:0};
+  tasks.forEach(t=>{
+    const pkey=t.frequency==='weekly'?wkey:t.frequency==='monthly'?mkey:ykey;
+    if((t.completedPeriods||[]).includes(pkey)){
+      const pts=taskPtsPerDim(t.dimensions);
+      t.dimensions.forEach(d=>{if(bonus[d]!==undefined)bonus[d]=Math.min(bonus[d]+pts,3)});
+    }
+  });
+  return bonus;
+}
+
+function getTotalXP(){
+  const data=db();
+  return(data.tasks||[]).reduce((sum,t)=>sum+(t.xpEarned||0),0);
+}
+
+function getXpInfo(xp){
+  let lvIdx=0;
+  for(let i=0;i<XP_LEVELS.length;i++){if(xp>=XP_LEVELS[i][0])lvIdx=i;}
+  const label=XP_LEVELS[lvIdx][1];
+  const cur=XP_LEVELS[lvIdx][0];
+  const next=XP_NEXT[lvIdx];
+  const pct=next===Infinity?100:Math.round((xp-cur)/(next-cur)*100);
+  return{label,pct};
+}
+
+// ════════════════════════════════
+// SCORING
+// ════════════════════════════════
+function r(n){return Math.round(Math.max(0,Math.min(10,n))*10)/10}
+
+function calcWeek(wkey){
+  const data=db();
+  const days=wDays(wkey);
+  const mkey=getMk(wkey),ykey=getYk(wkey);
+  const mult=l=>l&&l.retroactive?0.8:1;
+  const exDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.exercise?s+mult(l):s;},0);
+  const slDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.sleep?s+mult(l):s;},0);
+  const friedDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.fried===false?s+mult(l):s;},0);
+  const exRaw=days.filter(d=>{const l=data.daily[d];return l&&l.exercise;}).length;
+  const slRaw=days.filter(d=>{const l=data.daily[d];return l&&l.sleep;}).length;
+  const friedRaw=days.filter(d=>{const l=data.daily[d];return l&&l.fried===false;}).length;
+  const moodEntries=days.map(d=>data.daily[d]).filter(l=>l&&l.mood);
+  const moodWCount=moodEntries.reduce((s,l)=>s+mult(l),0);
+  const moodAvg=moodWCount>0?moodEntries.reduce((s,l)=>s+l.mood*mult(l),0)/moodWCount:0;
+  const W=data.weekly[wkey]||{};
+  const M=data.monthly[mkey]||{};
+  const Y=data.yearly[ykey]||{};
+  const bonus=getTaskBonus(wkey);
+
+  // Daily spending: under 1000=+1, over 1000=-1.5; range -10.5~+7 → 0-5
+  let spendSum=0,underDays=0,overDays=0;
+  days.forEach(d=>{
+    const log=data.daily[d];
+    if(!log||log.overBudget===undefined)return;
+    const m=mult(log);
+    if(log.overBudget){spendSum-=1.5*m;overDays++;}
+    else{spendSum+=1*m;underDays++;}
+  });
+  const recordedDays=underDays+overDays;
+  const spendScore=recordedDays===0?0:Math.max(0,Math.min(5,(spendSum+10.5)/17.5*5));
+
+  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+((M.health_goal||0)/10)*2+(bonus.health||0)));
+  const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
+  const work   =r(Math.min(10,((W.work_completion||0)/10)*5+(W.learning?2:0)+((M.work_goal||0)/10)*2+((Y.career_goal||0)/10)*1+(bonus.work||0)));
+  const social =r(Math.min(10,(W.contact?3:0)+Math.min(5,((M.deep_social||0)/3)*5)+((Y.relationships||0)/10)*2+(bonus.social||0)));
+  const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+(W.reflection?3:0)+(M.monthly_review?2:0)+(bonus.mental||0)));
+  const total  =r((health+finance+work+social+mental)/5);
+  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_under:underDays,_over:overDays};
+}
+
+function calcMonth(mkey){
+  const weeks=weeksOfMonth(mkey);
+  if(!weeks.length)return null;
+  const sc=weeks.map(w=>calcWeek(w));
+  const a=k=>r(sc.reduce((s,x)=>s+x[k],0)/sc.length);
+  return{health:a('health'),finance:a('finance'),work:a('work'),social:a('social'),mental:a('mental'),total:a('total')};
+}
+
+function streak(){
+  let s=0,w=wk();
+  for(let i=0;i<52;i++){if(calcWeek(w).total>=5)s++;else break;w=prevWk(w);}
+  return s;
+}
+
+function reward(t){
+  if(t>=8)return{icon:'🏆',title:'達標週 — 獎勵模式',desc:'本週可以自由消費，心安理得地犒賞自己。',bg:'#f0fdf4',c:'#14532d'};
+  if(t>=5)return{icon:'💪',title:'繼續保持',desc:'距離獎勵還差一點，下週再衝。',bg:'#fffbeb',c:'#78350f'};
+  return{icon:'🤲',title:'懲罰週 — 完成社區貢獻',desc:'這週沒有好好照顧自己，用行動照顧他人：志工、幫鄰居、捐款。',bg:'#fef2f2',c:'#7f1d1d'};
+}
+
+// ════════════════════════════════
+// DAY COMPLETE CHECK
+// ════════════════════════════════
+function isDayComplete(log){
+  if(!log)return false;
+  const budgetOk=log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory));
+  return log.exercise!==undefined&&log.sleep!==undefined&&log.fried!==undefined&&
+    log.mood&&(log.moodTags||[]).length>0&&(log.gratitude||[]).filter(Boolean).length===3&&
+    budgetOk&&log.workDone&&log.workState&&log.workTomorrow;
+}
+
+// ════════════════════════════════
+// ACHIEVEMENTS
+// ════════════════════════════════
+const ACHIEVEMENTS=[
+  {key:'exercise',label:'運動習慣',icon:'💪',color:'#10b981',check:l=>l.exercise===true,tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'買一雙新運動短襪（小確幸）'},
+    {id:'silver',days:30, icon:'🥈',reward:'升級運動裝備或補給品（NT$1,500 內）'},
+    {id:'gold',  days:90, icon:'🥇',reward:'報名一堂體驗課（攀岩／衝浪／游泳）'},
+    {id:'platinum',days:180,icon:'💎',reward:'週末戶外活動旅遊（健行或騎車行程）'},
+    {id:'legend',days:365,icon:'👑',reward:'夢想運動體驗（馬拉松／登山行程）'},
+  ]},
+  {key:'sleep',label:'晨型人',icon:'🌙',color:'#6366f1',check:l=>l.sleep===true,tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'睡前享受一杯喜歡的熱飲'},
+    {id:'silver',days:30, icon:'🥈',reward:'升級睡眠品質（枕頭／眼罩／薰香）'},
+    {id:'gold',  days:90, icon:'🥇',reward:'預約一次 SPA 或按摩'},
+    {id:'platinum',days:180,icon:'💎',reward:'購買喜歡的床組或寢具'},
+    {id:'legend',days:365,icon:'👑',reward:'一次奢侈住宿體驗'},
+  ]},
+  {key:'clean',label:'清淡生活',icon:'🥗',color:'#10b981',check:l=>l.fried===false,tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'去一間一直想試的健康餐廳'},
+    {id:'silver',days:30, icon:'🥈',reward:'購買喜歡的健康零食或補給品'},
+    {id:'gold',  days:90, icon:'🥇',reward:'一次精緻的日式或健康料理體驗'},
+    {id:'platinum',days:180,icon:'💎',reward:'入手廚具或報名料理課'},
+    {id:'legend',days:365,icon:'👑',reward:'美食旅遊（吃遍目標城市的健康料理）'},
+  ]},
+  {key:'budget',label:'帳目達人',icon:'💰',color:'#f59e0b',check:l=>l.overBudget!==undefined,tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'用省下的小錢買一個開心的小東西'},
+    {id:'silver',days:30, icon:'🥈',reward:'把這個月結餘的 10% 當獎勵金自由花'},
+    {id:'gold',  days:90, icon:'🥇',reward:'開一個投資帳戶或提高定存金額'},
+    {id:'platinum',days:180,icon:'💎',reward:'犒賞自己一次中型消費（NT$3,000 內）'},
+    {id:'legend',days:365,icon:'👑',reward:'財務自由里程碑慶祝（自訂）'},
+  ]},
+  {key:'mood',label:'心情穩定',icon:'😊',color:'#8b5cf6',check:l=>l.mood>=4,tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'一件讓心情更好的小事（咖啡／書／花）'},
+    {id:'silver',days:30, icon:'🥈',reward:'看一部一直想看的電影或音樂會'},
+    {id:'gold',  days:90, icon:'🥇',reward:'安排一次真正充電的獨處時光'},
+    {id:'platinum',days:180,icon:'💎',reward:'一次說走就走的小旅行（1–2 天）'},
+    {id:'legend',days:365,icon:'👑',reward:'給自己的心理健康大禮（自訂體驗）'},
+  ]},
+  {key:'gratitude',label:'感恩習慣',icon:'🙏',color:'#ec4899',check:l=>(l.gratitude||[]).filter(Boolean).length===3,tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'寫一封感謝信給某個重要的人'},
+    {id:'silver',days:30, icon:'🥈',reward:'安排一次和感謝對象的聚餐'},
+    {id:'gold',  days:90, icon:'🥇',reward:'買一本喜歡的書或訂閱喜歡的課程'},
+    {id:'platinum',days:180,icon:'💎',reward:'策劃一次感恩行動（送禮或聚會）'},
+    {id:'legend',days:365,icon:'👑',reward:'年度感恩儀式（自訂）'},
+  ]},
+  {key:'fullday',label:'鐵人打卡',icon:'⚡',color:'#4f46e5',check:l=>isDayComplete(l),tiers:[
+    {id:'bronze',days:7,  icon:'🥉',reward:'給自己一個小獎勵（NT$300）'},
+    {id:'silver',days:30, icon:'🥈',reward:'一個月完整打卡！中型獎勵（NT$1,000）'},
+    {id:'gold',  days:90, icon:'🥇',reward:'季度完整打卡！大獎勵（NT$3,000）'},
+    {id:'platinum',days:180,icon:'💎',reward:'半年完整打卡！奢侈體驗（自訂）'},
+    {id:'legend',days:365,icon:'👑',reward:'全年完整打卡！任何你最想要的一件事'},
+  ]},
+];
+
+function daysBetween(d1,d2){
+  return Math.round((new Date(d2+'T12:00:00')-new Date(d1+'T12:00:00'))/86400000);
+}
+
+function calcBehaviorProgress(achKey){
+  const data=db();
+  const ach=ACHIEVEMENTS.find(a=>a.key===achKey);
+  if(!ach)return{accumulated:0};
+  const allDays=Object.keys(data.daily).sort();
+  let accumulated=0,prevDate=null;
+  for(const day of allDays){
+    const log=data.daily[day];
+    if(!ach.check(log))continue;
+    if(prevDate===null){accumulated=1;}
+    else{
+      const diff=daysBetween(prevDate,day);
+      const N=Math.floor(accumulated/30);
+      accumulated=(diff-1)>N+1?1:accumulated+1;
+    }
+    prevDate=day;
+  }
+  const today=dk();
+  if(prevDate&&prevDate<today){
+    const diff=daysBetween(prevDate,today);
+    const N=Math.floor(accumulated/30);
+    if((diff-1)>N+1)accumulated=0;
+  }
+  return{accumulated};
+}
+
+function getRewardText(achKey,tierId,data){
+  const ach=ACHIEVEMENTS.find(a=>a.key===achKey);
+  const tier=ach?.tiers.find(t=>t.id===tierId);
+  return(((data?.achievements)||{})[achKey]?.customRewards||{})[tierId]||tier?.reward||'';
+}
+
+function checkAndUnlockAchievements(){
+  const data=db();
+  if(!data.achievements)data.achievements={};
+  const newUnlocks=[];
+  for(const ach of ACHIEVEMENTS){
+    const{accumulated}=calcBehaviorProgress(ach.key);
+    if(!data.achievements[ach.key])data.achievements[ach.key]={unlockedTiers:[],unlockedDates:{},customRewards:{}};
+    const ad=data.achievements[ach.key];
+    for(const tier of ach.tiers){
+      if(accumulated>=tier.days&&!ad.unlockedTiers.includes(tier.id)){
+        ad.unlockedTiers.push(tier.id);
+        ad.unlockedDates[tier.id]=dk();
+        newUnlocks.push({ach,tier});
+      }
+    }
+  }
+  dbS(data);
+  newUnlocks.forEach((u,i)=>setTimeout(()=>showToast(`🎉 成就解鎖：${u.ach.icon} ${u.ach.label} ${u.tier.icon} ${u.tier.days}天`,3500),i*1200));
+}
+
+function showTierDetail(achKey,tierId){
+  const data=db();
+  const ach=ACHIEVEMENTS.find(a=>a.key===achKey);
+  const tier=ach.tiers.find(t=>t.id===tierId);
+  const isUnlocked=((data.achievements||{})[achKey]?.unlockedTiers||[]).includes(tierId);
+  const unlockedDate=((data.achievements||{})[achKey]?.unlockedDates||{})[tierId];
+  const reward=getRewardText(achKey,tierId,data);
+  const{accumulated}=calcBehaviorProgress(achKey);
+  const el=document.getElementById('tierModal');if(el)el.remove();
+  const modal=document.createElement('div');modal.id='tierModal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:998;display:flex;align-items:flex-end';
+  modal.innerHTML=`<div style="background:#fff;border-radius:20px 20px 0 0;padding:24px 20px;width:100%;max-width:580px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="font-size:2.2rem">${tier.icon}</div>
+      <div style="font-size:1rem;font-weight:800;margin-top:6px">${ach.icon} ${ach.label}</div>
+      <div style="font-size:.8rem;color:${isUnlocked?'#10b981':'#94a3b8'};margin-top:4px">${isUnlocked?`✅ 解鎖於 ${unlockedDate}`:`需累積 ${tier.days} 天（尚差 ${Math.max(0,tier.days-accumulated)} 天）`}</div>
+    </div>
+    <div style="font-size:.72rem;font-weight:700;color:#94a3b8;letter-spacing:.5px;margin-bottom:8px">🎁 解鎖獎勵</div>
+    <div id="tierRewardDisplay" style="font-size:.9rem;color:#1e293b;background:#f8fafc;border-radius:12px;padding:14px;line-height:1.6;margin-bottom:16px">${reward||'（尚未設定獎勵）'}</div>
+    <div style="display:flex;gap:8px">
+      <button id="tierEditBtn" onclick="editTierReward('${achKey}','${tierId}')" style="flex:1;padding:13px;background:#f1f5f9;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;color:#475569">✏️ 修改獎勵</button>
+      <button onclick="document.getElementById('tierModal').remove()" style="flex:1;padding:13px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:12px;font-size:.88rem;font-weight:800;cursor:pointer">關閉</button>
+    </div>
+  </div>`;
+  modal.onclick=e=>{if(e.target===modal)modal.remove();};
+  document.body.appendChild(modal);
+}
+
+function editTierReward(achKey,tierId){
+  const display=document.getElementById('tierRewardDisplay');
+  const current=display.textContent.trim()==='（尚未設定獎勵）'?'':display.textContent.trim();
+  const ta=document.createElement('textarea');ta.id='tierRewardDisplay';
+  ta.value=current;
+  ta.style.cssText='width:100%;padding:12px;border:1.5px solid #4f46e5;border-radius:10px;font-size:.88rem;font-family:inherit;resize:none;height:80px;outline:none;box-sizing:border-box';
+  display.replaceWith(ta);ta.focus();
+  const btn=document.getElementById('tierEditBtn');
+  btn.textContent='💾 儲存';btn.style.background='#10b981';btn.style.color='#fff';
+  btn.onclick=()=>{
+    const data=db();
+    if(!data.achievements)data.achievements={};
+    if(!data.achievements[achKey])data.achievements[achKey]={unlockedTiers:[],unlockedDates:{},customRewards:{}};
+    if(!data.achievements[achKey].customRewards)data.achievements[achKey].customRewards={};
+    data.achievements[achKey].customRewards[tierId]=ta.value.trim();
+    dbS(data);document.getElementById('tierModal').remove();
+    renderAchievements();showToast('✅ 獎勵已更新');
+  };
+}
+
+function renderAchievements(){
+  const data=db();const el=document.getElementById('achList');if(!el)return;
+  const TC={bronze:'#b45309',silver:'#64748b',gold:'#d97706',platinum:'#7c3aed',legend:'#dc2626'};
+  el.innerHTML=ACHIEVEMENTS.map(ach=>{
+    const{accumulated}=calcBehaviorProgress(ach.key);
+    const ad=(data.achievements||{})[ach.key]||{unlockedTiers:[],unlockedDates:{}};
+    const nextTier=ach.tiers.find(t=>accumulated<t.days);
+    const topTier=ach.tiers.slice().reverse().find(t=>ad.unlockedTiers.includes(t.id));
+    const pct=nextTier?Math.min(100,Math.round(accumulated/nextTier.days*100)):100;
+    const barColor=topTier?TC[topTier.id]:ach.color;
+    const status=nextTier?`累積 ${accumulated} 天，距 ${nextTier.icon} 還差 ${nextTier.days-accumulated} 天`:`${ach.tiers.slice(-1)[0].icon} 已達最高等級！`;
+    const badges=ach.tiers.map(t=>{
+      const on=ad.unlockedTiers.includes(t.id);
+      return`<div style="text-align:center;cursor:pointer;padding:4px 5px;border-radius:8px" onclick="showTierDetail('${ach.key}','${t.id}')" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+        <div style="font-size:1.1rem;opacity:${on?1:.18}">${t.icon}</div>
+        <div style="font-size:.5rem;color:#94a3b8;margin-top:1px">${t.days}天</div>
+      </div>`;
+    }).join('');
+    return`<div class="ach-row">
+      <div style="font-size:1.25rem;width:28px;flex-shrink:0;padding-top:2px">${ach.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.86rem;font-weight:700;margin-bottom:2px;color:#1e293b">${ach.label}</div>
+        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:5px">${status}</div>
+        <div style="height:4px;background:#f1f5f9;border-radius:2px;margin-bottom:6px;overflow:hidden">
+          <div style="height:100%;border-radius:2px;background:${barColor};width:${pct}%;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
+        </div>
+        <div style="display:flex;gap:2px">${badges}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════
+// TOAST
+// ════════════════════════════════
+let toastTimer=null;
+function showToast(msg,dur=2800){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ════════════════════════════════
+// RENDER HOME
+// ════════════════════════════════
+let RC=null,RV='week';
+function setRV(v){RV=v;document.querySelectorAll('.rtab').forEach((el,i)=>el.classList.toggle('active',['week','month'][i]===v));document.getElementById('curLbl').textContent=v==='week'?'本週':'本月';document.getElementById('prvLbl').textContent=v==='week'?'上週':'上月';renderHome();}
+
+function renderHome(){
+  const curWk=wk(),curMk=mk();
+  const cur=RV==='week'?calcWeek(curWk):calcMonth(curMk);
+  const prv=RV==='week'?calcWeek(prevWk(curWk)):calcMonth(prevMk(curMk));
+  const ws=calcWeek(curWk);
+
+  // Header
+  document.getElementById('hWk').textContent=wkLabel(curWk);
+  document.getElementById('hScore').textContent=ws.total.toFixed(1);
+  document.getElementById('hStreak').textContent=streak()+'W';
+  const totalXP=getTotalXP();
+  document.getElementById('hXP').textContent=totalXP;
+  const xpInfo=getXpInfo(totalXP);
+  document.getElementById('hLv').textContent=xpInfo.label;
+  document.getElementById('xpBar').style.width=xpInfo.pct+'%';
+
+  // Badges
+  const data=db();
+  document.getElementById('dBadge').style.display=!data.daily[dk()]?'block':'none';
+  document.getElementById('sBadge').style.display=(!data.weekly[curWk]||!data.monthly[mk()])?'block':'none';
+
+  // Radar
+  const ctx=document.getElementById('rc').getContext('2d');
+  if(RC)RC.destroy();
+  const ds=[{label:RV==='week'?'本週':'本月',data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:'rgba(79,70,229,.12)',borderColor:'rgba(79,70,229,.9)',pointBackgroundColor:DIMS.map(d=>d.color),pointRadius:5,borderWidth:2.5}];
+  if(prv&&prv.total>0)ds.push({label:RV==='week'?'上週':'上月',data:DIMS.map(d=>prv[d.key]),backgroundColor:'rgba(148,163,184,.07)',borderColor:'rgba(148,163,184,.55)',pointBackgroundColor:'rgba(148,163,184,.55)',pointRadius:3,borderWidth:1.5});
+  RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'#94a3b8',backdropColor:'transparent'},grid:{color:'rgba(0,0,0,.05)'},angleLines:{color:'rgba(0,0,0,.07)'},pointLabels:{font:{size:13,weight:'700'},color:'#374151'}}},plugins:{legend:{display:false}}}});
+
+  // Dim list
+  const el=document.getElementById('dimList');
+  if(!cur||cur.total===0){el.innerHTML=`<div class="empty"><div class="ei">📊</div><p>尚無數據<br>開始每日打卡 + 每週結算後會出現</p></div>`;document.getElementById('rwCard').style.display='none';return;}
+
+  function srcTxt(d){
+    if(RV!=='week')return'';
+    const b=ws._bonus,W=ws._W,M=ws._M;
+    const t={
+      health:`日 運動${ws._ex}天 睡眠${ws._sl}天 未炸${ws._fried}天 | 月 健康目標${M.health_goal??'未填'}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
+      finance:`日 未超支${ws._under}天 超支${ws._over}天 | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
+      work:`週 完成${W.work_completion??'未填'}/10 學習${W.learning!==undefined?(W.learning?'✓':'✗'):'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
+      social:`週 聯繫${W.contact!==undefined?(W.contact?'✓':'✗'):'未填'} | 月 深度${M.deep_social??0}次${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
+      mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週 反思${W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填'}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
+    };
+    return t[d.key]||'';
+  }
+
+  el.innerHTML=DIMS.map(d=>{
+    const s=cur[d.key],pct=(s/10*100).toFixed(0);
+    const diff=prv?(s-prv[d.key]).toFixed(1):null;
+    const dc=diff!==null?(parseFloat(diff)>=0?'#10b981':'#ef4444'):'';
+    return`<div class="dim-row"><div class="dim-ico">${d.icon}</div><div class="dim-body"><div class="dim-name" style="color:${d.color}">${d.label}</div>${RV==='week'?`<div class="dim-src">${srcTxt(d)}</div>`:''}<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${d.color}"></div></div></div><div class="dim-right"><div class="dim-score" style="color:${d.color}">${s.toFixed(1)}</div>${diff!==null?`<div class="dim-diff" style="color:${dc}">${parseFloat(diff)>=0?'▲':'▼'}${Math.abs(diff)}</div>`:''}</div></div>`;
+  }).join('')+`<div class="total-row"><span class="total-lbl">${RV==='week'?'週':'月'}總分</span><span class="total-val">${cur.total.toFixed(1)} / 10</span></div>`;
+
+  if(RV==='week'){
+    const st=reward(ws.total);
+    document.getElementById('rwCard').style.display='block';
+    const rb=document.getElementById('rwBox');
+    rb.style.background=st.bg;rb.style.color=st.c;
+    rb.innerHTML=`<div class="rico">${st.icon}</div><div class="rtitle">${st.title}</div><div class="rbody">${st.desc}</div>`;
+  } else {document.getElementById('rwCard').style.display='none';}
+}
+
+// ════════════════════════════════
+// RENDER DAILY
+// ════════════════════════════════
+function renderDaily(){
+  const data=db();
+  const today=dk();
+  const targetDay=editDay;
+  const isRetro=targetDay<today;
+  const todayLog=data.daily[targetDay]||{};
+
+  // Retro banner + labels
+  document.getElementById('retroBanner').style.display=isRetro?'block':'none';
+  document.getElementById('editDayInfo').textContent=isRetro?targetDay:'今天';
+  document.getElementById('btnSaveDaily').textContent=isRetro?'儲存補救紀錄':'完成今日紀錄';
+
+  // Done badge
+  const isComplete=isDayComplete(todayLog);
+  document.getElementById('dDone').style.display=isComplete?'flex':'none';
+
+  // Reset all inputs to neutral before loading
+  DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;
+  ['dey','den','dsy','dsn','dfy','dfn','doy','don'].forEach(id=>document.getElementById(id).className='ynb');
+  for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.remove('active');
+  ['gr1','gr2','gr3','discomfort','dSpendWhat','workDone','workTomorrow'].forEach(id=>{document.getElementById(id).value='';});
+  document.getElementById('spendDetail').style.display='none';
+  selMoodTags=[];selWorkState=null;selOverBudget=null;selCat=null;
+
+  // Load existing data
+  const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
+  if(todayLog.exercise!==undefined){DS.exercise=todayLog.exercise;fill('dey','den',todayLog.exercise);}
+  if(todayLog.sleep!==undefined){DS.sleep=todayLog.sleep;fill('dsy','dsn',todayLog.sleep);}
+  if(todayLog.fried!==undefined){DS.fried=todayLog.fried;setFried(todayLog.fried);}
+  if(todayLog.mood){DS.mood=todayLog.mood;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===todayLog.mood);}
+  selMoodTags=todayLog.moodTags||[];
+  renderMoodTags();
+  if(todayLog.gratitude){document.getElementById('gr1').value=todayLog.gratitude[0]||'';document.getElementById('gr2').value=todayLog.gratitude[1]||'';document.getElementById('gr3').value=todayLog.gratitude[2]||'';}
+  if(todayLog.discomfort)document.getElementById('discomfort').value=todayLog.discomfort;
+  selOverBudget=todayLog.overBudget!==undefined?todayLog.overBudget:null;
+  if(selOverBudget!==null)setOverBudget(selOverBudget);
+  if(todayLog.spendDetail)document.getElementById('dSpendWhat').value=todayLog.spendDetail;
+  selCat=todayLog.spendCategory||null;
+  renderCatBtns();
+  if(todayLog.workDone)document.getElementById('workDone').value=todayLog.workDone;
+  selWorkState=todayLog.workState||null;
+  renderWorkState();
+  if(todayLog.workTomorrow)document.getElementById('workTomorrow').value=todayLog.workTomorrow;
+
+  // Week grid — all non-future days clickable
+  const days=wDays(wk());const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
+  let html='<div class="day-grid">';
+  days.forEach((day,i)=>{
+    const log=data.daily[day]||null;
+    const isTd=day===today,isPast=day<today,isFuture=day>today;
+    const isEditing=day===targetDay&&isRetro;
+    const full=isDayComplete(log);
+    const bg=isEditing?'#ede9fe':(isTd?'#eef2ff':(full?'#f0fdf4':(log?'#fffbeb':(isPast?'#fef2f2':'#f8fafc'))));
+    const border=isEditing?'#7c3aed':(isTd?'#4f46e5':(full?'#10b981':(log?'#f59e0b':(isPast?'#fca5a5':'#e2e8f0'))));
+    const clickFn=isFuture?'':(isTd?`onclick="backToToday()"`:`onclick="editPastDay('${day}')"`);
+    const retro=log&&log.retroactive?`<div style="font-size:.45rem;color:#f59e0b;font-weight:700">補</div>`:'';
+    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border};cursor:${isFuture?'default':'pointer'}" ${clickFn}>${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div><div style="font-size:.62rem">${log.overBudget===false?'💰':log.overBudget===true?'💸':'—'}</div>${retro}`:(isPast?'<div style="opacity:.3;font-size:.6rem">補?</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
+  });
+  html+='</div>';
+  document.getElementById('wGrid').innerHTML=html;
+}
+
+// ════════════════════════════════
+// RENDER TASKS
+// ════════════════════════════════
+let selDims=[],taskFreq='weekly',addFormOpen=false;
+
+function toggleAddForm(){
+  addFormOpen=!addFormOpen;
+  document.getElementById('addForm').style.display=addFormOpen?'block':'none';
+  if(addFormOpen){renderDimChips();renderPtsPreview();document.getElementById('taskInput').focus();}
+}
+
+function autoClassify(){
+  const title=document.getElementById('taskInput').value;
+  selDims=classify(title);
+  renderDimChips();renderPtsPreview();
+}
+
+function renderDimChips(){
+  document.getElementById('dimChips').innerHTML=DIMS.map(d=>{
+    const on=selDims.includes(d.key);
+    return`<button class="dim-chip${on?' on':''}" onclick="toggleDim('${d.key}')" style="${on?`background:${d.color};border-color:${d.color}`:''}">
+      ${d.icon} ${d.label}
+    </button>`;
+  }).join('');
+}
+
+function toggleDim(dim){
+  selDims=selDims.includes(dim)?selDims.filter(d=>d!==dim):[...selDims,dim];
+  renderDimChips();renderPtsPreview();
+}
+
+function setFreq(f){
+  taskFreq=f;
+  ['w','m','y'].forEach(x=>document.getElementById(`fq-${x}`).classList.toggle('on',{w:'weekly',m:'monthly',y:'yearly'}[x]===f));
+  renderPtsPreview();
+}
+
+function renderPtsPreview(){
+  const el=document.getElementById('ptsPreview');
+  if(!selDims.length){el.innerHTML='<span style="color:#94a3b8">請選擇至少一個領域</span>';return;}
+  const pts=taskPtsPerDim(selDims),xp=taskXPVal(taskFreq);
+  const icons=selDims.map(d=>DIMS.find(x=>x.key===d).icon).join(' ');
+  el.innerHTML=`完成可得：<b style="color:#4f46e5">${icons} 各 +${pts}分</b> · <b style="color:#f59e0b">+${xp} XP</b>`;
+}
+
+function submitTask(){
+  const title=document.getElementById('taskInput').value.trim();
+  if(!title){showToast('⚠️ 請輸入任務名稱');return;}
+  if(!selDims.length){showToast('⚠️ 請選擇至少一個領域');return;}
+  const data=db();
+  if(!data.tasks)data.tasks=[];
+  data.tasks.push({id:uid(),title,dimensions:selDims,frequency:taskFreq,completedPeriods:[],xpEarned:0,created:dk()});
+  dbS(data);
+  document.getElementById('taskInput').value='';selDims=[];taskFreq='weekly';
+  toggleAddForm();
+  document.querySelectorAll('.freq-btn').forEach((b,i)=>b.classList.toggle('on',i===0));
+  renderTasks();showToast(`✅ 任務已新增：${title}`);
+}
+
+function completeTask(id){
+  const data=db();const t=(data.tasks||[]).find(x=>x.id===id);if(!t)return;
+  const pkey=getPeriodKey(t.frequency);
+  if((t.completedPeriods||[]).includes(pkey)){
+    // Uncomplete
+    t.completedPeriods=t.completedPeriods.filter(p=>p!==pkey);
+    t.xpEarned=Math.max(0,(t.xpEarned||0)-taskXPVal(t.frequency));
+    dbS(data);renderTasks();renderHome();
+    showToast(`↩️ 已取消完成：${t.title}`);
+  } else {
+    // Complete
+    if(!t.completedPeriods)t.completedPeriods=[];
+    t.completedPeriods.push(pkey);
+    const xpGain=taskXPVal(t.frequency);
+    t.xpEarned=(t.xpEarned||0)+xpGain;
+    dbS(data);renderTasks();renderHome();
+    const pts=taskPtsPerDim(t.dimensions);
+    const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d).icon).join('');
+    showToast(`🎉 ${t.title}！${dimIcons} 各 +${pts}分 · +${xpGain} XP`);
+  }
+}
+
+function deleteTask(id){
+  if(!confirm('確定刪除這個任務嗎？'))return;
+  const data=db();
+  data.tasks=(data.tasks||[]).filter(t=>t.id!==id);
+  dbS(data);renderTasks();renderHome();
+}
+
+function renderTasks(){
+  const data=db();const tasks=data.tasks||[];
+  const curPeriods={weekly:wk(),monthly:mk(),yearly:yk()};
+  const freqCfg=[
+    {f:'weekly', label:'週任務',badge:'fb-w',icon:'📅'},
+    {f:'monthly',label:'月任務',badge:'fb-m',icon:'🗓️'},
+    {f:'yearly', label:'年任務',badge:'fb-y',icon:'🎯'},
+  ];
+  let html='';
+  freqCfg.forEach(({f,label,icon})=>{
+    const group=tasks.filter(t=>t.frequency===f);
+    if(!group.length)return;
+    const pkey=curPeriods[f];
+    const done=group.filter(t=>(t.completedPeriods||[]).includes(pkey)).length;
+    html+=`<div class="task-section"><div class="task-section-title">${icon} ${label} <span class="task-count">${done}/${group.length}</span></div>`;
+    // Uncompleted first
+    [...group.filter(t=>!(t.completedPeriods||[]).includes(pkey)),
+     ...group.filter(t=>(t.completedPeriods||[]).includes(pkey))].forEach(t=>{
+      const isDone=(t.completedPeriods||[]).includes(pkey);
+      const pts=taskPtsPerDim(t.dimensions),xp=taskXPVal(t.frequency);
+      const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
+      html+=`<div class="task-item${isDone?' done':''}">
+        <button class="task-check${isDone?' done':''}" onclick="completeTask('${t.id}')">${isDone?'✓':''}</button>
+        <div class="task-body">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">${dimChips}<span class="task-pts">各+${pts}分</span><span class="task-xp">+${xp}XP</span></div>
+        </div>
+        <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  if(!tasks.length)html=`<div class="empty"><div class="ei">✅</div><p>還沒有自訂任務<br>點擊「＋ 新增任務」開始</p></div>`;
+  document.getElementById('taskList').innerHTML=html;
+}
+
+// ════════════════════════════════
+// RENDER SETTLE
+// ════════════════════════════════
+let curST='w';
+function setST(t){
+  curST=t;
+  document.querySelectorAll('.stab').forEach((el,i)=>el.classList.toggle('active',['w','m','y'][i]===t));
+  document.querySelectorAll('.stview').forEach((el,i)=>el.classList.toggle('active',['w','m','y'][i]===t));
+}
+
+function renderSettle(){
+  const data=db();const curWk=wk(),curMk=mk(),curYk=yk();
+  const W=data.weekly[curWk]||{},M=data.monthly[curMk]||{},Y=data.yearly[curYk]||{};
+  document.getElementById('wDone').style.display=data.weekly[curWk]?'flex':'none';
+  document.getElementById('mDone').style.display=data.monthly[curMk]?'flex':'none';
+  const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
+  fill('wly','wln',W.learning);fill('wcy','wcn',W.contact);fill('wry','wrn',W.reflection);
+  if(W.work_completion!==undefined){document.getElementById('wki').value=W.work_completion;document.getElementById('wkv').textContent=W.work_completion+' / 10';}
+  fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);fill('mrvy','mrvn',M.monthly_review);
+  if(M.health_goal!==undefined){document.getElementById('mhi').value=M.health_goal;document.getElementById('mhv').textContent=M.health_goal+' / 10';}
+  if(M.work_goal!==undefined){document.getElementById('mwi').value=M.work_goal;document.getElementById('mwv').textContent=M.work_goal+' / 10';}
+  if(M.deep_social!==undefined){document.getElementById('mdi').value=M.deep_social;document.getElementById('mdv').textContent=M.deep_social+' 次';}
+  if(Y.health_achievement!==undefined){document.getElementById('yhi').value=Y.health_achievement;document.getElementById('yhv').textContent=Y.health_achievement+' / 10';}
+  if(Y.finance_goal!==undefined){document.getElementById('yfi').value=Y.finance_goal;document.getElementById('yfv').textContent=Y.finance_goal+' / 10';}
+  if(Y.career_goal!==undefined){document.getElementById('yci').value=Y.career_goal;document.getElementById('ycv').textContent=Y.career_goal+' / 10';}
+  if(Y.relationships!==undefined){document.getElementById('yri').value=Y.relationships;document.getElementById('yrv').textContent=Y.relationships+' / 10';}
+  if(Y.personal_growth!==undefined){document.getElementById('ygi').value=Y.personal_growth;document.getElementById('ygv').textContent=Y.personal_growth+' / 10';}
+}
+
+// ════════════════════════════════
+// RENDER HISTORY
+// ════════════════════════════════
+let expandedWeek=null;
+function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;renderHistory();}
+
+function genWeeklySummary(wkey){
+  const data=db();const days=wDays(wkey);
+  const logs=days.map(d=>data.daily[d]).filter(Boolean);
+  if(!logs.length)return'<span style="color:#94a3b8;font-size:.8rem">本週無打卡紀錄</span>';
+  const exDays=logs.filter(l=>l.exercise).length;
+  const slDays=logs.filter(l=>l.sleep).length;
+  const friedDays=logs.filter(l=>l.fried===true).length;
+  const moodLogs=logs.filter(l=>l.mood);
+  const moodAvg=moodLogs.length?moodLogs.reduce((s,l)=>s+l.mood,0)/moodLogs.length:0;
+  const MJ=['','😔','😕','😐','😊','😄'];
+  const moodE=MJ[Math.round(moodAvg)]||'';
+  const overCnt=logs.filter(l=>l.overBudget===true).length;
+  const underCnt=logs.filter(l=>l.overBudget===false).length;
+  const workDones=logs.map(l=>l.workDone).filter(Boolean);
+  const wStates=logs.map(l=>l.workState).filter(Boolean);
+  const stateMap=wStates.reduce((a,s)=>{a[s]=(a[s]||0)+1;return a;},{});
+  const stateBreakdown=Object.entries(stateMap).sort((a,b)=>b[1]-a[1]).map(([s,n])=>`${s}${n}天`).join(' ');
+  const lastTomorrow=logs.filter(l=>l.workTomorrow).slice(-1)[0]?.workTomorrow;
+  const grList=logs.flatMap(l=>l.gratitude||[]).filter(Boolean);
+  const discList=logs.map(l=>l.discomfort).filter(Boolean);
+  const lines=[];
+  lines.push(`<b>📅 打卡 ${logs.length}/7 天</b>${moodAvg>0?`　平均心情 ${moodAvg.toFixed(1)}/5 ${moodE}`:''}`);
+  lines.push(`🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃炸物 ${friedDays}天`:''}`);
+  if(underCnt+overCnt>0)lines.push(`💰 未超支 ${underCnt}天　超支 ${overCnt}天`);
+  if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　完成 ${workDones.length} 件`:''}`);
+  if(workDones.length)lines.push(`<span style="color:#475569">✅ ${workDones.slice(0,3).join('　')}</span>`);
+  if(lastTomorrow)lines.push(`<span style="color:#94a3b8">→ 本週末待辦：${lastTomorrow}</span>`);
+  if(grList.length)lines.push(`<span style="color:#64748b">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
+  if(discList.length)lines.push(`<span style="color:#94a3b8">💭 ${discList.slice(0,2).map(d=>`「${d}」`).join(' ')}</span>`);
+  return lines.map(l=>`<div style="margin-bottom:5px;font-size:.8rem;line-height:1.5">${l}</div>`).join('');
+}
+
+function renderHistory(){
+  const data=db();
+  const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d)))])].sort().reverse();
+  const el=document.getElementById('hist');
+  if(!allWks.length){el.innerHTML=`<div class="empty"><div class="ei">📅</div><p>還沒有任何紀錄</p></div>`;return;}
+  const MJ=['','😔','😕','😐','😊','😄'];
+  const DLBLS=['一','二','三','四','五','六','日'];
+  el.innerHTML=allWks.map(w=>{
+    const s=calcWeek(w);const st=s.total>=8?'🏆':s.total>=5?'💪':'🤲';
+    const isExp=expandedWeek===w;
+    const dimBar=DIMS.map(d=>`<span style="font-size:.65rem;font-weight:700;color:${d.color}">${d.icon}${s[d.key].toFixed(1)}</span>`).join(' ');
+    let detail='';
+    if(isExp){
+      const days=wDays(w);
+      const dayRows=days.map((day,i)=>{
+        const log=data.daily[day];
+        if(!log)return`<tr><td style="color:#94a3b8"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:#d1d5db;font-size:.7rem">未打卡</td></tr>`;
+        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:#94a3b8">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.overBudget===false?'✅':log.overBudget===true?'💸':'—'}</td><td>${log.workState||'—'}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569;font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8;font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+      }).join('');
+      detail=`<div class="wk-detail" onclick="event.stopPropagation()">
+        <div class="wk-summary">${genWeeklySummary(w)}</div>
+        <table class="wk-day-tbl"><thead><tr><th style="text-align:left">日期</th><th>運動</th><th>睡眠</th><th>心情</th><th>記帳</th><th>狀態</th><th style="text-align:left;padding-left:4px">工作成就 / 明日</th></tr></thead><tbody>${dayRows}</tbody></table>
+      </div>`;
+    }
+    return`<div class="week-row" onclick="toggleWeekDetail('${w}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px">
+        <div><div style="font-size:.84rem;font-weight:700">${wkLabel(w)}</div><div style="margin-top:4px">${dimBar}</div></div>
+        <div style="text-align:right"><div style="font-size:1.1rem;font-weight:800;color:#4f46e5">${s.total.toFixed(1)} ${st}</div><div style="font-size:.7rem;color:#94a3b8;margin-top:2px">${isExp?'▲ 收合':'▼ 展開'}</div></div>
+      </div>${detail}
+    </div>`;
+  }).join('');
+}
+
+// ════════════════════════════════
+// TREND CHART
+// ════════════════════════════════
+let TC=null,trendView='month';
+function setTrendView(v){
+  trendView=v;
+  document.querySelectorAll('#trendToggle .rtab').forEach((el,i)=>el.classList.toggle('active',['month','year'][i]===v));
+  renderTrendChart();
+}
+function renderTrendChart(){
+  const data=db();
+  const wrap=document.getElementById('trendWrap');if(!wrap)return;
+  let labels=[],pts=[];
+  if(trendView==='month'){
+    const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d+'T12:00:00')))])].sort();
+    const recent=allWks.slice(-26);
+    labels=recent.map(w=>`W${parseInt(w.split('-W')[1])}`);
+    pts=recent.map(w=>calcWeek(w));
+  }else{
+    const allMonths=[...new Set([...Object.keys(data.monthly),...Object.keys(data.daily).map(d=>d.slice(0,7))])].sort();
+    const recent=allMonths.slice(-24);
+    labels=recent.map(m=>`${m.slice(2,4)}/${m.slice(5,7)}`);
+    pts=recent.map(m=>calcMonth(m)||null);
+  }
+  if(TC){TC.destroy();TC=null;}
+  if(!labels.length){wrap.innerHTML='<div style="height:220px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.84rem">尚無足夠資料</div>';return;}
+  wrap.innerHTML='<canvas id="trendChart"></canvas>';
+  const pR=pts.length>16?2:pts.length>8?3:4;
+  const mkDs=(key,lbl,color,bold)=>({
+    label:lbl,data:pts.map(s=>s?parseFloat(s[key].toFixed(1)):null),
+    borderColor:color,backgroundColor:bold?color+'18':color+'08',
+    borderWidth:bold?2.5:1.5,pointRadius:pR,pointHoverRadius:6,
+    tension:.35,fill:bold,spanGaps:true,
+  });
+  TC=new Chart(document.getElementById('trendChart').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      mkDs('health','健康','#10b981'),
+      mkDs('finance','財務','#f59e0b'),
+      mkDs('work','工作','#6366f1'),
+      mkDs('social','社交','#ec4899'),
+      mkDs('mental','心理','#8b5cf6'),
+      mkDs('total','總分','#1e293b',true),
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      scales:{
+        y:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'#94a3b8'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'#94a3b8',maxRotation:0,maxTicksLimit:12},grid:{display:false},border:{display:false}},
+      },
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10}}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y??'—'}`}},
+      }
+    }
+  });
+}
+
+// ════════════════════════════════
+// FORM STATE
+// ════════════════════════════════
+const DS={exercise:null,sleep:null,mood:null,fried:null};
+const WS={learning:null,contact:null,reflection:null};
+const MS={saving:null,finance_report:null,monthly_review:null};
+let selMoodTags=[],selWorkState=null,selOverBudget=null,selCat=null,editDay=dk();
+
+function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
+function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
+function setW(k,v){WS[k]=v;const m={learning:['wly','wln'],contact:['wcy','wcn'],reflection:['wry','wrn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],monthly_review:['mrvy','mrvn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+
+function renderMoodTags(){
+  document.getElementById('moodTags').innerHTML=MOOD_TAGS.map(tag=>`<button class="tag-chip${selMoodTags.includes(tag)?' on':''}" onclick="toggleMoodTag('${tag}')">${tag}</button>`).join('');
+}
+function toggleMoodTag(tag){
+  selMoodTags=selMoodTags.includes(tag)?selMoodTags.filter(t=>t!==tag):[...selMoodTags,tag];
+  renderMoodTags();
+}
+function setOverBudget(v){
+  selOverBudget=v;
+  document.getElementById('doy').className='ynb'+(v?' yn-n':'');
+  document.getElementById('don').className='ynb'+(v?'':' yn-y');
+  document.getElementById('spendDetail').style.display=v?'block':'none';
+}
+function setCat(c){
+  selCat=c;
+  renderCatBtns();
+}
+function renderCatBtns(){
+  document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.cat===selCat));
+}
+function setWorkState(s){
+  selWorkState=s;
+  renderWorkState();
+}
+function renderWorkState(){
+  document.querySelectorAll('.wst-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.ws===selWorkState));
+}
+function editPastDay(day){editDay=day;renderDaily();}
+function backToToday(){editDay=dk();renderDaily();}
+
+// ════════════════════════════════
+// SAVE
+// ════════════════════════════════
+function saveDaily(){
+  const gr1=document.getElementById('gr1').value.trim();
+  const gr2=document.getElementById('gr2').value.trim();
+  const gr3=document.getElementById('gr3').value.trim();
+  const errs=[];
+  if(DS.exercise===null)errs.push('健康：運動');
+  if(DS.sleep===null)errs.push('健康：睡眠');
+  if(DS.fried===null)errs.push('健康：炸物');
+  if(DS.mood===null)errs.push('心情分數');
+  if(!selMoodTags.length)errs.push('心情關鍵詞');
+  if(!gr1||!gr2||!gr3)errs.push('感恩三件事（三項都要填）');
+  if(selOverBudget===null)errs.push('記帳：消費問題');
+  if(selOverBudget&&!document.getElementById('dSpendWhat').value.trim())errs.push('記帳：花費內容');
+  if(selOverBudget&&!selCat)errs.push('記帳：消費類別');
+  if(!document.getElementById('workDone').value.trim())errs.push('工作：完成事項');
+  if(!selWorkState)errs.push('工作：工作狀態');
+  if(!document.getElementById('workTomorrow').value.trim())errs.push('工作：明日優先');
+  if(errs.length){showToast('⚠️ 未填：'+errs[0]);return;}
+
+  const data=db();
+  const today=dk();
+  const targetDay=editDay;
+  const isRetro=targetDay<today;
+  const existing=data.daily[targetDay]||{};
+  data.daily[targetDay]={
+    ...existing,
+    exercise:DS.exercise,sleep:DS.sleep,fried:DS.fried,mood:DS.mood,
+    moodTags:selMoodTags,
+    gratitude:[gr1,gr2,gr3],
+    discomfort:document.getElementById('discomfort').value.trim(),
+    overBudget:selOverBudget,
+    ...(selOverBudget?{spendDetail:document.getElementById('dSpendWhat').value.trim(),spendCategory:selCat}:{}),
+    workDone:document.getElementById('workDone').value.trim(),
+    workState:selWorkState,
+    workTomorrow:document.getElementById('workTomorrow').value.trim(),
+    retroactive:isRetro&&!existing.savedAt?true:(existing.retroactive||false),
+    savedAt:new Date().toISOString()
+  };
+  dbS(data);
+  if(isRetro)editDay=today;
+  checkAndUnlockAchievements();
+  renderDaily();renderHome();
+  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！');
+}
+
+function saveWeekly(){
+  const wc=parseInt(document.getElementById('wki').value);
+  const data=db();
+  data.weekly[wk()]={work_completion:wc,learning:WS.learning??false,contact:WS.contact??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
+  dbS(data);renderSettle();go('home');showToast('📅 本週結算已儲存');
+}
+
+function saveMonthly(){
+  const data=db();
+  data.monthly[mk()]={health_goal:parseInt(document.getElementById('mhi').value),saving:MS.saving??false,finance_report:MS.finance_report??false,work_goal:parseInt(document.getElementById('mwi').value),deep_social:parseInt(document.getElementById('mdi').value),monthly_review:MS.monthly_review??false,savedAt:new Date().toISOString()};
+  dbS(data);renderSettle();go('home');showToast('🗓️ 本月結算已儲存');
+}
+
+function saveYearly(){
+  const data=db();
+  data.yearly[yk()]={health_achievement:parseInt(document.getElementById('yhi').value),finance_goal:parseInt(document.getElementById('yfi').value),career_goal:parseInt(document.getElementById('yci').value),relationships:parseInt(document.getElementById('yri').value),personal_growth:parseInt(document.getElementById('ygi').value),savedAt:new Date().toISOString()};
+  dbS(data);showToast('🎯 年度設定已儲存');
+}
+
+// ════════════════════════════════
+// BACKUP
+// ════════════════════════════════
+function exportBackup(){
+  const json=JSON.stringify(db(),null,2);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.download=`life_rpg_backup_${dk()}.json`;
+  a.click();
+  showToast('📦 備份已下載');
+}
+
+function importBackup(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(!data.daily||!data.weekly)throw new Error();
+      if(!confirm('確定匯入備份？現有資料將被完整覆蓋。'))return;
+      dbS(data);renderHome();renderHistory();
+      showToast('✅ 備份還原成功');
+    }catch{showToast('❌ 匯入失敗：檔案格式不符');}
+  };
+  reader.readAsText(file);
+  e.target.value='';
+}
+
+function csvEsc(v){
+  if(v===undefined||v===null||v==='')return'';
+  const s=String(v);
+  return(s.includes(',')||s.includes('"')||s.includes('\n'))?`"${s.replace(/"/g,'""')}"`:s;
+}
+
+function exportDailyCSV(){
+  const data=db();
+  const days=Object.keys(data.daily).sort();
+  if(!days.length){showToast('⚠️ 尚無每日紀錄');return;}
+  const WD=['日','一','二','三','四','五','六'];
+  const yn=v=>v===true?'是':v===false?'否':'';
+  const headers=['日期','週次','星期','運動','睡眠','未吃炸物','心情(1-5)','心情關鍵詞','感恩1','感恩2','感恩3','不舒服','超支','花費內容','消費類別','工作完成','工作狀態','明日優先','補救紀錄'];
+  const rows=days.map(day=>{
+    const l=data.daily[day];
+    const d=new Date(day+'T12:00:00');
+    return[
+      day,wk(d),WD[d.getDay()],
+      yn(l.exercise),yn(l.sleep),
+      l.fried===false?'是':l.fried===true?'否':'',
+      l.mood||'',
+      csvEsc((l.moodTags||[]).join('、')),
+      csvEsc((l.gratitude||[])[0]),csvEsc((l.gratitude||[])[1]),csvEsc((l.gratitude||[])[2]),
+      csvEsc(l.discomfort),
+      yn(l.overBudget),csvEsc(l.spendDetail),csvEsc(l.spendCategory),
+      csvEsc(l.workDone),l.workState||'',csvEsc(l.workTomorrow),
+      l.retroactive?'是':'否'
+    ].join(',');
+  });
+  const blob=new Blob(['﻿'+[headers.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`life_rpg_daily_${dk()}.csv`;a.click();
+  showToast(`📊 每日紀錄 CSV 已下載（${days.length} 筆）`);
+}
+
+function exportWeeklyCSV(){
+  const data=db();
+  const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d+'T12:00:00')))])].sort().reverse();
+  if(!allWks.length){showToast('⚠️ 尚無週紀錄');return;}
+  const headers=['週次','日期區間','健康','財務','工作','社交','心理','總分','獎懲'];
+  const rows=allWks.map(w=>{
+    const s=calcWeek(w);const days=wDays(w);
+    const range=`${days[0].slice(5)}~${days[6].slice(5)}`;
+    const badge=s.total>=8?'達標':s.total>=5?'普通':'懲罰';
+    return[w,range,s.health.toFixed(1),s.finance.toFixed(1),s.work.toFixed(1),s.social.toFixed(1),s.mental.toFixed(1),s.total.toFixed(1),badge].join(',');
+  });
+  const blob=new Blob(['﻿'+[headers.join(','),...rows].join('\n')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`life_rpg_weekly_${dk()}.csv`;a.click();
+  showToast(`📈 週分數 CSV 已下載（${allWks.length} 週）`);
+}
+
+// ════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════
+const TABS=['home','daily','tasks','settle','history'];
+function go(tab){
+  if(tab!=='daily')editDay=dk();
+  TABS.forEach(t=>{document.getElementById(`view-${t}`).classList.toggle('active',t===tab);document.getElementById(`n-${t}`).classList.toggle('active',t===tab);});
+  if(tab==='home')renderHome();
+  if(tab==='daily')renderDaily();
+  if(tab==='tasks')renderTasks();
+  if(tab==='settle')renderSettle();
+  if(tab==='history'){renderHistory();renderAchievements();renderTrendChart();}
+}
+
+// INIT
+go('home');
+</script>
+</body>
+</html>
