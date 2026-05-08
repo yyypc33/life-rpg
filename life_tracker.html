@@ -601,6 +601,10 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
       <div id="trendWrap" style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
     </div>
     <div class="card">
+      <div class="ctitle">💸 消費統計</div>
+      <div id="spendStats"></div>
+    </div>
+    <div class="card">
       <div class="ctitle">成就系統 🏅</div>
       <div id="achList"><div class="empty" style="padding:16px 0"><p style="font-size:.84rem">載入中…</p></div></div>
     </div>
@@ -1341,6 +1345,24 @@ function renderSettle(){
 // RENDER HISTORY
 // ════════════════════════════════
 let expandedWeek=null;
+function renderSpendStats(){
+  const el=document.getElementById('spendStats');if(!el)return;
+  const data=db();
+  const CAT_ICONS={飲食:'🍴',交通:'🚌',購物:'🛍️',娛樂:'🎮',其他:'📦'};
+  const CATS=['飲食','交通','購物','娛樂','其他'];
+  const allDays=Object.keys(data.daily).sort().reverse();
+  const overLogs=allDays.map(d=>({date:d,...data.daily[d]})).filter(l=>l.overBudget===true&&l.spendCategory);
+  if(!overLogs.length){el.innerHTML='<div style="color:rgba(255,255,255,.38);font-size:.8rem;padding:8px 0">尚無超支紀錄 💪</div>';return;}
+  const catMap={};overLogs.forEach(l=>{catMap[l.spendCategory]=(catMap[l.spendCategory]||0)+1;});
+  const total=overLogs.length;
+  const catChips=CATS.filter(c=>catMap[c]).map(c=>{
+    const cnt=catMap[c];const pct=Math.round(cnt/total*100);
+    return`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.25);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600">${CAT_ICONS[c]||'📦'} <span style="color:rgba(255,255,255,.7)">${c}</span><span style="color:#fbbf24">${cnt}次</span><span style="color:rgba(255,255,255,.3);font-size:.7rem">${pct}%</span></div>`;
+  }).join('');
+  const recentRows=overLogs.slice(0,12).map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:48px;flex-shrink:0">${CAT_ICONS[l.spendCategory]||'📦'}${l.spendCategory}</div><div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.spendDetail||'—'}</div></div>`).join('');
+  el.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${catChips}</div><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:4px">最近超支明細（共 ${total} 筆）</div>${recentRows}`;
+}
+
 function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;renderHistory();}
 
 function genWeeklySummary(wkey){
@@ -1827,7 +1849,7 @@ function go(tab){
   if(tab==='daily')renderDaily();
   if(tab==='tasks')renderTasks();
   if(tab==='settle')renderSettle();
-  if(tab==='history'){renderHistory();renderAchievements();renderTrendChart();renderSyncPanel();}
+  if(tab==='history'){renderHistory();renderSpendStats();renderAchievements();renderTrendChart();renderSyncPanel();}
 }
 
 // ════════════════════════════════
