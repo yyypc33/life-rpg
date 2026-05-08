@@ -1370,6 +1370,12 @@ function genWeeklySummary(wkey){
   if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　完成 ${workDones.length} 件`:''}`);
   if(workDones.length)lines.push(`<span style="color:rgba(255,255,255,.55)">✅ ${workDones.slice(0,3).join('　')}</span>`);
   if(lastTomorrow)lines.push(`<span style="color:rgba(255,255,255,.38)">→ 本週末待辦：${lastTomorrow}</span>`);
+  const socialLogs=logs.filter(l=>l.socialToday===true);
+  if(socialLogs.length){
+    const withList=[...new Set(socialLogs.map(l=>l.socialWith).filter(Boolean))];
+    lines.push(`🤝 社交 ${socialLogs.length}天${withList.length?`　${withList.slice(0,4).join('、')}`:''}`);}
+  const socialNotes=socialLogs.map(l=>l.socialNote).filter(Boolean);
+  if(socialNotes.length)lines.push(`<span style="color:rgba(165,180,252,.55)">💬 ${socialNotes.slice(0,2).map(n=>`「${n}」`).join(' ')}</span>`);
   if(grList.length)lines.push(`<span style="color:rgba(255,255,255,.45)">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
   if(discList.length)lines.push(`<span style="color:rgba(255,255,255,.38)">💭 ${discList.slice(0,2).map(d=>`「${d}」`).join(' ')}</span>`);
   return lines.map(l=>`<div style="margin-bottom:5px;font-size:.8rem;line-height:1.5">${l}</div>`).join('');
@@ -1392,11 +1398,12 @@ function renderHistory(){
       const dayRows=days.map((day,i)=>{
         const log=data.daily[day];
         if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:rgba(255,255,255,.2);font-size:.7rem">未打卡</td></tr>`;
-        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.overBudget===false?'✅':log.overBudget===true?'💸':'—'}</td><td>${log.workState||'—'}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+        const socialCell=log.socialToday===true?`<div>🤝</div>${log.socialWith?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(165,180,252,.65);font-size:.62rem">${log.socialWith}</div>`:''}`:log.socialToday===false?`<span style="color:rgba(255,255,255,.25)">—</span>`:`<span style="color:rgba(255,255,255,.15)">?</span>`;
+        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.overBudget===false?'✅':log.overBudget===true?'💸':'—'}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
       }).join('');
       detail=`<div class="wk-detail" onclick="event.stopPropagation()">
         <div class="wk-summary">${genWeeklySummary(w)}</div>
-        <table class="wk-day-tbl"><thead><tr><th style="text-align:left">日期</th><th>運動</th><th>睡眠</th><th>心情</th><th>記帳</th><th>狀態</th><th style="text-align:left;padding-left:4px">工作成就 / 明日</th></tr></thead><tbody>${dayRows}</tbody></table>
+        <table class="wk-day-tbl"><thead><tr><th style="text-align:left">日期</th><th>運動</th><th>睡眠</th><th>心情</th><th>記帳</th><th>狀態</th><th style="text-align:left;padding-left:2px">社交</th><th style="text-align:left;padding-left:4px">工作成就 / 明日</th></tr></thead><tbody>${dayRows}</tbody></table>
       </div>`;
     }
     return`<div class="week-row" onclick="toggleWeekDetail('${w}')">
