@@ -3,11 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
-<title>YU's Life RPG</title>
+<title>Life RPG</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh;padding-bottom:72px}
+
+/* Welcome overlay */
+.welcome-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#1e1b4b,#4338ca);z-index:9999;display:flex;align-items:center;justify-content:center;padding:32px}
+.welcome-box{background:#fff;border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.welcome-icon{font-size:3rem;margin-bottom:12px}
+.welcome-title{font-size:1.4rem;font-weight:800;color:#1e293b;margin-bottom:6px}
+.welcome-sub{font-size:.85rem;color:#64748b;margin-bottom:24px;line-height:1.5}
+.welcome-input{width:100%;padding:14px 16px;border:2px solid #e2e8f0;border-radius:14px;font-size:1.1rem;text-align:center;outline:none;margin-bottom:16px;font-weight:600;transition:border-color .15s}
+.welcome-input:focus{border-color:#4f46e5}
+.welcome-btn{width:100%;padding:14px;background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.5px}
 
 /* Toast */
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1e293b;color:#fff;padding:11px 20px;border-radius:20px;font-size:.85rem;font-weight:700;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3)}
@@ -201,7 +211,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
 <div class="hdr">
   <div class="hdr-top">
     <div>
-      <div class="hdr-title">YU's Life RPG</div>
+      <div class="hdr-title"><span id="hdrName">—</span>'s Life RPG <span onclick="editUserName()" style="font-size:.75rem;opacity:.5;cursor:pointer;font-weight:400">✏️</span></div>
       <div class="hdr-sub" id="hWk">—</div>
     </div>
     <div class="hdr-lv" id="hLv" title="點擊查看 XP">Lv.1</div>
@@ -1730,7 +1740,57 @@ function go(tab){
   if(tab==='history'){renderHistory();renderAchievements();renderTrendChart();renderSyncPanel();}
 }
 
+// ════════════════════════════════
+// USER NAME
+// ════════════════════════════════
+const NAME_KEY='life_rpg_user_name';
+function getUserName(){return localStorage.getItem(NAME_KEY)||''}
+
+function applyUserName(){
+  const name=getUserName()||'你';
+  document.getElementById('hdrName').textContent=name;
+  document.title=`${name}'s Life RPG`;
+}
+
+function showWelcome(){
+  const el=document.createElement('div');
+  el.className='welcome-overlay';el.id='welcomeOverlay';
+  el.innerHTML=`
+    <div class="welcome-box">
+      <div class="welcome-icon">🎮</div>
+      <div class="welcome-title">歡迎來到 Life RPG</div>
+      <div class="welcome-sub">量化你的成長，把生活過成遊戲<br>請輸入你的名字開始</div>
+      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" autofocus>
+      <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>
+    </div>`;
+  document.body.appendChild(el);
+  setTimeout(()=>document.getElementById('welcomeNameInput')?.focus(),100);
+  document.getElementById('welcomeNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmWelcomeName();});
+}
+
+function confirmWelcomeName(){
+  const name=(document.getElementById('welcomeNameInput').value||'').trim();
+  if(!name){showToast('❌ 請輸入名字');return;}
+  localStorage.setItem(NAME_KEY,name);
+  document.getElementById('welcomeOverlay')?.remove();
+  applyUserName();
+  showToast(`👋 歡迎，${name}！`);
+}
+
+function editUserName(){
+  const cur=getUserName();
+  const name=prompt('修改名字：',cur);
+  if(name===null)return;
+  const trimmed=name.trim();
+  if(!trimmed){showToast('❌ 名字不能空白');return;}
+  localStorage.setItem(NAME_KEY,trimmed);
+  applyUserName();
+  showToast(`✅ 名字已更新為「${trimmed}」`);
+}
+
 // INIT
+applyUserName();
+if(!getUserName())showWelcome();
 go('home');
 </script>
 </body>
