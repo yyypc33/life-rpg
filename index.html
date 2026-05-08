@@ -1601,19 +1601,33 @@ function renderSyncPanel(){
         style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;margin-bottom:10px;outline:none">
       <button class="btn-save" onclick="saveSyncToken()" style="width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#6366f1)">💾 儲存 Token</button>`;
   } else {
-    const gistLink=cfg.gistId
-      ?`<a href="https://gist.github.com/${cfg.gistId}" target="_blank" style="color:#4f46e5;font-size:.72rem">查看 Gist →</a>`
-      :`<span style="font-size:.72rem;color:#94a3b8">尚未建立，推送後自動建立</span>`;
+    const shortId=cfg.gistId?cfg.gistId.slice(0,8)+'…':'';
+    const gistInfo=cfg.gistId
+      ?`<div style="margin-top:3px;display:flex;align-items:center;gap:8px">
+          <span style="font-size:.72rem;color:#94a3b8;font-family:monospace">${shortId}</span>
+          <button onclick="copyGistId()" style="font-size:.68rem;color:#4f46e5;background:none;border:1px solid #c7d2fe;border-radius:4px;cursor:pointer;padding:2px 6px">複製ID</button>
+          <a href="https://gist.github.com/${cfg.gistId}" target="_blank" style="color:#4f46e5;font-size:.72rem">查看→</a>
+        </div>`
+      :`<div style="font-size:.72rem;color:#94a3b8;margin-top:3px">尚未建立，推送後自動建立</div>`;
     el.innerHTML=`
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div><div style="font-size:.82rem;font-weight:700">Token 已設定 ✅</div><div style="margin-top:3px">${gistLink}</div></div>
+        <div><div style="font-size:.82rem;font-weight:700">Token 已設定 ✅</div>${gistInfo}</div>
         <button onclick="clearSyncToken()" style="font-size:.72rem;color:#94a3b8;background:none;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;padding:4px 8px">清除</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="btn-save" onclick="gistPush()" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)">☁️ 推送到雲端</button>
-        <button class="btn-save" onclick="gistPull()" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)">⬇️ 從雲端拉取</button>
+        <button class="btn-save" onclick="gistPush()" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)">☁️ 推送</button>
+        <button class="btn-save" onclick="gistPull()" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)">⬇️ 拉取</button>
       </div>
-      <div id="syncStatus" style="font-size:.75rem;color:#94a3b8;text-align:center;min-height:18px"></div>`;
+      ${!cfg.gistId?`
+      <div style="border-top:1px solid #f1f5f9;padding-top:10px;margin-top:2px">
+        <div style="font-size:.73rem;color:#94a3b8;margin-bottom:6px">或手動輸入舊裝置的 Gist ID：</div>
+        <div style="display:flex;gap:6px">
+          <input id="manualGistId" placeholder="20位英數字…"
+            style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.82rem;outline:none;font-family:monospace">
+          <button onclick="setGistIdManual()" style="padding:8px 12px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:700">確認</button>
+        </div>
+      </div>`:''}
+      <div id="syncStatus" style="font-size:.75rem;color:#94a3b8;text-align:center;min-height:18px;margin-top:8px"></div>`;
   }
 }
 
@@ -1630,7 +1644,33 @@ function clearSyncToken(){
   localStorage.removeItem(SYNC_KEY);renderSyncPanel();
 }
 
+function copyGistId(){
+  const cfg=getSyncCfg();
+  if(!cfg.gistId)return;
+  navigator.clipboard.writeText(cfg.gistId).then(()=>showToast('✅ Gist ID 已複製')).catch(()=>{
+    prompt('手動複製 Gist ID：',cfg.gistId);
+  });
+}
+
+function setGistIdManual(){
+  const id=(document.getElementById('manualGistId').value||'').trim();
+  if(!id||id.length<16){showToast('❌ Gist ID 格式不正確');return;}
+  const cfg=getSyncCfg();cfg.gistId=id;
+  localStorage.setItem(SYNC_KEY,JSON.stringify(cfg));
+  renderSyncPanel();showToast('✅ Gist ID 已設定');
+}
+
 function setSyncStatus(msg){const el=document.getElementById('syncStatus');if(el)el.textContent=msg;}
+
+async function findLifeRPGGist(token){
+  const res=await fetch('https://api.github.com/gists?per_page=100',
+    {headers:{'Authorization':`Bearer ${token}`}});
+  const list=await res.json();
+  if(!res.ok)throw new Error(list.message||res.status);
+  const found=list.filter(g=>g.files['life_rpg_data.json'])
+    .sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
+  return found[0]?.id||null;
+}
 
 async function gistPush(){
   const cfg=getSyncCfg();
@@ -1654,9 +1694,14 @@ async function gistPush(){
 async function gistPull(){
   const cfg=getSyncCfg();
   if(!cfg.token){showToast('❌ 請先設定 Token');return;}
-  if(!cfg.gistId){showToast('❌ 尚未推送過，請先從舊裝置推送');return;}
-  setSyncStatus('下載中…');
+  setSyncStatus('搜尋中…');
   try{
+    if(!cfg.gistId){
+      const found=await findLifeRPGGist(cfg.token);
+      if(!found){setSyncStatus('❌ 找不到 Life RPG Gist，請先從舊裝置推送');showToast('❌ 找不到 Gist');return;}
+      cfg.gistId=found;localStorage.setItem(SYNC_KEY,JSON.stringify(cfg));renderSyncPanel();
+    }
+    setSyncStatus('下載中…');
     const res=await fetch(`https://api.github.com/gists/${cfg.gistId}`,
       {headers:{'Authorization':`Bearer ${cfg.token}`}});
     const json=await res.json();
