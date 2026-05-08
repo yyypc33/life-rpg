@@ -7,61 +7,62 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%) fixed;background-attachment:fixed;color:#1a1a2e;min-height:100vh;padding-bottom:72px}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%);background-attachment:fixed;color:#e2e8f0;min-height:100vh;padding-bottom:72px}
 
 /* Welcome overlay */
-.welcome-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#1e1b4b,#4338ca);z-index:9999;display:flex;align-items:center;justify-content:center;padding:32px}
-.welcome-box{background:#fff;border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.welcome-overlay{position:fixed;inset:0;background:linear-gradient(160deg,#080c20,#150d30);z-index:9999;display:flex;align-items:center;justify-content:center;padding:32px}
+.welcome-box{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .welcome-icon{font-size:3rem;margin-bottom:12px}
-.welcome-title{font-size:1.4rem;font-weight:800;color:#1e293b;margin-bottom:6px}
-.welcome-sub{font-size:.85rem;color:#64748b;margin-bottom:24px;line-height:1.5}
-.welcome-input{width:100%;padding:14px 16px;border:2px solid #e2e8f0;border-radius:14px;font-size:1.1rem;text-align:center;outline:none;margin-bottom:16px;font-weight:600;transition:border-color .15s}
-.welcome-input:focus{border-color:#4f46e5}
-.welcome-btn{width:100%;padding:14px;background:linear-gradient(135deg,#4f46e5,#6366f1);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.5px}
+.welcome-title{font-size:1.4rem;font-weight:800;color:#e2e8f0;margin-bottom:6px}
+.welcome-sub{font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.5}
+.welcome-input{width:100%;padding:14px 16px;border:1.5px solid rgba(255,255,255,.15);border-radius:14px;font-size:1.1rem;text-align:center;outline:none;margin-bottom:16px;font-weight:600;transition:border-color .15s;background:rgba(255,255,255,.08);color:#e2e8f0}
+.welcome-input:focus{border-color:#818cf8}
+.welcome-input::placeholder{color:rgba(255,255,255,.3)}
+.welcome-btn{width:100%;padding:14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:1rem;font-weight:800;cursor:pointer;letter-spacing:.5px;box-shadow:0 4px 20px rgba(79,70,229,.4)}
 
 /* Toast */
-.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:#1e293b;color:#fff;padding:11px 20px;border-radius:20px;font-size:.85rem;font-weight:700;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%) translateY(-80px);background:rgba(30,41,59,.95);backdrop-filter:blur(12px);color:#e2e8f0;padding:11px 20px;border-radius:20px;font-size:.85rem;font-weight:700;z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1)}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
 /* Header */
-.hdr{background:linear-gradient(135deg,#1e1b4b,#4338ca);color:#fff;padding:20px 16px 16px}
+.hdr{background:linear-gradient(135deg,rgba(30,27,75,.9),rgba(67,56,202,.8));backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,.08);color:#fff;padding:20px 16px 16px}
 .hdr-top{display:flex;justify-content:space-between;align-items:flex-start}
 .hdr-title{font-size:1.1rem;font-weight:800}
-.hdr-sub{font-size:.72rem;opacity:.6;margin-top:2px}
-.hdr-lv{background:rgba(255,255,255,.15);padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:700;cursor:pointer}
+.hdr-sub{font-size:.72rem;opacity:.5;margin-top:2px}
+.hdr-lv{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.15);padding:4px 10px;border-radius:20px;font-size:.75rem;font-weight:700;cursor:pointer}
 .stats{display:flex;margin-top:14px}
 .stat{flex:1;text-align:center}
-.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.15)}
+.stat:not(:last-child){border-right:1px solid rgba(255,255,255,.12)}
 .sv{font-size:1.5rem;font-weight:800;color:#fde68a}
-.sl{font-size:.65rem;opacity:.6;margin-top:1px}
+.sl{font-size:.65rem;opacity:.5;margin-top:1px}
 
 /* XP bar */
-.xp-bar-wrap{margin:10px 0 2px;background:rgba(255,255,255,.15);border-radius:4px;height:5px;overflow:hidden}
-.xp-bar-fill{height:100%;background:#fde68a;border-radius:4px;transition:width .5s}
+.xp-bar-wrap{margin:10px 0 2px;background:rgba(255,255,255,.12);border-radius:4px;height:5px;overflow:hidden}
+.xp-bar-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:4px;transition:width .5s}
 
 /* Bottom nav */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,30,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-.ni{flex:1;padding:9px 4px 7px;text-align:center;cursor:pointer;color:rgba(255,255,255,.4);position:relative}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,12,32,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.ni{flex:1;padding:9px 4px 7px;text-align:center;cursor:pointer;color:rgba(255,255,255,.35);position:relative;transition:color .15s}
 .ni.active{color:#818cf8}
 .ni-icon{font-size:1.2rem;line-height:1}
 .ni-lbl{font-size:.58rem;margin-top:3px;font-weight:600}
-.dot-badge{position:absolute;top:7px;right:calc(50% - 14px);width:7px;height:7px;background:#ef4444;border-radius:50%;border:1.5px solid #fff}
+.dot-badge{position:absolute;top:7px;right:calc(50% - 14px);width:7px;height:7px;background:#f87171;border-radius:50%;border:1.5px solid #080c20}
 
 /* Container */
 .wrap{max-width:580px;margin:0 auto;padding:14px}
 .view{display:none}.view.active{display:block}
 
 /* Card */
-.card{background:#fff;border-radius:18px;padding:18px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
-.ctitle{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#94a3b8;margin-bottom:14px}
+.card{background:rgba(10,14,44,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(99,102,241,.2);border-radius:18px;padding:18px;margin-bottom:12px;box-shadow:0 4px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(165,180,252,.06)}
+.ctitle{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6366f1;margin-bottom:14px}
 
 /* Radar */
 .rwrap{position:relative;height:265px}
-.rtoggle,.stabs{display:flex;background:#f1f5f9;border-radius:8px;padding:3px;margin-bottom:12px}
-.rtab,.stab{flex:1;padding:6px;text-align:center;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;color:#94a3b8;transition:all .15s}
-.rtab.active,.stab.active{background:#fff;color:#4f46e5;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.rtoggle,.stabs{display:flex;background:rgba(10,14,44,.8);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:3px;margin-bottom:12px}
+.rtab,.stab{flex:1;padding:6px;text-align:center;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
+.rtab.active,.stab.active{background:rgba(99,102,241,.25);color:#a5b4fc;box-shadow:0 0 12px rgba(99,102,241,.2)}
 .rlegend{display:flex;justify-content:center;gap:16px;margin-top:8px}
-.rleg-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:#64748b}
+.rleg-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:#94a3b8}
 .rleg-dot{width:9px;height:9px;border-radius:50%}
 
 /* Dim list */
@@ -69,136 +70,139 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 .dim-row{display:flex;align-items:center;gap:10px}
 .dim-ico{font-size:1.1rem;width:24px;text-align:center;flex-shrink:0}
 .dim-body{flex:1;min-width:0}
-.dim-name{font-size:.86rem;font-weight:700}
-.dim-src{font-size:.67rem;color:#94a3b8;margin-top:2px;line-height:1.3}
-.dim-bar{height:5px;background:#f1f5f9;border-radius:3px;margin-top:5px;overflow:hidden}
-.dim-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.dim-name{font-size:.86rem;font-weight:700;color:#c7d2fe}
+.dim-src{font-size:.67rem;color:#6366f1;margin-top:2px;line-height:1.3}
+.dim-bar{height:5px;background:rgba(99,102,241,.15);border-radius:3px;margin-top:5px;overflow:hidden}
+.dim-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1);box-shadow:0 0 6px currentColor}
 .dim-right{text-align:right;flex-shrink:0}
-.dim-score{font-size:1.05rem;font-weight:800}
+.dim-score{font-size:1.05rem;font-weight:800;color:#e2e8f0}
 .dim-diff{font-size:.7rem;margin-top:1px}
-.total-row{display:flex;align-items:center;justify-content:space-between;padding-top:12px;margin-top:12px;border-top:1px solid #f1f5f9}
-.total-lbl{font-size:.86rem;font-weight:700;color:#475569}
-.total-val{font-size:1.35rem;font-weight:800;color:#4f46e5}
+.total-row{display:flex;align-items:center;justify-content:space-between;padding-top:12px;margin-top:12px;border-top:1px solid rgba(99,102,241,.2)}
+.total-lbl{font-size:.86rem;font-weight:700;color:#94a3b8}
+.total-val{font-size:1.35rem;font-weight:800;color:#818cf8;text-shadow:0 0 20px rgba(129,140,248,.5)}
 
 /* Reward */
 .rbox{border-radius:14px;padding:18px;text-align:center}
 .rico{font-size:2rem;margin-bottom:6px}
 .rtitle{font-size:.95rem;font-weight:800}
-.rbody{font-size:.82rem;margin-top:5px;opacity:.85;line-height:1.45}
+.rbody{font-size:.82rem;margin-top:5px;opacity:.75;line-height:1.45}
 
 /* Form elements */
 .fblock{margin-bottom:18px}
-.fbtitle{font-size:.9rem;font-weight:800;margin-bottom:11px;display:flex;align-items:center;gap:7px;color:#1e293b}
+.fbtitle{font-size:.9rem;font-weight:800;margin-bottom:11px;display:flex;align-items:center;gap:7px;color:#c7d2fe}
 .frow{margin-bottom:13px}
-.flbl{font-size:.82rem;color:#64748b;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;line-height:1.3}
-.fval{font-weight:700;color:#1e293b;white-space:nowrap;margin-left:8px}
-input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:#e2e8f0;outline:none}
-input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#4f46e5;cursor:pointer;box-shadow:0 2px 6px rgba(79,70,229,.3)}
+.flbl{font-size:.82rem;color:#94a3b8;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;line-height:1.3}
+.fval{font-weight:700;color:#a5b4fc;white-space:nowrap;margin-left:8px}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:2px;background:rgba(99,102,241,.2);outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#818cf8;cursor:pointer;box-shadow:0 0 12px rgba(129,140,248,.6)}
 .yn{display:flex;gap:8px}
-.ynb{flex:1;padding:11px 8px;border:2px solid #e2e8f0;background:#fff;border-radius:12px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;color:#94a3b8}
-.yn-y{border-color:#10b981;background:#f0fdf4;color:#065f46}
-.yn-n{border-color:#f87171;background:#fef2f2;color:#991b1b}
-.btn-save{width:100%;padding:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,.3);transition:transform .15s;margin-top:4px}
+.ynb{flex:1;padding:11px 8px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .15s;color:#6366f1}
+.yn-y{border-color:#34d399;background:rgba(52,211,153,.1);color:#34d399;box-shadow:0 0 10px rgba(52,211,153,.15)}
+.yn-n{border-color:#f87171;background:rgba(248,113,113,.1);color:#f87171;box-shadow:0 0 10px rgba(248,113,113,.15)}
+.btn-save{width:100%;padding:15px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(79,70,229,.5),0 0 40px rgba(79,70,229,.15);transition:transform .15s;margin-top:4px}
 .btn-save:active{transform:scale(.98)}
-.done-badge{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:#f0fdf4;color:#065f46;border-radius:12px;font-weight:700;font-size:.88rem;margin-bottom:12px}
-hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
+.done-badge{display:flex;align-items:center;justify-content:center;gap:8px;padding:13px;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:#34d399;border-radius:12px;font-weight:700;font-size:.88rem;margin-bottom:12px;box-shadow:0 0 16px rgba(52,211,153,.1)}
+hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 
 /* Mood */
 .mood-row{display:flex;gap:6px}
-.mood-btn{flex:1;padding:10px 2px;border:2px solid #e2e8f0;background:#fff;border-radius:12px;font-size:1.3rem;cursor:pointer;text-align:center;transition:all .15s}
-.mood-btn.active{border-color:#4f46e5;background:#eef2ff;transform:scale(1.08)}
-.mood-lbl{font-size:.58rem;color:#94a3b8;margin-top:2px;text-align:center;font-weight:600}
+.mood-btn{flex:1;padding:10px 2px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:1.3rem;cursor:pointer;text-align:center;transition:all .15s}
+.mood-btn.active{border-color:#818cf8;background:rgba(99,102,241,.2);transform:scale(1.08);box-shadow:0 0 14px rgba(129,140,248,.3)}
+.mood-lbl{font-size:.58rem;color:#6366f1;margin-top:2px;text-align:center;font-weight:600}
 
 /* Daily grid */
 .day-grid{display:flex;gap:4px;justify-content:center;margin-top:4px}
 .day-col{text-align:center}
-.day-lbl{font-size:.6rem;color:#94a3b8;font-weight:700;margin-bottom:4px}
-.day-box{width:38px;height:68px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;gap:1px;border:2px solid transparent}
+.day-lbl{font-size:.6rem;color:#6366f1;font-weight:700;margin-bottom:4px}
+.day-box{width:38px;height:68px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.75rem;gap:1px;border:1.5px solid rgba(99,102,241,.2)}
 
 /* ── TASK STYLES ── */
 .task-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.task-group-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#94a3b8}
-.btn-add-task{padding:6px 14px;background:#4f46e5;color:#fff;border:none;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer}
+.task-group-lbl{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#6366f1}
+.btn-add-task{padding:6px 14px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:20px;font-size:.8rem;font-weight:700;cursor:pointer;box-shadow:0 2px 12px rgba(79,70,229,.4)}
 
 /* Add task form */
-.add-form{background:#f8fafc;border-radius:14px;padding:16px;margin-bottom:14px;border:1.5px dashed #c7d2fe}
-.add-form input[type=text]{width:100%;padding:11px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;outline:none;background:#fff;margin-bottom:10px}
-.add-form input[type=text]:focus{border-color:#4f46e5}
+.add-form{background:rgba(10,14,44,.7);border-radius:14px;padding:16px;margin-bottom:14px;border:1.5px dashed rgba(99,102,241,.35)}
+.add-form input[type=text]{width:100%;padding:11px 14px;border:1.5px solid rgba(99,102,241,.25);border-radius:10px;font-size:.9rem;outline:none;background:rgba(10,14,44,.8);color:#c7d2fe;margin-bottom:10px;font-family:inherit}
+.add-form input[type=text]:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.15)}
+.add-form input[type=text]::placeholder{color:#4f46e5}
 .dim-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.dim-chip{padding:5px 10px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.78rem;font-weight:600;cursor:pointer;color:#94a3b8;transition:all .15s;display:flex;align-items:center;gap:4px}
-.dim-chip.on{color:#fff}
+.dim-chip{padding:5px 10px;border-radius:20px;border:1.5px solid rgba(99,102,241,.25);background:rgba(10,14,44,.6);font-size:.78rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s;display:flex;align-items:center;gap:4px}
+.dim-chip.on{color:#fff;border-color:transparent;box-shadow:0 0 8px rgba(129,140,248,.3)}
 .freq-row{display:flex;gap:6px;margin-bottom:10px}
-.freq-btn{flex:1;padding:8px;border:1.5px solid #e2e8f0;background:#fff;border-radius:10px;font-size:.8rem;font-weight:600;cursor:pointer;color:#94a3b8;text-align:center;transition:all .15s}
-.freq-btn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
-.pts-preview{font-size:.8rem;color:#64748b;margin-bottom:10px;text-align:center;min-height:18px}
-.btn-add-confirm{width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:11px;font-size:.88rem;font-weight:800;cursor:pointer}
+.freq-btn{flex:1;padding:8px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.6);border-radius:10px;font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;text-align:center;transition:all .15s}
+.freq-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);color:#a5b4fc;box-shadow:0 0 10px rgba(129,140,248,.2)}
+.pts-preview{font-size:.8rem;color:#818cf8;margin-bottom:10px;text-align:center;min-height:18px}
+.btn-add-confirm{width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:11px;font-size:.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(79,70,229,.4)}
 
 /* Task item */
 .task-section{margin-bottom:16px}
-.task-section-title{font-size:.72rem;font-weight:700;letter-spacing:.8px;color:#94a3b8;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.task-count{background:#f1f5f9;color:#64748b;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
-.task-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f8fafc}
+.task-section-title{font-size:.72rem;font-weight:700;letter-spacing:.8px;color:#6366f1;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.task-count{background:rgba(99,102,241,.15);color:#818cf8;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
+.task-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(99,102,241,.1)}
 .task-item:last-child{border-bottom:none}
-.task-item.done .task-title{text-decoration:line-through;color:#94a3b8}
-.task-check{width:24px;height:24px;border-radius:50%;border:2px solid #d1d5db;background:#fff;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .2s}
-.task-check.done{background:#10b981;border-color:#10b981;color:#fff}
+.task-item.done .task-title{text-decoration:line-through;color:#4f46e5}
+.task-check{width:24px;height:24px;border-radius:50%;border:2px solid rgba(99,102,241,.3);background:rgba(10,14,44,.6);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .2s}
+.task-check.done{background:#34d399;border-color:#34d399;color:#064e3b;box-shadow:0 0 10px rgba(52,211,153,.3)}
 .task-body{flex:1;min-width:0}
-.task-title{font-size:.88rem;font-weight:600;color:#1e293b;margin-bottom:4px}
+.task-title{font-size:.88rem;font-weight:600;color:#c7d2fe;margin-bottom:4px}
 .task-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap}
 .task-dim{font-size:.7rem;padding:2px 6px;border-radius:8px;font-weight:700}
-.task-pts{font-size:.68rem;color:#64748b;font-weight:600}
-.task-xp{font-size:.68rem;color:#f59e0b;font-weight:700}
-.task-del{padding:4px 8px;background:none;border:none;color:#d1d5db;cursor:pointer;font-size:.9rem;flex-shrink:0}
-.task-del:hover{color:#ef4444}
+.task-pts{font-size:.68rem;color:#6366f1;font-weight:600}
+.task-xp{font-size:.68rem;color:#fbbf24;font-weight:700;text-shadow:0 0 8px rgba(251,191,36,.4)}
+.task-del{padding:4px 8px;background:none;border:none;color:rgba(99,102,241,.3);cursor:pointer;font-size:.9rem;flex-shrink:0}
+.task-del:hover{color:#f87171}
 
 /* Settle sub-views */
 .stview{display:none}.stview.active{display:block}
 
 /* Freq badges */
 .fbadge{font-size:.64rem;padding:2px 7px;border-radius:8px;font-weight:700;margin-left:6px}
-.fb-w{background:#e0e7ff;color:#3730a3}
-.fb-m{background:#fce7f3;color:#9d174d}
-.fb-y{background:#fef3c7;color:#92400e}
+.fb-w{background:rgba(99,102,241,.2);color:#a5b4fc;border:1px solid rgba(99,102,241,.3)}
+.fb-m{background:rgba(244,114,182,.15);color:#f9a8d4;border:1px solid rgba(244,114,182,.25)}
+.fb-y{background:rgba(251,191,36,.15);color:#fcd34d;border:1px solid rgba(251,191,36,.25)}
 
 /* History table */
 .htbl{width:100%;border-collapse:collapse}
-.htbl th,.htbl td{padding:8px 4px;text-align:center;font-size:.75rem}
-.htbl th{color:#94a3b8;font-weight:700;border-bottom:1px solid #f1f5f9}
-.htbl td:first-child{text-align:left;font-weight:600;font-size:.72rem;color:#475569}
-.htbl .hv{font-weight:800;color:#4f46e5}
+.htbl th,.htbl td{padding:8px 4px;text-align:center;font-size:.75rem;color:#94a3b8}
+.htbl th{color:#6366f1;font-weight:700;border-bottom:1px solid rgba(99,102,241,.2)}
+.htbl td:first-child{text-align:left;font-weight:600;font-size:.72rem;color:#94a3b8}
+.htbl .hv{font-weight:800;color:#818cf8;text-shadow:0 0 10px rgba(129,140,248,.4)}
 
 /* Empty */
-.empty{text-align:center;padding:28px 16px;color:#94a3b8}
+.empty{text-align:center;padding:28px 16px;color:#4f46e5}
 .ei{font-size:2.5rem;margin-bottom:10px}
 .empty p{font-size:.84rem;line-height:1.5}
 
 /* Daily journal extended */
-.txt-input{width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.88rem;outline:none;background:#fff;font-family:inherit;color:#1e293b}
-.txt-input:focus{border-color:#4f46e5}
+.txt-input{width:100%;padding:10px 14px;border:1.5px solid rgba(99,102,241,.25);border-radius:10px;font-size:.88rem;outline:none;background:rgba(10,14,44,.7);font-family:inherit;color:#c7d2fe}
+.txt-input:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.15)}
+.txt-input::placeholder{color:#4f46e5}
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.tag-chip{padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
-.tag-chip.on{border-color:#8b5cf6;background:#f5f3ff;color:#6d28d9}
+.tag-chip{padding:6px 12px;border-radius:20px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
+.tag-chip.on{border-color:#a78bfa;background:rgba(167,139,250,.15);color:#c4b5fd;box-shadow:0 0 8px rgba(167,139,250,.2)}
 .cat-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.cat-btn{padding:6px 12px;border-radius:20px;border:1.5px solid #e2e8f0;background:#fff;font-size:.8rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
-.cat-btn.on{border-color:#f59e0b;background:#fffbeb;color:#92400e}
+.cat-btn{padding:6px 12px;border-radius:20px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
+.cat-btn.on{border-color:#fbbf24;background:rgba(251,191,36,.1);color:#fcd34d;box-shadow:0 0 8px rgba(251,191,36,.2)}
 .work-state-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
-.wst-btn{padding:8px 12px;border:1.5px solid #e2e8f0;background:#fff;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;color:#64748b;transition:all .15s}
-.wst-btn.on{border-color:#4f46e5;background:#eef2ff;color:#4f46e5}
+.wst-btn{padding:8px 12px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
+.wst-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);color:#a5b4fc;box-shadow:0 0 10px rgba(129,140,248,.2)}
 .gr-inputs{display:flex;flex-direction:column;gap:6px}
-.spend-expand{background:#f8fafc;border-radius:12px;padding:12px;margin-top:8px;border:1px solid #e2e8f0}
+.spend-expand{background:rgba(10,14,44,.6);border-radius:12px;padding:12px;margin-top:8px;border:1px solid rgba(99,102,241,.2)}
+
 /* Achievement rows */
-.ach-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid #f1f5f9}
+.ach-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(99,102,241,.1)}
 .ach-row:last-child{border-bottom:none}
 
 /* History expandable rows */
-.week-row{padding:4px 0;cursor:pointer;transition:background .1s}
-.week-row:hover{background:#fafafe}
-.week-row+.week-row{border-top:1px solid #f1f5f9}
-.wk-detail{background:#f8fafc;border-radius:12px;padding:14px;margin-bottom:6px}
-.wk-summary{border-left:3px solid #4f46e5;padding-left:10px;margin-bottom:12px}
+.week-row{padding:4px 0;cursor:pointer;transition:background .1s;border-radius:8px}
+.week-row:hover{background:rgba(99,102,241,.07)}
+.week-row+.week-row{border-top:1px solid rgba(99,102,241,.1)}
+.wk-detail{background:rgba(10,14,44,.7);border:1px solid rgba(99,102,241,.2);border-radius:12px;padding:14px;margin-bottom:6px}
+.wk-summary{border-left:3px solid #818cf8;padding-left:10px;margin-bottom:12px;color:#94a3b8}
 .wk-day-tbl{width:100%;border-collapse:collapse;font-size:.74rem}
-.wk-day-tbl th{color:#94a3b8;font-weight:700;padding:4px 3px;border-bottom:1px solid #e2e8f0;font-size:.65rem;text-align:center}
-.wk-day-tbl td{padding:5px 3px;text-align:center;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.wk-day-tbl th{color:#6366f1;font-weight:700;padding:4px 3px;border-bottom:1px solid rgba(99,102,241,.2);font-size:.65rem;text-align:center}
+.wk-day-tbl td{padding:5px 3px;text-align:center;border-bottom:1px solid rgba(99,102,241,.08);vertical-align:middle;color:#94a3b8}
 .wk-day-tbl td:first-child{text-align:left}
 @media(min-width:480px){.rwrap{height:320px}}
 </style>
@@ -256,7 +260,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div class="ctitle" style="margin-bottom:0">每日紀錄</div>
-        <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:#64748b">今天</div>
+        <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.45)">今天</div>
       </div>
       <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
 
@@ -342,7 +346,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天有什麼讓你不舒服？<span style="color:#94a3b8;font-size:.72rem;font-weight:400">（選填）</span></div>
+          <div class="flbl">今天有什麼讓你不舒服？<span style="color:rgba(255,255,255,.38);font-size:.72rem;font-weight:400">（選填）</span></div>
           <input type="text" class="txt-input" id="discomfort" placeholder="可以是任何事，說給自己聽">
         </div>
       </div>
@@ -389,7 +393,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
       <!-- Add form -->
       <div id="addForm" class="add-form" style="display:none">
         <input type="text" id="taskInput" placeholder="輸入任務名稱，例如：游泳 30 分鐘" oninput="autoClassify()">
-        <div style="font-size:.72rem;color:#94a3b8;margin-bottom:6px">領域（自動偵測，點選可調整）</div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">領域（自動偵測，點選可調整）</div>
         <div class="dim-chips" id="dimChips"></div>
         <div class="freq-row">
           <button class="freq-btn on" id="fq-w" onclick="setFreq('weekly')">每週</button>
@@ -421,15 +425,15 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
       <div class="card">
         <div class="ctitle">每週結算 <span class="fbadge fb-w">週日</span></div>
         <div class="fblock">
-          <div class="fbtitle">💰 財務消費 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
-          <div style="font-size:.8rem;color:#64748b;background:#f8fafc;border-radius:10px;padding:10px 12px;line-height:1.6">
+          <div class="fbtitle">💰 財務消費 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
+          <div style="font-size:.8rem;color:rgba(255,255,255,.45);background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;line-height:1.6">
             未超過 NT$1,000 <b style="color:#10b981">+1</b>　超過 NT$1,000 <b style="color:#ef4444">−1.5</b><br>
-            <span style="font-size:.72rem;color:#94a3b8">每天打卡時填寫，週分數自動加總</span>
+            <span style="font-size:.72rem;color:rgba(255,255,255,.38)">每天打卡時填寫，週分數自動加總</span>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔工作 7分</span></div>
+          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 7分</span></div>
           <div class="frow">
             <div class="flbl"><span>本週工作目標完成度</span><span class="fval" id="wkv">5 / 10</span></div>
             <input type="range" min="0" max="10" value="5" id="wki" oninput="document.getElementById('wkv').textContent=this.value+' / 10'">
@@ -441,7 +445,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔社交 3分（月任務占 5分）</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 3分（月任務占 5分）</span></div>
           <div class="frow">
             <div class="flbl">本週主動聯繫朋友或家人了嗎？</div>
             <div class="yn"><button class="ynb" id="wcy" onclick="setW('contact',true)">✅ 有</button><button class="ynb yn-n" id="wcn" onclick="setW('contact',false)">❌ 沒有</button></div>
@@ -449,7 +453,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔心理 3分</span></div>
+          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 3分</span></div>
           <div class="frow">
             <div class="flbl">本週有完成週反思嗎？</div>
             <div class="yn"><button class="ynb" id="wry" onclick="setW('reflection',true)">✅ 有</button><button class="ynb yn-n" id="wrn" onclick="setW('reflection',false)">❌ 沒有</button></div>
@@ -465,7 +469,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
       <div class="card">
         <div class="ctitle">每月結算 <span class="fbadge fb-m">月底</span></div>
         <div class="fblock">
-          <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔健康 2分</span></div>
+          <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔健康 2分</span></div>
           <div class="frow">
             <div class="flbl"><span>本月體能 / 健康目標達成度</span><span class="fval" id="mhv">5 / 10</span></div>
             <input type="range" min="0" max="10" value="5" id="mhi" oninput="document.getElementById('mhv').textContent=this.value+' / 10'">
@@ -473,7 +477,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💰 財務 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔財務 3分</span></div>
+          <div class="fbtitle">💰 財務 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 3分</span></div>
           <div class="frow">
             <div class="flbl">本月有儲蓄或投資行動嗎？</div>
             <div class="yn"><button class="ynb" id="msy" onclick="setM('saving',true)">✅ 有</button><button class="ynb yn-n" id="msn" onclick="setM('saving',false)">❌ 沒有</button></div>
@@ -485,7 +489,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔工作 2分</span></div>
+          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 2分</span></div>
           <div class="frow">
             <div class="flbl"><span>本月最重要工作目標完成度</span><span class="fval" id="mwv">5 / 10</span></div>
             <input type="range" min="0" max="10" value="5" id="mwi" oninput="document.getElementById('mwv').textContent=this.value+' / 10'">
@@ -493,7 +497,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔社交 5分（最重要）</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 5分（最重要）</span></div>
           <div class="frow">
             <div class="flbl"><span>本月深度社交幾次？（真正見面 / 深聊）</span><span class="fval" id="mdv">0 次</span></div>
             <input type="range" min="0" max="6" value="0" id="mdi" oninput="document.getElementById('mdv').textContent=this.value+' 次'">
@@ -501,7 +505,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:#94a3b8;font-weight:400">佔心理 2分</span></div>
+          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 2分</span></div>
           <div class="frow">
             <div class="flbl">本月有完成月度回顧嗎？</div>
             <div class="yn"><button class="ynb" id="mrvy" onclick="setM('monthly_review',true)">✅ 有</button><button class="ynb yn-n" id="mrvn" onclick="setM('monthly_review',false)">❌ 沒有</button></div>
@@ -515,7 +519,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
     <div class="stview" id="st-y">
       <div class="card">
         <div class="ctitle">每年設定 <span class="fbadge fb-y">年初填 / 年底更新</span></div>
-        <p style="font-size:.8rem;color:#94a3b8;margin-bottom:14px;line-height:1.4">年度目標為各維度提供基礎加分，代表長期方向。</p>
+        <p style="font-size:.8rem;color:rgba(255,255,255,.38);margin-bottom:14px;line-height:1.4">年度目標為各維度提供基礎加分，代表長期方向。</p>
         <div class="frow"><div class="flbl"><span>🏃 年度健康成就</span><span class="fval" id="yhv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yhi" oninput="document.getElementById('yhv').textContent=this.value+' / 10'"></div>
         <div class="frow"><div class="flbl"><span>💰 年度財務目標進展</span><span class="fval" id="yfv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yfi" oninput="document.getElementById('yfv').textContent=this.value+' / 10'"></div>
         <div class="frow"><div class="flbl"><span>💼 年度職涯 / 技能目標</span><span class="fval" id="ycv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yci" oninput="document.getElementById('ycv').textContent=this.value+' / 10'"></div>
@@ -545,7 +549,7 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
         <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)" onclick="exportDailyCSV()">📊 每日紀錄 CSV</button>
         <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed)" onclick="exportWeeklyCSV()">📈 週分數 CSV</button>
       </div>
-      <div style="font-size:.75rem;color:#94a3b8;line-height:1.6">
+      <div style="font-size:.75rem;color:rgba(255,255,255,.38);line-height:1.6">
         JSON：完整備份含任務，建議每週存 iCloud / OneDrive。<br>
         CSV：可直接用 Excel / Google Sheets 開啟分析。
       </div>
@@ -911,10 +915,10 @@ function showTierDetail(achKey,tierId){
       <div style="font-size:1rem;font-weight:800;margin-top:6px">${ach.icon} ${ach.label}</div>
       <div style="font-size:.8rem;color:${isUnlocked?'#10b981':'#94a3b8'};margin-top:4px">${isUnlocked?`✅ 解鎖於 ${unlockedDate}`:`需累積 ${tier.days} 天（尚差 ${Math.max(0,tier.days-accumulated)} 天）`}</div>
     </div>
-    <div style="font-size:.72rem;font-weight:700;color:#94a3b8;letter-spacing:.5px;margin-bottom:8px">🎁 解鎖獎勵</div>
-    <div id="tierRewardDisplay" style="font-size:.9rem;color:#1e293b;background:#f8fafc;border-radius:12px;padding:14px;line-height:1.6;margin-bottom:16px">${reward||'（尚未設定獎勵）'}</div>
+    <div style="font-size:.72rem;font-weight:700;color:rgba(255,255,255,.38);letter-spacing:.5px;margin-bottom:8px">🎁 解鎖獎勵</div>
+    <div id="tierRewardDisplay" style="font-size:.9rem;color:#e2e8f0;background:rgba(255,255,255,.05);border-radius:12px;padding:14px;line-height:1.6;margin-bottom:16px">${reward||'（尚未設定獎勵）'}</div>
     <div style="display:flex;gap:8px">
-      <button id="tierEditBtn" onclick="editTierReward('${achKey}','${tierId}')" style="flex:1;padding:13px;background:#f1f5f9;border:none;border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;color:#475569">✏️ 修改獎勵</button>
+      <button id="tierEditBtn" onclick="editTierReward('${achKey}','${tierId}')" style="flex:1;padding:13px;background:rgba(129,140,248,.12);border:1px solid rgba(129,140,248,.25);border-radius:12px;font-size:.85rem;font-weight:700;cursor:pointer;color:#818cf8">✏️ 修改獎勵</button>
       <button onclick="document.getElementById('tierModal').remove()" style="flex:1;padding:13px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:12px;font-size:.88rem;font-weight:800;cursor:pointer">關閉</button>
     </div>
   </div>`;
@@ -957,15 +961,15 @@ function renderAchievements(){
       const on=ad.unlockedTiers.includes(t.id);
       return`<div style="text-align:center;cursor:pointer;padding:4px 5px;border-radius:8px" onclick="showTierDetail('${ach.key}','${t.id}')" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
         <div style="font-size:1.1rem;opacity:${on?1:.18}">${t.icon}</div>
-        <div style="font-size:.5rem;color:#94a3b8;margin-top:1px">${t.days}天</div>
+        <div style="font-size:.5rem;color:rgba(255,255,255,.38);margin-top:1px">${t.days}天</div>
       </div>`;
     }).join('');
     return`<div class="ach-row">
       <div style="font-size:1.25rem;width:28px;flex-shrink:0;padding-top:2px">${ach.icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:.86rem;font-weight:700;margin-bottom:2px;color:#1e293b">${ach.label}</div>
-        <div style="font-size:.7rem;color:#94a3b8;margin-bottom:5px">${status}</div>
-        <div style="height:4px;background:#f1f5f9;border-radius:2px;margin-bottom:6px;overflow:hidden">
+        <div style="font-size:.86rem;font-weight:700;margin-bottom:2px;color:#e2e8f0">${ach.label}</div>
+        <div style="font-size:.7rem;color:rgba(255,255,255,.38);margin-bottom:5px">${status}</div>
+        <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:6px;overflow:hidden">
           <div style="height:100%;border-radius:2px;background:${barColor};width:${pct}%;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
         </div>
         <div style="display:flex;gap:2px">${badges}</div>
@@ -1015,9 +1019,9 @@ function renderHome(){
   // Radar
   const ctx=document.getElementById('rc').getContext('2d');
   if(RC)RC.destroy();
-  const ds=[{label:RV==='week'?'本週':'本月',data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:'rgba(79,70,229,.12)',borderColor:'rgba(79,70,229,.9)',pointBackgroundColor:DIMS.map(d=>d.color),pointRadius:5,borderWidth:2.5}];
-  if(prv&&prv.total>0)ds.push({label:RV==='week'?'上週':'上月',data:DIMS.map(d=>prv[d.key]),backgroundColor:'rgba(148,163,184,.07)',borderColor:'rgba(148,163,184,.55)',pointBackgroundColor:'rgba(148,163,184,.55)',pointRadius:3,borderWidth:1.5});
-  RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'#94a3b8',backdropColor:'transparent'},grid:{color:'rgba(0,0,0,.05)'},angleLines:{color:'rgba(0,0,0,.07)'},pointLabels:{font:{size:13,weight:'700'},color:'#374151'}}},plugins:{legend:{display:false}}}});
+  const ds=[{label:RV==='week'?'本週':'本月',data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:'rgba(99,102,241,.18)',borderColor:'#818cf8',pointBackgroundColor:DIMS.map(d=>d.color),pointBorderColor:'#0f1535',pointRadius:5,borderWidth:2.5}];
+  if(prv&&prv.total>0)ds.push({label:RV==='week'?'上週':'上月',data:DIMS.map(d=>prv[d.key]),backgroundColor:'rgba(34,211,238,.07)',borderColor:'rgba(34,211,238,.45)',pointBackgroundColor:'rgba(34,211,238,.45)',pointRadius:3,borderWidth:1.5});
+  RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'rgba(165,180,252,.6)',backdropColor:'transparent'},grid:{color:'rgba(99,102,241,.25)'},angleLines:{color:'rgba(99,102,241,.35)'},pointLabels:{font:{size:13,weight:'700'},color:'#a5b4fc'}}},plugins:{legend:{display:false}}}});
 
   // Dim list
   const el=document.getElementById('dimList');
@@ -1156,7 +1160,7 @@ function setFreq(f){
 
 function renderPtsPreview(){
   const el=document.getElementById('ptsPreview');
-  if(!selDims.length){el.innerHTML='<span style="color:#94a3b8">請選擇至少一個領域</span>';return;}
+  if(!selDims.length){el.innerHTML='<span style="color:rgba(255,255,255,.38)">請選擇至少一個領域</span>';return;}
   const pts=taskPtsPerDim(selDims),xp=taskXPVal(taskFreq);
   const icons=selDims.map(d=>DIMS.find(x=>x.key===d).icon).join(' ');
   el.innerHTML=`完成可得：<b style="color:#4f46e5">${icons} 各 +${pts}分</b> · <b style="color:#f59e0b">+${xp} XP</b>`;
@@ -1279,7 +1283,7 @@ function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;renderHistory(
 function genWeeklySummary(wkey){
   const data=db();const days=wDays(wkey);
   const logs=days.map(d=>data.daily[d]).filter(Boolean);
-  if(!logs.length)return'<span style="color:#94a3b8;font-size:.8rem">本週無打卡紀錄</span>';
+  if(!logs.length)return'<span style="color:rgba(255,255,255,.38);font-size:.8rem">本週無打卡紀錄</span>';
   const exDays=logs.filter(l=>l.exercise).length;
   const slDays=logs.filter(l=>l.sleep).length;
   const friedDays=logs.filter(l=>l.fried===true).length;
@@ -1301,10 +1305,10 @@ function genWeeklySummary(wkey){
   lines.push(`🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃炸物 ${friedDays}天`:''}`);
   if(underCnt+overCnt>0)lines.push(`💰 未超支 ${underCnt}天　超支 ${overCnt}天`);
   if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　完成 ${workDones.length} 件`:''}`);
-  if(workDones.length)lines.push(`<span style="color:#475569">✅ ${workDones.slice(0,3).join('　')}</span>`);
-  if(lastTomorrow)lines.push(`<span style="color:#94a3b8">→ 本週末待辦：${lastTomorrow}</span>`);
-  if(grList.length)lines.push(`<span style="color:#64748b">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
-  if(discList.length)lines.push(`<span style="color:#94a3b8">💭 ${discList.slice(0,2).map(d=>`「${d}」`).join(' ')}</span>`);
+  if(workDones.length)lines.push(`<span style="color:rgba(255,255,255,.55)">✅ ${workDones.slice(0,3).join('　')}</span>`);
+  if(lastTomorrow)lines.push(`<span style="color:rgba(255,255,255,.38)">→ 本週末待辦：${lastTomorrow}</span>`);
+  if(grList.length)lines.push(`<span style="color:rgba(255,255,255,.45)">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
+  if(discList.length)lines.push(`<span style="color:rgba(255,255,255,.38)">💭 ${discList.slice(0,2).map(d=>`「${d}」`).join(' ')}</span>`);
   return lines.map(l=>`<div style="margin-bottom:5px;font-size:.8rem;line-height:1.5">${l}</div>`).join('');
 }
 
@@ -1324,8 +1328,8 @@ function renderHistory(){
       const days=wDays(w);
       const dayRows=days.map((day,i)=>{
         const log=data.daily[day];
-        if(!log)return`<tr><td style="color:#94a3b8"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:#d1d5db;font-size:.7rem">未打卡</td></tr>`;
-        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:#94a3b8">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.overBudget===false?'✅':log.overBudget===true?'💸':'—'}</td><td>${log.workState||'—'}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#475569;font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8;font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+        if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:rgba(255,255,255,.2);font-size:.7rem">未打卡</td></tr>`;
+        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.overBudget===false?'✅':log.overBudget===true?'💸':'—'}</td><td>${log.workState||'—'}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
       }).join('');
       detail=`<div class="wk-detail" onclick="event.stopPropagation()">
         <div class="wk-summary">${genWeeklySummary(w)}</div>
@@ -1335,7 +1339,7 @@ function renderHistory(){
     return`<div class="week-row" onclick="toggleWeekDetail('${w}')">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 2px">
         <div><div style="font-size:.84rem;font-weight:700">${wkLabel(w)}</div><div style="margin-top:4px">${dimBar}</div></div>
-        <div style="text-align:right"><div style="font-size:1.1rem;font-weight:800;color:#4f46e5">${s.total.toFixed(1)} ${st}</div><div style="font-size:.7rem;color:#94a3b8;margin-top:2px">${isExp?'▲ 收合':'▼ 展開'}</div></div>
+        <div style="text-align:right"><div style="font-size:1.1rem;font-weight:800;color:#4f46e5">${s.total.toFixed(1)} ${st}</div><div style="font-size:.7rem;color:rgba(255,255,255,.38);margin-top:2px">${isExp?'▲ 收合':'▼ 展開'}</div></div>
       </div>${detail}
     </div>`;
   }).join('');
@@ -1366,7 +1370,7 @@ function renderTrendChart(){
     pts=recent.map(m=>calcMonth(m)||null);
   }
   if(TC){TC.destroy();TC=null;}
-  if(!labels.length){wrap.innerHTML='<div style="height:220px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.84rem">尚無足夠資料</div>';return;}
+  if(!labels.length){wrap.innerHTML='<div style="height:220px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.38);font-size:.84rem">尚無足夠資料</div>';return;}
   wrap.innerHTML='<canvas id="trendChart"></canvas>';
   const pR=pts.length>16?2:pts.length>8?3:4;
   const mkDs=(key,lbl,color,bold)=>({
@@ -1389,8 +1393,8 @@ function renderTrendChart(){
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       scales:{
-        y:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'#94a3b8'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
-        x:{ticks:{font:{size:10},color:'#94a3b8',maxRotation:0,maxTicksLimit:12},grid:{display:false},border:{display:false}},
+        y:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'rgba(165,180,252,.6)'},grid:{color:'rgba(99,102,241,.15)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'rgba(165,180,252,.6)',maxRotation:0,maxTicksLimit:12},grid:{display:false},border:{display:false}},
       },
       plugins:{
         legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10}}},
@@ -1603,7 +1607,7 @@ function renderSyncPanel(){
   if(!el)return;
   if(!cfg.token){
     el.innerHTML=`
-      <div style="font-size:.78rem;color:#64748b;margin-bottom:12px;line-height:1.7">
+      <div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-bottom:12px;line-height:1.7">
         需要 GitHub Personal Access Token（勾選 <b>gist</b> 權限）<br>
         <a href="https://github.com/settings/tokens/new?scopes=gist&description=LifeRPG" target="_blank" style="color:#4f46e5;font-weight:700">點此建立 Token →</a>
       </div>
@@ -1614,15 +1618,15 @@ function renderSyncPanel(){
     const shortId=cfg.gistId?cfg.gistId.slice(0,8)+'…':'';
     const gistInfo=cfg.gistId
       ?`<div style="margin-top:3px;display:flex;align-items:center;gap:8px">
-          <span style="font-size:.72rem;color:#94a3b8;font-family:monospace">${shortId}</span>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.38);font-family:monospace">${shortId}</span>
           <button onclick="copyGistId()" style="font-size:.68rem;color:#4f46e5;background:none;border:1px solid #c7d2fe;border-radius:4px;cursor:pointer;padding:2px 6px">複製ID</button>
           <a href="https://gist.github.com/${cfg.gistId}" target="_blank" style="color:#4f46e5;font-size:.72rem">查看→</a>
         </div>`
-      :`<div style="font-size:.72rem;color:#94a3b8;margin-top:3px">尚未建立，推送後自動建立</div>`;
+      :`<div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-top:3px">尚未建立，推送後自動建立</div>`;
     el.innerHTML=`
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
         <div><div style="font-size:.82rem;font-weight:700">Token 已設定 ✅</div>${gistInfo}</div>
-        <button onclick="clearSyncToken()" style="font-size:.72rem;color:#94a3b8;background:none;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;padding:4px 8px">清除</button>
+        <button onclick="clearSyncToken()" style="font-size:.72rem;color:rgba(255,255,255,.38);background:none;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;padding:4px 8px">清除</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <button class="btn-save" onclick="gistPush()" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)">☁️ 推送</button>
@@ -1630,14 +1634,14 @@ function renderSyncPanel(){
       </div>
       ${!cfg.gistId?`
       <div style="border-top:1px solid #f1f5f9;padding-top:10px;margin-top:2px">
-        <div style="font-size:.73rem;color:#94a3b8;margin-bottom:6px">或手動輸入舊裝置的 Gist ID：</div>
+        <div style="font-size:.73rem;color:rgba(255,255,255,.38);margin-bottom:6px">或手動輸入舊裝置的 Gist ID：</div>
         <div style="display:flex;gap:6px">
           <input id="manualGistId" placeholder="20位英數字…"
             style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.82rem;outline:none;font-family:monospace">
           <button onclick="setGistIdManual()" style="padding:8px 12px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:700">確認</button>
         </div>
       </div>`:''}
-      <div id="syncStatus" style="font-size:.75rem;color:#94a3b8;text-align:center;min-height:18px;margin-top:8px"></div>`;
+      <div id="syncStatus" style="font-size:.75rem;color:rgba(255,255,255,.38);text-align:center;min-height:18px;margin-top:8px"></div>`;
   }
 }
 
