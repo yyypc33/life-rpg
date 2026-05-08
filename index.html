@@ -1011,19 +1011,25 @@ function renderAchievements(){
     const topTier=ach.tiers.slice().reverse().find(t=>ad.unlockedTiers.includes(t.id));
     const pct=nextTier?Math.min(100,Math.round(accumulated/nextTier.days*100)):100;
     const barColor=topTier?TC[topTier.id]:ach.color;
-    const status=nextTier?`累積 ${accumulated} 天，距 ${nextTier.icon} 還差 ${nextTier.days-accumulated} 天`:`${ach.tiers.slice(-1)[0].icon} 已達最高等級！`;
     const badges=ach.tiers.map(t=>{
       const on=ad.unlockedTiers.includes(t.id);
-      return`<div style="text-align:center;cursor:pointer;padding:4px 5px;border-radius:8px" onclick="showTierDetail('${ach.key}','${t.id}')" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background=''">
+      return`<div style="text-align:center;cursor:pointer;padding:4px 5px;border-radius:8px" onclick="showTierDetail('${ach.key}','${t.id}')" onmouseover="this.style.background='rgba(99,102,241,.1)'" onmouseout="this.style.background=''">
         <div style="font-size:1.1rem;opacity:${on?1:.18}">${t.icon}</div>
         <div style="font-size:.5rem;color:rgba(255,255,255,.38);margin-top:1px">${t.days}天</div>
       </div>`;
     }).join('');
+    const statRow=nextTier
+      ?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <span style="font-size:.8rem;font-weight:700;color:${barColor}">📅 ${accumulated}天</span>
+          <span style="font-size:.68rem;color:rgba(255,255,255,.35)">→ 距${nextTier.icon}</span>
+          <span style="font-size:.8rem;font-weight:700;color:#fbbf24">還差 ${nextTier.days-accumulated}天</span>
+        </div>`
+      :`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;margin-bottom:5px">📅 ${accumulated}天　${ach.tiers.slice(-1)[0].icon} 已達最高等級！</div>`;
     return`<div class="ach-row">
       <div style="font-size:1.25rem;width:28px;flex-shrink:0;padding-top:2px">${ach.icon}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:.86rem;font-weight:700;margin-bottom:2px;color:#e2e8f0">${ach.label}</div>
-        <div style="font-size:.7rem;color:rgba(255,255,255,.38);margin-bottom:5px">${status}</div>
+        <div style="font-size:.86rem;font-weight:700;margin-bottom:4px;color:#e2e8f0">${ach.label}</div>
+        ${statRow}
         <div style="height:4px;background:rgba(255,255,255,.07);border-radius:2px;margin-bottom:6px;overflow:hidden">
           <div style="height:100%;border-radius:2px;background:${barColor};width:${pct}%;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
         </div>
