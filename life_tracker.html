@@ -537,6 +537,14 @@ hr{border:none;border-top:1px solid #f1f5f9;margin:16px 0 18px}
       </div>
     </div>
     <div class="card">
+      <div class="ctitle">趨勢分析</div>
+      <div class="rtoggle" id="trendToggle" style="margin-bottom:12px">
+        <div class="rtab active" onclick="setTrendView('month')">月趨勢（週）</div>
+        <div class="rtab" onclick="setTrendView('year')">年趨勢（月）</div>
+      </div>
+      <div id="trendWrap" style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
       <div class="ctitle">成就系統 🏅</div>
       <div id="achList"><div class="empty" style="padding:16px 0"><p style="font-size:.84rem">載入中…</p></div></div>
     </div>
@@ -1320,6 +1328,65 @@ function renderHistory(){
 }
 
 // ════════════════════════════════
+// TREND CHART
+// ════════════════════════════════
+let TC=null,trendView='month';
+function setTrendView(v){
+  trendView=v;
+  document.querySelectorAll('#trendToggle .rtab').forEach((el,i)=>el.classList.toggle('active',['month','year'][i]===v));
+  renderTrendChart();
+}
+function renderTrendChart(){
+  const data=db();
+  const wrap=document.getElementById('trendWrap');if(!wrap)return;
+  let labels=[],pts=[];
+  if(trendView==='month'){
+    const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d+'T12:00:00')))])].sort();
+    const recent=allWks.slice(-26);
+    labels=recent.map(w=>`W${parseInt(w.split('-W')[1])}`);
+    pts=recent.map(w=>calcWeek(w));
+  }else{
+    const allMonths=[...new Set([...Object.keys(data.monthly),...Object.keys(data.daily).map(d=>d.slice(0,7))])].sort();
+    const recent=allMonths.slice(-24);
+    labels=recent.map(m=>`${m.slice(2,4)}/${m.slice(5,7)}`);
+    pts=recent.map(m=>calcMonth(m)||null);
+  }
+  if(TC){TC.destroy();TC=null;}
+  if(!labels.length){wrap.innerHTML='<div style="height:220px;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:.84rem">尚無足夠資料</div>';return;}
+  wrap.innerHTML='<canvas id="trendChart"></canvas>';
+  const pR=pts.length>16?2:pts.length>8?3:4;
+  const mkDs=(key,lbl,color,bold)=>({
+    label:lbl,data:pts.map(s=>s?parseFloat(s[key].toFixed(1)):null),
+    borderColor:color,backgroundColor:bold?color+'18':color+'08',
+    borderWidth:bold?2.5:1.5,pointRadius:pR,pointHoverRadius:6,
+    tension:.35,fill:bold,spanGaps:true,
+  });
+  TC=new Chart(document.getElementById('trendChart').getContext('2d'),{
+    type:'line',
+    data:{labels,datasets:[
+      mkDs('health','健康','#10b981'),
+      mkDs('finance','財務','#f59e0b'),
+      mkDs('work','工作','#6366f1'),
+      mkDs('social','社交','#ec4899'),
+      mkDs('mental','心理','#8b5cf6'),
+      mkDs('total','總分','#1e293b',true),
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      scales:{
+        y:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'#94a3b8'},grid:{color:'rgba(0,0,0,.05)'},border:{display:false}},
+        x:{ticks:{font:{size:10},color:'#94a3b8',maxRotation:0,maxTicksLimit:12},grid:{display:false},border:{display:false}},
+      },
+      plugins:{
+        legend:{position:'bottom',labels:{boxWidth:10,padding:8,font:{size:10}}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y??'—'}`}},
+      }
+    }
+  });
+}
+
+// ════════════════════════════════
 // FORM STATE
 // ════════════════════════════════
 const DS={exercise:null,sleep:null,mood:null,fried:null};
@@ -1521,7 +1588,7 @@ function go(tab){
   if(tab==='daily')renderDaily();
   if(tab==='tasks')renderTasks();
   if(tab==='settle')renderSettle();
-  if(tab==='history'){renderHistory();renderAchievements();}
+  if(tab==='history'){renderHistory();renderAchievements();renderTrendChart();}
 }
 
 // INIT
