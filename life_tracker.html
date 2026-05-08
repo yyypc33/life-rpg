@@ -187,6 +187,9 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .work-state-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .wst-btn{padding:8px 12px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
 .wst-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);color:#a5b4fc;box-shadow:0 0 10px rgba(129,140,248,.2)}
+.wsc-row{display:flex;gap:6px;margin-top:4px}
+.wsc-btn{flex:1;padding:8px 4px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s;text-align:center;line-height:1.4}
+.wsc-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);color:#a5b4fc;box-shadow:0 0 10px rgba(129,140,248,.2)}
 .gr-inputs{display:flex;flex-direction:column;gap:6px}
 .spend-expand{background:rgba(10,14,44,.6);border-radius:12px;padding:12px;margin-top:8px;border:1px solid rgba(99,102,241,.2)}
 
@@ -371,6 +374,39 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         <div class="frow">
           <div class="flbl">明天最優先一件事</div>
           <input type="text" class="txt-input" id="workTomorrow" placeholder="讓明天的自己有個開始方向">
+        </div>
+        <div class="frow">
+          <div class="flbl">今天工作表現自評（1-5）</div>
+          <div class="wsc-row">
+            <button class="wsc-btn" data-wsc="1" onclick="setWorkScore(1)">😔<br>1</button>
+            <button class="wsc-btn" data-wsc="2" onclick="setWorkScore(2)">😕<br>2</button>
+            <button class="wsc-btn" data-wsc="3" onclick="setWorkScore(3)">😐<br>3</button>
+            <button class="wsc-btn" data-wsc="4" onclick="setWorkScore(4)">😊<br>4</button>
+            <button class="wsc-btn" data-wsc="5" onclick="setWorkScore(5)">🔥<br>5</button>
+          </div>
+        </div>
+      </div>
+      <hr>
+
+      <!-- 今日社交 -->
+      <div class="fblock">
+        <div class="fbtitle">🤝 今日社交</div>
+        <div class="frow">
+          <div class="flbl">今天有社交互動嗎？</div>
+          <div class="yn-row">
+            <button class="ynb" id="scy" onclick="setSocialToday(true)">有</button>
+            <button class="ynb" id="scn" onclick="setSocialToday(false)">沒有</button>
+          </div>
+        </div>
+        <div id="socialDetail" style="display:none">
+          <div class="frow">
+            <div class="flbl">跟誰</div>
+            <input type="text" class="txt-input" id="socialWith" placeholder="朋友、同事、家人…">
+          </div>
+          <div class="frow">
+            <div class="flbl">小心得</div>
+            <input type="text" class="txt-input" id="socialNote" placeholder="一句話記錄">
+          </div>
         </div>
       </div>
 
@@ -751,8 +787,13 @@ function calcWeek(wkey){
 
   const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+((M.health_goal||0)/10)*2+(bonus.health||0)));
   const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
-  const work   =r(Math.min(10,((W.work_completion||0)/10)*5+(W.learning?2:0)+((M.work_goal||0)/10)*2+((Y.career_goal||0)/10)*1+(bonus.work||0)));
-  const socialWeek=W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0);
+  const today=dk();
+  const dailyWorkScores=days.filter(d=>d<=today&&data.daily?.[d]?.workScore).map(d=>data.daily[d].workScore);
+  const avgWorkScore=dailyWorkScores.length>0?dailyWorkScores.reduce((a,b)=>a+b)/dailyWorkScores.length:null;
+  const workBase=avgWorkScore!==null?(avgWorkScore/5)*5:((W.work_completion||0)/10)*5;
+  const work   =r(Math.min(10,workBase+(W.learning?2:0)+((M.work_goal||0)/10)*2+((Y.career_goal||0)/10)*1+(bonus.work||0)));
+  const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
+  const socialWeek=dailySocialCount>0?Math.min(3,dailySocialCount):(W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0));
   const socialMonth=Math.min(5,(M.deep_social||0)===0?0:(M.deep_social||0)===1?4:5);
   const social =r(Math.min(10,socialWeek+socialMonth+((Y.relationships||0)/10)*2+(bonus.social||0)));
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+(W.reflection?3:0)+(M.monthly_review?2:0)+(bonus.mental||0)));
@@ -794,7 +835,7 @@ function isDayComplete(log){
   const budgetOk=log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory));
   return log.exercise!==undefined&&log.sleep!==undefined&&log.fried!==undefined&&
     log.mood&&(log.moodTags||[]).length>0&&(log.gratitude||[]).filter(Boolean).length===3&&
-    budgetOk&&log.workDone&&log.workState&&log.workTomorrow;
+    budgetOk&&log.workDone&&log.workState&&log.workTomorrow&&log.workScore&&log.socialToday!==undefined;
 }
 
 // ════════════════════════════════
@@ -1093,9 +1134,11 @@ function renderDaily(){
   DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;
   ['dey','den','dsy','dsn','dfy','dfn','doy','don'].forEach(id=>document.getElementById(id).className='ynb');
   for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.remove('active');
-  ['gr1','gr2','gr3','discomfort','dSpendWhat','workDone','workTomorrow'].forEach(id=>{document.getElementById(id).value='';});
+  ['gr1','gr2','gr3','discomfort','dSpendWhat','workDone','workTomorrow','socialWith','socialNote'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('spendDetail').style.display='none';
-  selMoodTags=[];selWorkState=null;selOverBudget=null;selCat=null;
+  document.getElementById('socialDetail').style.display='none';
+  document.getElementById('scy').className='ynb';document.getElementById('scn').className='ynb';
+  selMoodTags=[];selWorkState=null;selWorkScore=null;selOverBudget=null;selCat=null;selSocialToday=null;
 
   // Load existing data
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
@@ -1116,6 +1159,10 @@ function renderDaily(){
   selWorkState=todayLog.workState||null;
   renderWorkState();
   if(todayLog.workTomorrow)document.getElementById('workTomorrow').value=todayLog.workTomorrow;
+  if(todayLog.workScore){selWorkScore=todayLog.workScore;setWorkScore(todayLog.workScore);}
+  if(todayLog.socialToday!==undefined){setSocialToday(todayLog.socialToday);}
+  if(todayLog.socialWith)document.getElementById('socialWith').value=todayLog.socialWith;
+  if(todayLog.socialNote)document.getElementById('socialNote').value=todayLog.socialNote;
 
   // Week grid — all non-future days clickable
   const days=wDays(wk());const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
@@ -1426,7 +1473,7 @@ function renderTrendChart(){
 const DS={exercise:null,sleep:null,mood:null,fried:null};
 const WS={learning:null,contact:null,reflection:null};
 const MS={saving:null,finance_report:null,monthly_review:null};
-let selMoodTags=[],selWorkState=null,selOverBudget=null,selCat=null,editDay=dk();
+let selMoodTags=[],selWorkState=null,selWorkScore=null,selOverBudget=null,selCat=null,selSocialToday=null,editDay=dk();
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
@@ -1461,6 +1508,17 @@ function setWorkState(s){
 function renderWorkState(){
   document.querySelectorAll('.wst-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.ws===selWorkState));
 }
+function setWorkScore(s){
+  selWorkScore=s;
+  document.querySelectorAll('.wsc-btn').forEach(btn=>btn.classList.toggle('on',+btn.dataset.wsc===s));
+}
+function setSocialToday(v){
+  selSocialToday=v;
+  document.getElementById('scy').className='ynb'+(v?' yn-y':'');
+  document.getElementById('scn').className='ynb'+(v?'':' yn-n');
+  document.getElementById('socialDetail').style.display=v?'block':'none';
+  if(!v){document.getElementById('socialWith').value='';document.getElementById('socialNote').value='';}
+}
 function editPastDay(day){editDay=day;renderDaily();}
 function backToToday(){editDay=dk();renderDaily();}
 
@@ -1484,6 +1542,8 @@ function saveDaily(){
   if(!document.getElementById('workDone').value.trim())errs.push('工作：完成事項');
   if(!selWorkState)errs.push('工作：工作狀態');
   if(!document.getElementById('workTomorrow').value.trim())errs.push('工作：明日優先');
+  if(selWorkScore===null)errs.push('工作：今日自評');
+  if(selSocialToday===null)errs.push('社交：今天是否有互動');
   if(errs.length){showToast('⚠️ 未填：'+errs[0]);return;}
 
   const data=db();
@@ -1502,6 +1562,9 @@ function saveDaily(){
     workDone:document.getElementById('workDone').value.trim(),
     workState:selWorkState,
     workTomorrow:document.getElementById('workTomorrow').value.trim(),
+    workScore:selWorkScore,
+    socialToday:selSocialToday,
+    ...(selSocialToday?{socialWith:document.getElementById('socialWith').value.trim(),socialNote:document.getElementById('socialNote').value.trim()}:{}),
     retroactive:isRetro&&!existing.savedAt?true:(existing.retroactive||false),
     savedAt:new Date().toISOString()
   };
