@@ -1507,7 +1507,7 @@ function saveYearly(){
 function exportBackup(){
   const json=JSON.stringify(db(),null,2);
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+  a.href=URL.createObjectURL(new Blob(['﻿'+json],{type:'application/json;charset=utf-8'}));
   a.download=`life_rpg_backup_${dk()}.json`;
   a.click();
   showToast('📦 備份已下載');
