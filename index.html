@@ -7,7 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:#f0f2f5;color:#1a1a2e;min-height:100vh;padding-bottom:72px}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%) fixed;background-attachment:fixed;color:#1a1a2e;min-height:100vh;padding-bottom:72px}
 
 /* Welcome overlay */
 .welcome-overlay{position:fixed;inset:0;background:linear-gradient(135deg,#1e1b4b,#4338ca);z-index:9999;display:flex;align-items:center;justify-content:center;padding:32px}
@@ -40,9 +40,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 .xp-bar-fill{height:100%;background:#fde68a;border-radius:4px;transition:width .5s}
 
 /* Bottom nav */
-.bnav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
-.ni{flex:1;padding:9px 4px 7px;text-align:center;cursor:pointer;color:#94a3b8;position:relative}
-.ni.active{color:#4f46e5}
+.bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,12,30,.92);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
+.ni{flex:1;padding:9px 4px 7px;text-align:center;cursor:pointer;color:rgba(255,255,255,.4);position:relative}
+.ni.active{color:#818cf8}
 .ni-icon{font-size:1.2rem;line-height:1}
 .ni-lbl{font-size:.58rem;margin-top:3px;font-weight:600}
 .dot-badge{position:absolute;top:7px;right:calc(50% - 14px);width:7px;height:7px;background:#ef4444;border-radius:50%;border:1.5px solid #fff}
