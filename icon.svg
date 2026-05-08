@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#080c20"/>
+      <stop offset="100%" stop-color="#150d30"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="114" fill="url(#bg)"/>
+  <!-- Grid outer (R=160) -->
+  <polygon points="256,96 408,207 350,385 162,385 104,207"
+           fill="none" stroke="rgba(99,102,241,0.22)" stroke-width="2"/>
+  <!-- Grid mid (R=107) -->
+  <polygon points="256,149 358,223 319,343 193,343 154,223"
+           fill="none" stroke="rgba(99,102,241,0.15)" stroke-width="1.5"/>
+  <!-- Axes -->
+  <line x1="256" y1="256" x2="256" y2="96"  stroke="rgba(99,102,241,0.28)" stroke-width="1.5"/>
+  <line x1="256" y1="256" x2="408" y2="207" stroke="rgba(99,102,241,0.28)" stroke-width="1.5"/>
+  <line x1="256" y1="256" x2="350" y2="385" stroke="rgba(99,102,241,0.28)" stroke-width="1.5"/>
+  <line x1="256" y1="256" x2="162" y2="385" stroke="rgba(99,102,241,0.28)" stroke-width="1.5"/>
+  <line x1="256" y1="256" x2="104" y2="207" stroke="rgba(99,102,241,0.28)" stroke-width="1.5"/>
+  <!-- Data shape (~87% full) -->
+  <polygon points="256,116 389,213 338,369 174,369 123,213"
+           fill="rgba(99,102,241,0.28)" stroke="#818cf8" stroke-width="4"/>
+  <!-- Center -->
+  <circle cx="256" cy="256" r="20" fill="#6366f1" filter="url(#glow)"/>
+  <circle cx="256" cy="256" r="10" fill="#a5b4fc"/>
+</svg>
