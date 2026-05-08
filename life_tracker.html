@@ -770,10 +770,16 @@ function streak(){
   return s;
 }
 
-function reward(t){
-  if(t>=8)return{icon:'🏆',title:'達標週 — 獎勵模式',desc:'本週可以自由消費，心安理得地犒賞自己。',bg:'#f0fdf4',c:'#14532d'};
-  if(t>=5)return{icon:'💪',title:'繼續保持',desc:'距離獎勵還差一點，下週再衝。',bg:'#fffbeb',c:'#78350f'};
-  return{icon:'🤲',title:'懲罰週 — 完成社區貢獻',desc:'這週沒有好好照顧自己，用行動照顧他人：志工、幫鄰居、捐款。',bg:'#fef2f2',c:'#7f1d1d'};
+function reward(t, isCurrent, daysRecorded){
+  if(isCurrent){
+    if(daysRecorded===0)return{icon:'🚀',title:'本週剛開始',desc:'記錄第一天，打好本週基礎。',bg:'rgba(99,102,241,.1)',border:'rgba(99,102,241,.25)',c:'#a5b4fc'};
+    if(t>=8)return{icon:'🏆',title:`已達標 · ${t.toFixed(1)} 分`,desc:'繼續保持到週末，本週獎勵穩了！',bg:'rgba(52,211,153,.1)',border:'rgba(52,211,153,.3)',c:'#34d399'};
+    if(t>=5)return{icon:'📊',title:`進行中 · ${t.toFixed(1)} 分`,desc:`距達標（8.0）還差 ${(8-t).toFixed(1)} 分，週還沒結束！`,bg:'rgba(251,191,36,.08)',border:'rgba(251,191,36,.25)',c:'#fbbf24'};
+    return{icon:'⚡',title:`加把勁 · ${t.toFixed(1)} 分`,desc:`本週還有機會，先把分數拉到 5.0 穩住局面。`,bg:'rgba(129,140,248,.1)',border:'rgba(129,140,248,.25)',c:'#818cf8'};
+  }
+  if(t>=8)return{icon:'🏆',title:'達標週 — 獎勵模式',desc:'本週可以自由消費，心安理得地犒賞自己。',bg:'rgba(52,211,153,.1)',border:'rgba(52,211,153,.3)',c:'#34d399'};
+  if(t>=5)return{icon:'💪',title:'繼續保持',desc:'距離獎勵還差一點，下週再衝。',bg:'rgba(251,191,36,.08)',border:'rgba(251,191,36,.25)',c:'#fbbf24'};
+  return{icon:'🤲',title:'懲罰週 — 完成社區貢獻',desc:'這週沒有好好照顧自己，用行動照顧他人：志工、幫鄰居、捐款。',bg:'rgba(248,113,113,.08)',border:'rgba(248,113,113,.25)',c:'#f87171'};
 }
 
 // ════════════════════════════════
@@ -1048,10 +1054,14 @@ function renderHome(){
   }).join('')+`<div class="total-row"><span class="total-lbl">${RV==='week'?'週':'月'}總分</span><span class="total-val">${cur.total.toFixed(1)} / 10</span></div>`;
 
   if(RV==='week'){
-    const st=reward(ws.total);
+    const isCurrent=curWk===wk();
+    const data=db();
+    const daysRecorded=isCurrent?wDays(curWk).filter(d=>d<=dk()&&data.daily?.[d]).length:7;
+    const st=reward(ws.total,isCurrent,daysRecorded);
     document.getElementById('rwCard').style.display='block';
     const rb=document.getElementById('rwBox');
     rb.style.background=st.bg;rb.style.color=st.c;
+    rb.style.border=`1px solid ${st.border}`;rb.style.boxShadow=`0 0 20px ${st.bg}`;
     rb.innerHTML=`<div class="rico">${st.icon}</div><div class="rtitle">${st.title}</div><div class="rbody">${st.desc}</div>`;
   } else {document.getElementById('rwCard').style.display='none';}
 }
