@@ -445,10 +445,11 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 3分（月任務占 5分）</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 3分｜3次以上滿分</span></div>
           <div class="frow">
-            <div class="flbl">本週主動聯繫朋友或家人了嗎？</div>
-            <div class="yn"><button class="ynb" id="wcy" onclick="setW('contact',true)">✅ 有</button><button class="ynb yn-n" id="wcn" onclick="setW('contact',false)">❌ 沒有</button></div>
+            <div class="flbl"><span>本週與朋友／陌生人／家人互動幾次？</span><span class="fval" id="wcv">0 次</span></div>
+            <input type="range" min="0" max="7" value="0" id="wci" oninput="setW('social_count',+this.value);document.getElementById('wcv').textContent=this.value+' 次'">
+            <div style="font-size:.72rem;color:#6366f1;margin-top:6px">0次→0分　1次→1分　2次→2分　3次以上→3分滿分</div>
           </div>
         </div>
         <hr>
@@ -497,10 +498,11 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 5分（最重要）</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 5分｜1次即大幅得分</span></div>
           <div class="frow">
-            <div class="flbl"><span>本月深度社交幾次？（真正見面 / 深聊）</span><span class="fval" id="mdv">0 次</span></div>
-            <input type="range" min="0" max="6" value="0" id="mdi" oninput="document.getElementById('mdv').textContent=this.value+' 次'">
+            <div class="flbl"><span>本月與朋友深度交流幾次？（真正見面／深聊）</span><span class="fval" id="mdv">0 次</span></div>
+            <input type="range" min="0" max="5" value="0" id="mdi" oninput="document.getElementById('mdv').textContent=this.value+' 次'">
+            <div style="font-size:.72rem;color:#6366f1;margin-top:6px">0次→0分　1次→4分　2次以上→5分滿分</div>
           </div>
         </div>
         <hr>
@@ -750,7 +752,9 @@ function calcWeek(wkey){
   const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+((M.health_goal||0)/10)*2+(bonus.health||0)));
   const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
   const work   =r(Math.min(10,((W.work_completion||0)/10)*5+(W.learning?2:0)+((M.work_goal||0)/10)*2+((Y.career_goal||0)/10)*1+(bonus.work||0)));
-  const social =r(Math.min(10,(W.contact?3:0)+Math.min(5,((M.deep_social||0)/3)*5)+((Y.relationships||0)/10)*2+(bonus.social||0)));
+  const socialWeek=W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0);
+  const socialMonth=Math.min(5,(M.deep_social||0)===0?0:(M.deep_social||0)===1?4:5);
+  const social =r(Math.min(10,socialWeek+socialMonth+((Y.relationships||0)/10)*2+(bonus.social||0)));
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+(W.reflection?3:0)+(M.monthly_review?2:0)+(bonus.mental||0)));
   const total  =r((health+finance+work+social+mental)/5);
   return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_under:underDays,_over:overDays};
@@ -1040,7 +1044,7 @@ function renderHome(){
       health:`日 運動${ws._ex}天 睡眠${ws._sl}天 未炸${ws._fried}天 | 月 健康目標${M.health_goal??'未填'}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
       finance:`日 未超支${ws._under}天 超支${ws._over}天 | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
       work:`週 完成${W.work_completion??'未填'}/10 學習${W.learning!==undefined?(W.learning?'✓':'✗'):'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
-      social:`週 聯繫${W.contact!==undefined?(W.contact?'✓':'✗'):'未填'} | 月 深度${M.deep_social??0}次${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
+      social:`週 互動${W.social_count!==undefined?W.social_count+'次':(W.contact!==undefined?(W.contact?'3次':'0次'):'未填')} | 月 深度${M.deep_social??0}次${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
       mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週 反思${W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填'}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
     };
     return t[d.key]||'';
@@ -1271,7 +1275,9 @@ function renderSettle(){
   document.getElementById('wDone').style.display=data.weekly[curWk]?'flex':'none';
   document.getElementById('mDone').style.display=data.monthly[curMk]?'flex':'none';
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
-  fill('wly','wln',W.learning);fill('wcy','wcn',W.contact);fill('wry','wrn',W.reflection);
+  fill('wly','wln',W.learning);fill('wry','wrn',W.reflection);
+  const sc=W.social_count!==undefined?W.social_count:(W.contact?3:0);
+  document.getElementById('wci').value=sc;document.getElementById('wcv').textContent=sc+' 次';
   if(W.work_completion!==undefined){document.getElementById('wki').value=W.work_completion;document.getElementById('wkv').textContent=W.work_completion+' / 10';}
   fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);fill('mrvy','mrvn',M.monthly_review);
   if(M.health_goal!==undefined){document.getElementById('mhi').value=M.health_goal;document.getElementById('mhv').textContent=M.health_goal+' / 10';}
