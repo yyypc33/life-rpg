@@ -903,9 +903,9 @@ function getTaskBonus(wkey){
 function getTotalXP(){
   const data=db();
   const taskXP=(data.tasks||[]).reduce((sum,t)=>sum+(t.xpEarned||0),0);
-  const dailyXP=Object.values(data.daily).reduce((sum,l)=>sum+(l.xp||0),0);
-  const weeklyXP=Object.values(data.weekly).reduce((sum,w)=>sum+(w.xp||0),0);
-  const monthlyXP=Object.values(data.monthly).reduce((sum,m)=>sum+(m.xp||0),0);
+  const dailyXP=Object.values(data.daily||{}).reduce((sum,l)=>sum+(l.xp||0),0);
+  const weeklyXP=Object.values(data.weekly||{}).reduce((sum,w)=>sum+(w.xp||0),0);
+  const monthlyXP=Object.values(data.monthly||{}).reduce((sum,m)=>sum+(m.xp||0),0);
   return taskXP+dailyXP+weeklyXP+monthlyXP;
 }
 
@@ -1856,12 +1856,12 @@ function renderTrendChart(){
   const wrap=document.getElementById('trendWrap');if(!wrap)return;
   let labels=[],pts=[];
   if(trendView==='month'){
-    const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d+'T12:00:00')))])].sort();
+    const allWks=[...new Set([...Object.keys(data.weekly||{}),...Object.keys(data.daily||{}).map(d=>wk(new Date(d+'T12:00:00')))])].sort();
     const recent=allWks.slice(-26);
     labels=recent.map(w=>`W${parseInt(w.split('-W')[1])}`);
     pts=recent.map(w=>calcWeek(w));
   }else{
-    const allMonths=[...new Set([...Object.keys(data.monthly),...Object.keys(data.daily).map(d=>d.slice(0,7))])].sort();
+    const allMonths=[...new Set([...Object.keys(data.monthly||{}),...Object.keys(data.daily||{}).map(d=>d.slice(0,7))])].sort();
     const recent=allMonths.slice(-24);
     labels=recent.map(m=>`${m.slice(2,4)}/${m.slice(5,7)}`);
     pts=recent.map(m=>calcMonth(m)||null);
@@ -2043,7 +2043,7 @@ function saveMonthly(){
 function saveYearly(){
   const data=db();
   const prev=data.yearly[yk()]||{};
-  data.yearly[yk()]={...prev,monthly_budget:parseInt(document.getElementById('ybi').value),savedAt:new Date().toISOString()};
+  data.yearly[yk()]={...prev,monthly_budget:parseInt(document.getElementById('ybi').value)||25000,savedAt:new Date().toISOString()};
   dbS(data);showToast('🎯 月預算已儲存');
 }
 
@@ -2091,7 +2091,8 @@ function importBackup(e){
       const data=JSON.parse(ev.target.result);
       if(!data.daily||!data.weekly)throw new Error();
       if(!confirm('確定匯入備份？現有資料將被完整覆蓋。'))return;
-      dbS(data);renderHome();renderHistory();
+      const normalized={daily:{},weekly:{},monthly:{},yearly:{},tasks:[],...data};
+      dbS(normalized);renderHome();renderHistory();
       showToast('✅ 備份還原成功');
     }catch{showToast('❌ 匯入失敗：檔案格式不符');}
   };
