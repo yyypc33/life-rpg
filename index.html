@@ -860,7 +860,7 @@ function reward(t, isCurrent, daysRecorded){
 function isDayComplete(log){
   if(!log)return false;
   const budgetOk=log.spendAmount!==undefined
-    ?(log.spendAmount===0||!!log.spendCategory)       // new format
+    ?(log.spendAmount===0||(Array.isArray(log.spendCategory)?log.spendCategory.length>0:!!log.spendCategory)) // new format
     :(log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory))); // old
   const baseOk=log.exercise!==undefined&&log.sleep!==undefined&&log.fried!==undefined&&
     log.mood&&(log.moodTags||[]).length>0&&(log.gratitude||[]).filter(Boolean).length===3&&
@@ -1179,7 +1179,7 @@ function renderDaily(){
   document.getElementById('spendDetail').style.display='none';
   document.getElementById('socialDetail').style.display='none';
   document.getElementById('scy').className='ynb';document.getElementById('scn').className='ynb';
-  selMoodTags=[];selWorkState=null;selWorkScore=null;selCat=null;selSocialToday=null;
+  selMoodTags=[];selWorkState=null;selWorkScore=null;selCat=[];selSocialToday=null;
 
   // Load existing data
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
@@ -1199,7 +1199,7 @@ function renderDaily(){
     document.getElementById('spendDetail').style.display='block';
   }
   if(todayLog.spendDetail)document.getElementById('dSpendWhat').value=todayLog.spendDetail;
-  selCat=todayLog.spendCategory||null;
+  const rawCat=todayLog.spendCategory;selCat=Array.isArray(rawCat)?rawCat:(rawCat?[rawCat]:[]);
   renderCatBtns();
   if(todayLog.workDone)document.getElementById('workDone').value=todayLog.workDone;
   selWorkState=todayLog.workState||null;
@@ -1434,17 +1434,18 @@ function renderSpendStats(){
   const CATS=['飲食','交通','購物','娛樂','社交','其他'];
   const allDays=Object.keys(data.daily).sort().reverse();
   // Include new spendAmount>0 logs and legacy overBudget=true logs
+  const getCats=l=>Array.isArray(l.spendCategory)?l.spendCategory:(l.spendCategory?[l.spendCategory]:[]);
   const spendLogs=allDays.map(d=>({date:d,...data.daily[d]})).filter(l=>
-    (l.spendAmount!==undefined&&l.spendAmount>0&&l.spendCategory)||(l.overBudget===true&&l.spendCategory&&l.spendAmount===undefined));
+    (l.spendAmount!==undefined&&l.spendAmount>0&&getCats(l).length>0)||(l.overBudget===true&&l.spendCategory&&l.spendAmount===undefined));
   if(!spendLogs.length){el.innerHTML='<div style="color:rgba(255,255,255,.38);font-size:.8rem;padding:8px 0">尚無消費紀錄 💪</div>';return;}
   const catMap={};const catAmt={};
-  spendLogs.forEach(l=>{catMap[l.spendCategory]=(catMap[l.spendCategory]||0)+1;catAmt[l.spendCategory]=(catAmt[l.spendCategory]||0)+(l.spendAmount||0);});
+  spendLogs.forEach(l=>{getCats(l).forEach(c=>{catMap[c]=(catMap[c]||0)+1;catAmt[c]=(catAmt[c]||0)+(l.spendAmount||0)/getCats(l).length;});});
   const total=spendLogs.length;const hasAmounts=spendLogs.some(l=>l.spendAmount!==undefined);
   const catChips=CATS.filter(c=>catMap[c]).map(c=>{
     const cnt=catMap[c];const pct=Math.round(cnt/total*100);const amt=catAmt[c];
-    return`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.25);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600">${CAT_ICONS[c]||'📦'} <span style="color:rgba(255,255,255,.7)">${c}</span>${hasAmounts&&amt?`<span style="color:#fbbf24">$${amt.toLocaleString()}</span>`:`<span style="color:#fbbf24">${cnt}次</span>`}<span style="color:rgba(255,255,255,.3);font-size:.7rem">${pct}%</span></div>`;
+    return`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.25);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600">${CAT_ICONS[c]||'📦'} <span style="color:rgba(255,255,255,.7)">${c}</span>${hasAmounts&&amt?`<span style="color:#fbbf24">$${Math.round(amt).toLocaleString()}</span>`:`<span style="color:#fbbf24">${cnt}次</span>`}<span style="color:rgba(255,255,255,.3);font-size:.7rem">${pct}%</span></div>`;
   }).join('');
-  const recentRows=spendLogs.slice(0,12).map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:48px;flex-shrink:0">${CAT_ICONS[l.spendCategory]||'📦'}${l.spendCategory}</div>${l.spendAmount!==undefined?`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;min-width:56px">$${l.spendAmount.toLocaleString()}</div>`:''}<div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.spendDetail||'—'}</div></div>`).join('');
+  const recentRows=spendLogs.slice(0,12).map(l=>{const cats=getCats(l);const catLabel=cats.map(c=>`${CAT_ICONS[c]||'📦'}${c}`).join(' ');return`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:52px;flex-shrink:0">${catLabel}</div>${l.spendAmount!==undefined?`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;min-width:56px">$${l.spendAmount.toLocaleString()}</div>`:''}<div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.spendDetail||'—'}</div></div>`;}).join('');
   const Y2=data.yearly[dk().slice(0,4)]||{};const mBudget=Y2.monthly_budget||25000;
   const thisMonth=dk().slice(0,7);const monthTotal=spendLogs.filter(l=>l.date.startsWith(thisMonth)&&l.spendAmount!==undefined).reduce((s,l)=>s+l.spendAmount,0);
   const monthBar=monthTotal>0?`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:4px"><span>本月花費</span><span style="color:${monthTotal>mBudget?'#f87171':'#34d399'};font-weight:700">NT$${monthTotal.toLocaleString()} / ${mBudget.toLocaleString()}</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${monthTotal>mBudget?'#f87171':'#34d399'};width:${Math.min(100,monthTotal/mBudget*100).toFixed(1)}%"></div></div></div>`:'';
@@ -1592,7 +1593,7 @@ function renderTrendChart(){
 const DS={exercise:null,sleep:null,mood:null,fried:null};
 const WS={learning:null};
 const MS={saving:null,finance_report:null,health_goal_met:null,work_goal_met:null,social_goal_met:null};
-let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=null,selSocialToday=null,editDay=dk();
+let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=[],selSocialToday=null,editDay=dk();
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
@@ -1610,14 +1611,14 @@ function toggleMoodTag(tag){
 function onSpendAmountInput(val){
   const amount=parseInt(val)||0;
   document.getElementById('spendDetail').style.display=amount>0?'block':'none';
-  if(amount<=0){selCat=null;renderCatBtns();document.getElementById('dSpendWhat').value='';}
+  if(amount<=0){selCat=[];renderCatBtns();document.getElementById('dSpendWhat').value='';}
 }
 function setCat(c){
-  selCat=c;
+  selCat=selCat.includes(c)?selCat.filter(x=>x!==c):[...selCat,c];
   renderCatBtns();
 }
 function renderCatBtns(){
-  document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.cat===selCat));
+  document.querySelectorAll('.cat-btn').forEach(btn=>btn.classList.toggle('on',selCat.includes(btn.dataset.cat)));
 }
 function setWorkState(s){
   selWorkState=s;
@@ -1657,7 +1658,7 @@ function saveDaily(){
   const spendAmtStr=document.getElementById('spendAmount').value.trim();
   const spendAmt=spendAmtStr===''?null:Math.max(0,parseInt(spendAmtStr)||0);
   if(spendAmt===null)errs.push('記帳：請填今日花費（沒花填 0）');
-  if(spendAmt>0&&!selCat)errs.push('記帳：消費類別');
+  if(spendAmt>0&&selCat.length===0)errs.push('記帳：消費類別');
   if(!document.getElementById('workDone').value.trim())errs.push('工作：完成事項');
   if(!selWorkState)errs.push('工作：工作狀態');
   if(!document.getElementById('workTomorrow').value.trim())errs.push('工作：明日優先');
@@ -1677,7 +1678,7 @@ function saveDaily(){
     gratitude:[gr1,gr2,gr3],
     discomfort:document.getElementById('discomfort').value.trim(),
     spendAmount:spendAmt,
-    ...(spendAmt>0?{spendDetail:document.getElementById('dSpendWhat').value.trim(),spendCategory:selCat}:{}),
+    ...(spendAmt>0?{spendDetail:document.getElementById('dSpendWhat').value.trim(),spendCategory:[...selCat]}:{}),
     workDone:document.getElementById('workDone').value.trim(),
     workState:selWorkState,
     workTomorrow:document.getElementById('workTomorrow').value.trim(),
@@ -1778,7 +1779,7 @@ function exportDailyCSV(){
       csvEsc((l.moodTags||[]).join('、')),
       csvEsc((l.gratitude||[])[0]),csvEsc((l.gratitude||[])[1]),csvEsc((l.gratitude||[])[2]),
       csvEsc(l.discomfort),
-      l.spendAmount!==undefined?l.spendAmount:(l.overBudget===true?'超支':l.overBudget===false?'0':''),csvEsc(l.spendDetail),csvEsc(l.spendCategory),
+      l.spendAmount!==undefined?l.spendAmount:(l.overBudget===true?'超支':l.overBudget===false?'0':''),csvEsc(l.spendDetail),csvEsc(Array.isArray(l.spendCategory)?l.spendCategory.join('、'):l.spendCategory),
       csvEsc(l.workDone),l.workState||'',csvEsc(l.workTomorrow),
       l.retroactive?'是':'否'
     ].join(',');
