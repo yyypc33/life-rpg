@@ -364,9 +364,9 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天有吃炸物嗎？</div>
+          <div class="flbl">今天有吃垃圾食物嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.38)">（炸物、甜食、重口味）</span></div>
           <div class="yn">
-            <button class="ynb" id="dfy" onclick="setFried(true)">🍟 有吃</button>
+            <button class="ynb" id="dfy" onclick="setFried(true)">🍔 有吃</button>
             <button class="ynb" id="dfn" onclick="setFried(false)">✅ 沒有</button>
           </div>
         </div>
@@ -1172,7 +1172,7 @@ const ACHIEVEMENTS=[
     {id:'platinum',days:180,icon:'💎',reward:'購買喜歡的床組或寢具'},
     {id:'legend',days:365,icon:'👑',reward:'一次奢侈住宿體驗'},
   ]},
-  {key:'clean',label:'清淡生活',icon:'🥗',color:'#10b981',check:l=>l.fried===false,tiers:[
+  {key:'clean',label:'飲食自律',icon:'🥗',color:'#10b981',check:l=>l.fried===false,tiers:[
     {id:'bronze',days:7,  icon:'🥉',reward:'去一間一直想試的健康餐廳'},
     {id:'silver',days:30, icon:'🥈',reward:'購買喜歡的健康零食或補給品'},
     {id:'gold',  days:90, icon:'🥇',reward:'一次精緻的日式或健康料理體驗'},
@@ -1525,7 +1525,7 @@ function renderHome(){
     const now=new Date();
     const lastWeekOfMonth=(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate())<7;
     const t={
-      health:`日 運動${ws._ex}天 睡眠${ws._sl}天 未炸${ws._fried}天 手機${ws._phone??0}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':lnk}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
+      health:`日 運動${ws._ex}天 睡眠${ws._sl}天 忌口${ws._fried}天 手機${ws._phone??0}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':lnk}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
       finance:ws._spendDays>0?`本週 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
       work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
@@ -1934,7 +1934,7 @@ function renderSettle(){
   const mSlDays=curMoDays.filter(d=>data.daily[d]?.sleep===true).length;
   const mFrDays=curMoDays.filter(d=>data.daily[d]?.fried===false).length;
   const mhEl=document.getElementById('mHealthSummary');
-  if(curMoDays.length>0){mhEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月 ${curMoDays.length} 天記錄：運動 ${mExDays} 天 · 充足睡眠 ${mSlDays} 天 · 未炸 ${mFrDays} 天</div>`;}
+  if(curMoDays.length>0){mhEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月 ${curMoDays.length} 天記錄：運動 ${mExDays} 天 · 充足睡眠 ${mSlDays} 天 · 忌口 ${mFrDays} 天</div>`;}
   else{mhEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無每日健康紀錄</div>';}
   const mWorkDays2=curMoDays.filter(d=>data.daily[d]?.workScore);
   const mAvgWork2=mWorkDays2.length>0?mWorkDays2.reduce((s,d)=>s+data.daily[d].workScore,0)/mWorkDays2.length:null;
@@ -2007,7 +2007,7 @@ function genWeeklySummary(wkey){
   const discList=logs.map(l=>l.discomfort).filter(Boolean);
   const lines=[];
   lines.push(`<b>📅 打卡 ${logs.length}/7 天</b>${moodAvg>0?`　平均心情 ${moodAvg.toFixed(1)}/5 ${moodE}`:''}`);
-  lines.push(`🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃炸物 ${friedDays}天`:''}`);
+  lines.push(`🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃垃圾食物 ${friedDays}天`:''}`);
   if(newSpendLogs.length>0){const wkTotal=newSpendLogs.reduce((s,l)=>s+l.spendAmount,0);const Y2=data.yearly[new Date(wDays(wkey)[3]).getFullYear().toString()]||{};const wkBudget=(Y2.monthly_budget||25000)/4;lines.push(`💰 本週花費 NT$${wkTotal.toLocaleString()} / ${Math.round(wkBudget).toLocaleString()}${wkTotal>wkBudget?` ⚠️超預算 NT$${(wkTotal-wkBudget).toLocaleString()}`:''}`);}
   else if(legacyUnderCnt+legacyOverCnt>0)lines.push(`💰 未超支 ${legacyUnderCnt}天　超支 ${legacyOverCnt}天`);
   if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　完成 ${workDones.length} 件`:''}`);
@@ -2211,7 +2211,7 @@ function saveDaily(){
   const errs=[];
   if(DS.exercise===null)errs.push('健康：運動');
   if(DS.sleep===null)errs.push('健康：睡眠');
-  if(DS.fried===null)errs.push('健康：炸物');
+  if(DS.fried===null)errs.push('健康：垃圾食物');
   if(DS.mood===null)errs.push('心情分數');
   if(!selMoodTags.length)errs.push('心情關鍵詞');
   if(!gr1||!gr2||!gr3)errs.push('感恩三件事（三項都要填）');
@@ -2365,7 +2365,7 @@ function exportDailyCSV(){
   if(!days.length){showToast('⚠️ 尚無每日紀錄');return;}
   const WD=['日','一','二','三','四','五','六'];
   const yn=v=>v===true?'是':v===false?'否':'';
-  const headers=['日期','週次','星期','運動','睡眠','未吃炸物','心情(1-5)','心情關鍵詞','感恩1','感恩2','感恩3','不舒服','今日花費(NT$)','花費內容','消費類別','工作完成','工作狀態','明日優先','補救紀錄'];
+  const headers=['日期','週次','星期','運動','睡眠','忌口垃圾食物','心情(1-5)','心情關鍵詞','感恩1','感恩2','感恩3','不舒服','今日花費(NT$)','花費內容','消費類別','工作完成','工作狀態','明日優先','補救紀錄'];
   const rows=days.map(day=>{
     const l=data.daily[day];
     const d=new Date(day+'T12:00:00');
