@@ -159,6 +159,22 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .task-del{padding:4px 8px;background:none;border:none;color:rgba(99,102,241,.3);cursor:pointer;font-size:.9rem;flex-shrink:0}
 .task-del:hover{color:#f87171}
 
+/* Pack panel */
+.btn-pack{padding:6px 12px;background:rgba(99,102,241,.15);color:#a5b4fc;border:1.5px solid rgba(99,102,241,.3);border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer}
+.pack-card{background:rgba(10,14,44,.6);border:1.5px solid rgba(99,102,241,.2);border-radius:14px;padding:14px;margin-bottom:10px}
+.pack-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pack-name{font-size:.88rem;font-weight:700}
+.pack-desc{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:1px}
+.pack-add-all{margin-left:auto;padding:6px 12px;border-radius:20px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.4);color:#a5b4fc;font-size:.75rem;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.pack-add-all.exists{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:#34d399;cursor:default}
+.pack-task-row{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid rgba(99,102,241,.08)}
+.pack-task-row:last-child{border-bottom:none}
+.pack-task-freq{font-size:.65rem;font-weight:700;color:#6366f1;background:rgba(99,102,241,.15);padding:2px 5px;border-radius:6px;flex-shrink:0}
+.pack-task-title{flex:1;font-size:.82rem;color:#c7d2fe}
+.pack-task-dim{font-size:.78rem;flex-shrink:0}
+.pack-task-add{padding:3px 8px;border-radius:8px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc;font-size:.78rem;font-weight:700;cursor:pointer;flex-shrink:0}
+.pack-task-add.exists{background:rgba(52,211,153,.1);border-color:rgba(52,211,153,.3);color:#34d399;cursor:default}
+
 /* Settle sub-views */
 .stview{display:none}.stview.active{display:block}
 
@@ -427,8 +443,14 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
     <div class="card">
       <div class="task-header">
         <div class="task-group-lbl">自訂任務</div>
-        <button class="btn-add-task" onclick="toggleAddForm()">＋ 新增任務</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-pack" onclick="togglePackPanel()">📦 模板</button>
+          <button class="btn-add-task" onclick="toggleAddForm()">＋ 新增</button>
+        </div>
       </div>
+
+      <!-- Pack panel -->
+      <div id="packPanel" style="display:none;margin-bottom:14px"></div>
 
       <!-- Add form -->
       <div id="addForm" class="add-form" style="display:none">
@@ -654,6 +676,36 @@ const DIMS=[
   {key:'mental', label:'心理',icon:'🧠',color:'#8b5cf6'},
 ];
 const DIM_DEFAULTS={health:'健康',finance:'財務',work:'工作',social:'社交',mental:'心理'};
+const TASK_PACKS=[
+  {id:'health',name:'健康包',icon:'🏃',color:'#10b981',desc:'運動、睡眠、飲食',tasks:[
+    {title:'有氧運動 30 分鐘',dimensions:['health'],frequency:'weekly'},
+    {title:'飲食均衡記錄',dimensions:['health'],frequency:'weekly'},
+    {title:'早睡目標達成',dimensions:['health'],frequency:'weekly'},
+    {title:'月健康目標設定',dimensions:['health'],frequency:'monthly'},
+  ]},
+  {id:'work',name:'學習包',icon:'💼',color:'#6366f1',desc:'技能、閱讀、筆記',tasks:[
+    {title:'閱讀 30 分鐘',dimensions:['work','mental'],frequency:'weekly'},
+    {title:'學習筆記整理',dimensions:['work'],frequency:'weekly'},
+    {title:'英文練習',dimensions:['work'],frequency:'weekly'},
+    {title:'線上課程進度',dimensions:['work'],frequency:'monthly'},
+  ]},
+  {id:'finance',name:'理財包',icon:'💰',color:'#f59e0b',desc:'存錢、投資、預算',tasks:[
+    {title:'本週預算確認',dimensions:['finance'],frequency:'weekly'},
+    {title:'月度消費分析',dimensions:['finance'],frequency:'monthly'},
+    {title:'投資組合檢視',dimensions:['finance'],frequency:'monthly'},
+    {title:'年度財務目標設定',dimensions:['finance'],frequency:'yearly'},
+  ]},
+  {id:'social',name:'社交包',icon:'🤝',color:'#ec4899',desc:'朋友、家人、聯繫',tasks:[
+    {title:'主動聯繫一位朋友',dimensions:['social'],frequency:'weekly'},
+    {title:'家人問候',dimensions:['social'],frequency:'weekly'},
+    {title:'深度聚會或約見面',dimensions:['social'],frequency:'monthly'},
+  ]},
+  {id:'mental',name:'心理包',icon:'🧠',color:'#8b5cf6',desc:'冥想、反思、放鬆',tasks:[
+    {title:'10 分鐘冥想',dimensions:['mental'],frequency:'weekly'},
+    {title:'感恩日記',dimensions:['mental'],frequency:'weekly'},
+    {title:'月度心理回顧',dimensions:['mental'],frequency:'monthly'},
+  ]},
+];
 const DIM_NAMES_KEY='life_rpg_dim_names';
 function loadDimNames(){
   const saved=JSON.parse(localStorage.getItem(DIM_NAMES_KEY)||'{}');
@@ -1244,7 +1296,73 @@ function renderDaily(){
 // ════════════════════════════════
 // RENDER TASKS
 // ════════════════════════════════
-let selDims=[],taskFreq='weekly',addFormOpen=false;
+let selDims=[],taskFreq='weekly',addFormOpen=false,packPanelOpen=false;
+
+function togglePackPanel(){
+  packPanelOpen=!packPanelOpen;
+  const el=document.getElementById('packPanel');
+  el.style.display=packPanelOpen?'block':'none';
+  if(packPanelOpen)renderPackPanel();
+}
+
+function renderPackPanel(){
+  const data=db();
+  const existingTitles=new Set((data.tasks||[]).map(t=>t.title));
+  const freqLbl={weekly:'週',monthly:'月',yearly:'年'};
+  document.getElementById('packPanel').innerHTML=TASK_PACKS.map(pack=>{
+    const taskRows=pack.tasks.map(t=>{
+      const exists=existingTitles.has(t.title);
+      const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join('');
+      const safeTask=JSON.stringify(t).replace(/'/g,'\\x27');
+      return`<div class="pack-task-row">
+        <span class="pack-task-freq">${freqLbl[t.frequency]}</span>
+        <span class="pack-task-title">${t.title}</span>
+        <span class="pack-task-dim">${dimIcons}</span>
+        <button class="pack-task-add${exists?' exists':''}" onclick='addSinglePackTask(${safeTask})' ${exists?'disabled':''}>
+          ${exists?'✓':'＋'}
+        </button>
+      </div>`;
+    }).join('');
+    const allExist=pack.tasks.every(t=>existingTitles.has(t.title));
+    return`<div class="pack-card" style="border-color:${pack.color}40">
+      <div class="pack-header">
+        <span style="font-size:1.2rem">${pack.icon}</span>
+        <div style="flex:1">
+          <div class="pack-name" style="color:${pack.color}">${pack.name}</div>
+          <div class="pack-desc">${pack.desc}</div>
+        </div>
+        <button class="pack-add-all${allExist?' exists':''}" onclick="addPack('${pack.id}')" ${allExist?'disabled':''}>
+          ${allExist?'✓ 已加入':'加入全部'}
+        </button>
+      </div>
+      <div>${taskRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function addSinglePackTask(task){
+  const data=db();if(!data.tasks)data.tasks=[];
+  if(data.tasks.some(t=>t.title===task.title))return;
+  data.tasks.push({id:uid(),title:task.title,dimensions:task.dimensions,frequency:task.frequency,completedPeriods:[],xpEarned:0,created:dk()});
+  dbS(data);renderTasks();renderPackPanel();
+  showToast(`✅ ${task.title}`);
+}
+
+function addPack(packId){
+  const pack=TASK_PACKS.find(p=>p.id===packId);if(!pack)return;
+  const data=db();if(!data.tasks)data.tasks=[];
+  const existingTitles=new Set(data.tasks.map(t=>t.title));
+  let added=0;
+  pack.tasks.forEach(task=>{
+    if(!existingTitles.has(task.title)){
+      data.tasks.push({id:uid(),title:task.title,dimensions:task.dimensions,frequency:task.frequency,completedPeriods:[],xpEarned:0,created:dk()});
+      added++;
+    }
+  });
+  if(added>0){dbS(data);renderTasks();renderHome();}
+  renderPackPanel();
+  showToast(added>0?`📦 ${pack.name} 加入 ${added} 個任務`:`✅ ${pack.name} 已全部加入`);
+}
 
 function toggleAddForm(){
   addFormOpen=!addFormOpen;
