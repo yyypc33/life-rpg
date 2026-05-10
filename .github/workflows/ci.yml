@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check JS syntax
+        run: |
+          python3 - <<'EOF'
+          import re, sys
+          with open('life_tracker.html') as f:
+              content = f.read()
+          scripts = re.findall(r'<script>(.*?)</script>', content, re.DOTALL)
+          if not scripts:
+              print("❌ No inline <script> block found")
+              sys.exit(1)
+          with open('/tmp/check.js', 'w') as f:
+              f.write(scripts[0])
+          print(f"✓ Extracted {len(scripts[0])} chars of JS")
+          EOF
+          node --check /tmp/check.js && echo "✓ JS syntax OK"
+
+      - name: Check index.html is in sync with life_tracker.html
+        run: |
+          if ! diff -q life_tracker.html index.html > /dev/null 2>&1; then
+            echo "❌ index.html is out of sync with life_tracker.html"
+            echo "Run: cp life_tracker.html index.html"
+            exit 1
+          fi
+          echo "✓ index.html is in sync"

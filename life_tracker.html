@@ -819,7 +819,7 @@ const XP_NEXT=[80,200,400,700,1100,1600,2300,3100,4000,Infinity];
 // DATA
 // ════════════════════════════════
 const SK='life_rpg_yu3';
-var _fbUser=null,_syncState='idle',_syncTimer=null;
+var _fbUser=null,_syncState='idle',_syncTimer=null,_snapshotUnsub=null,_suppressSnapshotUntil=0;
 function db(){
   const DEF={daily:{},weekly:{},monthly:{},yearly:{},tasks:[]};
   try{return JSON.parse(localStorage.getItem(SK))||DEF;}catch{return DEF;}
@@ -2649,13 +2649,37 @@ function _scheduleSyncToCloud(){
   _syncState='syncing';renderSyncStatus();
   clearTimeout(_syncTimer);
   _syncTimer=setTimeout(async()=>{
-    try{await _userDoc().set(db());_syncState='synced';}
-    catch(e){_syncState='error';}
+    try{
+      _suppressSnapshotUntil=Date.now()+3000; // 防止自己寫入觸發 snapshot 回調
+      await _userDoc().set(db());
+      _syncState='synced';
+    }catch(e){_syncState='error';}
     renderSyncStatus();
   },1500);
 }
 
-if(_auth)_auth.onAuthStateChanged(async user=>{
+function _setupRealtimeSync(){
+  if(_snapshotUnsub){_snapshotUnsub();_snapshotUnsub=null;}
+  const docRef=_userDoc();
+  if(!docRef)return;
+  _snapshotUnsub=docRef.onSnapshot(snapshot=>{
+    if(Date.now()<_suppressSnapshotUntil)return; // 忽略自己剛寫入的回調
+    if(!snapshot.exists){
+      // 第一次登入：把本機資料推上雲端
+      _userDoc().set(db()).catch(()=>{});
+      return;
+    }
+    const merged=_mergeData(db(),snapshot.data());
+    localStorage.setItem(SK,JSON.stringify(merged));
+    _syncState='synced';renderSyncStatus();
+    renderHome();renderTasks();renderDaily();
+  },err=>{
+    console.error('snapshot error',err);
+    _syncState='error';renderSyncStatus();
+  });
+}
+
+if(_auth)_auth.onAuthStateChanged(user=>{
   _fbUser=user;
   if(user){
     if(!getUserName()&&user.displayName){
@@ -2663,25 +2687,11 @@ if(_auth)_auth.onAuthStateChanged(async user=>{
       applyUserName();
     }
     document.getElementById('welcomeOverlay')?.remove();
-    try{
-      _syncState='syncing';renderSyncStatus();
-      const doc=await _userDoc().get();
-      if(doc.exists){
-        const merged=_mergeData(db(),doc.data());
-        localStorage.setItem(SK,JSON.stringify(merged));
-        showToast(`☁️ 雲端同步成功！歡迎 ${user.displayName||getUserName()}`);
-      }else{
-        await _userDoc().set(db());
-        showToast(`☁️ 資料已備份！歡迎 ${user.displayName||getUserName()}`);
-      }
-      _syncState='synced';
-      renderHome();renderTasks();renderDaily();
-    }catch(e){
-      console.error('sync error',e);
-      _syncState='error';
-      showToast('⚠️ 雲端同步失敗，請檢查網路');
-    }
+    _syncState='syncing';renderSyncStatus();
+    _setupRealtimeSync();
+    showToast(`☁️ 雲端同步中… 歡迎 ${user.displayName||getUserName()}`);
   }else{
+    if(_snapshotUnsub){_snapshotUnsub();_snapshotUnsub=null;}
     _syncState='idle';
     if(!getUserName())showWelcome();
   }
