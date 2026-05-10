@@ -243,7 +243,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
       <div class="hdr-title"><span id="hdrName">—</span>'s Life RPG <span onclick="editUserName()" style="font-size:.75rem;opacity:.5;cursor:pointer;font-weight:400">✏️</span></div>
       <div class="hdr-sub" id="hWk">—</div>
     </div>
-    <div class="hdr-lv" id="hLv" title="點擊查看 XP">Lv.1</div>
+    <div class="hdr-lv" id="hLv" onclick="showLvModal()">Lv.1 新手</div>
   </div>
   <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
   <div id="xpDetail" style="font-size:.62rem;color:rgba(255,255,255,.38);text-align:right;margin-top:3px;letter-spacing:.3px"></div>
@@ -251,6 +251,15 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
     <div class="stat"><div class="sv" id="hScore">—</div><div class="sl">本週總分</div></div>
     <div class="stat"><div class="sv" id="hXP">0</div><div class="sl">總 XP</div></div>
     <div class="stat"><div class="sv" id="hStreak">0W</div><div class="sl">連勝週數</div></div>
+  </div>
+</div>
+
+<!-- 等級詳情彈窗 -->
+<div id="lvModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;align-items:center;justify-content:center" onclick="this.style.display='none'">
+  <div style="background:#0f1629;border-radius:20px;padding:22px 20px;width:min(320px,88vw);border:1px solid rgba(99,102,241,.3);max-height:80vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div style="font-size:.88rem;font-weight:800;color:#a5b4fc;text-align:center;margin-bottom:16px;letter-spacing:.5px">⚔️ 等級系統</div>
+    <div id="lvList"></div>
+    <button onclick="document.getElementById('lvModal').style.display='none'" style="width:100%;margin-top:14px;padding:10px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:12px;color:#a5b4fc;font-size:.82rem;font-weight:700;cursor:pointer">關閉</button>
   </div>
 </div>
 
@@ -731,18 +740,18 @@ const KW={
 
 const MOOD_TAGS=['開心','平靜','焦慮','疲憊','充實','無聊','感恩','沮喪'];
 
-// [門檻, 等級標籤, 等級稱號, 升級獎勵]
+// [門檻, 等級標籤, 階段稱號, 升級獎勵（保留欄位，暫空）]
 const XP_LEVELS=[
-  [0,    'Lv.1','踏出第一步',  ''],
-  [150,  'Lv.2','習慣養成中',  '一杯喜歡的手搖飲'],
-  [400,  'Lv.3','開始有感覺了','一本想讀的書'],
-  [800,  'Lv.4','生活在改變',  '一場喜歡的電影或演唱會'],
-  [1500, 'Lv.5','越來越穩了',  '一次好的用餐體驗'],
-  [2500, 'Lv.6','自律成習慣',  '一件讓生活更好的小物'],
-  [4000, 'Lv.7','掌控感真好',  '一雙新鞋或運動裝備'],
-  [6000, 'Lv.8','生活的主人',  '一次國內小旅行'],
-  [9000, 'Lv.9','難以撼動',    '自訂一個夢想獎勵'],
-  [13000,'Lv.10','已是傳說',   '你不再需要外部認可了'],
+  [0,    'Lv.1', '新手',   ''],
+  [150,  'Lv.2', '見習生', ''],
+  [400,  'Lv.3', '實踐者', ''],
+  [800,  'Lv.4', '探索者', ''],
+  [1500, 'Lv.5', '成長者', ''],
+  [2500, 'Lv.6', '熟練者', ''],
+  [4000, 'Lv.7', '自律者', ''],
+  [6000, 'Lv.8', '掌控者', ''],
+  [9000, 'Lv.9', '挑戰者', ''],
+  [13000,'Lv.10','傳說',   ''],
 ];
 const XP_NEXT=[150,400,800,1500,2500,4000,6000,9000,13000,Infinity];
 
@@ -852,8 +861,31 @@ function checkLevelUp(beforeXP,afterXP){
   const bLv=getXpInfo(beforeXP).lvIdx;
   const aInfo=getXpInfo(afterXP);
   if(aInfo.lvIdx>bLv){
-    setTimeout(()=>showToast(`🎉 升級！${aInfo.lv} ${aInfo.title}${aInfo.reward?` — 獎勵：${aInfo.reward}`:''}`,4000),600);
+    setTimeout(()=>showToast(`🎉 升級！${aInfo.lv} ${aInfo.title}`,3500),600);
   }
+}
+
+function showLvModal(){
+  const totalXP=getTotalXP();
+  const cur=getXpInfo(totalXP);
+  document.getElementById('lvList').innerHTML=XP_LEVELS.map(([threshold,lv,title],i)=>{
+    const isCur=i===cur.lvIdx;
+    const isDone=totalXP>=threshold;
+    const next=XP_NEXT[i];
+    const xpNeeded=next===Infinity?'MAX':threshold.toLocaleString()+' XP';
+    return`<div style="display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;margin-bottom:4px;
+      background:${isCur?'rgba(99,102,241,.2)':'transparent'};
+      border:1px solid ${isCur?'rgba(99,102,241,.5)':'transparent'}">
+      <div style="font-size:.72rem;font-weight:800;color:${isDone?'#34d399':'rgba(255,255,255,.25)'};flex-shrink:0;width:14px;text-align:center">${isDone?'✓':'·'}</div>
+      <div style="flex:1">
+        <div style="font-size:.82rem;font-weight:700;color:${isCur?'#c7d2fe':isDone?'rgba(255,255,255,.7)':'rgba(255,255,255,.3)'}">${lv} ${title}${isCur?' ←':''}</div>
+        <div style="font-size:.68rem;color:rgba(255,255,255,.35);margin-top:1px">${xpNeeded}</div>
+      </div>
+      ${isCur?`<div style="font-size:.65rem;color:#818cf8;font-weight:700">${totalXP.toLocaleString()} XP</div>`:''}
+    </div>`;
+  }).join('');
+  const modal=document.getElementById('lvModal');
+  modal.style.display='flex';
 }
 
 // ════════════════════════════════
@@ -1195,11 +1227,11 @@ function renderHome(){
   const totalXP=getTotalXP();
   document.getElementById('hXP').textContent=totalXP;
   const xpInfo=getXpInfo(totalXP);
-  document.getElementById('hLv').textContent=xpInfo.lv;
+  document.getElementById('hLv').textContent=`${xpInfo.lv} ${xpInfo.title}`;
   document.getElementById('xpBar').style.width=xpInfo.pct+'%';
   document.getElementById('xpDetail').textContent=xpInfo.xpToNext>0
-    ?`${xpInfo.title} · 距升級 ${xpInfo.xpToNext} XP → ${xpInfo.nextReward}`
-    :`${xpInfo.title} · 已達最高等級`;
+    ?`距下一級 ${xpInfo.xpToNext} XP`
+    :'已達最高等級';
 
   // Badges
   const data=db();
