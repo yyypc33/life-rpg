@@ -2371,6 +2371,13 @@ function editUserName(){
   if(changed)dbS(data);
 })();
 
+// Migrate daily XP: old +3 → new +10
+(function migrateDailyXP(){
+  const data=db();let changed=false;
+  Object.values(data.daily).forEach(log=>{if(log&&log.xp===3){log.xp=10;changed=true;}});
+  if(changed)dbS(data);
+})();
+
 // INIT
 loadDimNames();
 applyUserName();
