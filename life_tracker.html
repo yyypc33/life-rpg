@@ -1947,7 +1947,7 @@ function saveDaily(){
     workScore:selWorkScore,
     socialToday:selSocialToday,
     ...(selSocialToday?{socialWith:document.getElementById('socialWith').value.trim(),socialNote:document.getElementById('socialNote').value.trim()}:{}),
-    xp:existing.xp||(isFirstSave&&!isRetro?3:0),
+    xp:existing.xp||(isFirstSave&&!isRetro?10:0),
     retroactive:isRetro&&!existing.savedAt?true:(existing.retroactive||false),
     savedAt:new Date().toISOString()
   };
@@ -1956,14 +1956,12 @@ function saveDaily(){
   if(isRetro)editDay=today;
   checkAndUnlockAchievements();
   renderDaily();renderHome();
-  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！ +3 XP');
+  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！ +10 XP');
 }
 
 function saveWeekly(){
   const data=db();
   const prev=data.weekly[wk()]||{};
-  const isFirstSave=!prev.savedAt;
-  const beforeXP=isFirstSave?getTotalXP():0;
   const saved={...prev,savedAt:new Date().toISOString()};
   const ln=document.getElementById('wLearningNote').value.trim();
   const wn=document.getElementById('wWorkNote').value.trim();
@@ -1974,26 +1972,21 @@ function saveWeekly(){
   if(sn)saved.social_note=sn;else delete saved.social_note;
   saved.mental_note=mn;
   delete saved.reflection;
-  if(isFirstSave)saved.xp=15;
   data.weekly[wk()]=saved;
   dbS(data);
-  if(isFirstSave)checkLevelUp(beforeXP,getTotalXP());
-  renderSettle();go('home');showToast('📅 本週結算已儲存'+( isFirstSave?' +15 XP':''));
+  renderSettle();go('home');showToast('📅 本週結算已儲存');
 }
 
 function saveMonthly(){
   const data=db();
   const prev=data.monthly[mk()]||{};
-  const isFirstSave=!prev.savedAt;
-  const beforeXP=isFirstSave?getTotalXP():0;
   const mrvNote=document.getElementById('mMonthlyReviewNote').value.trim();
   const mhNote=document.getElementById('mHealthGoalNote').value.trim();
   const mwNote=document.getElementById('mWorkGoalNote').value.trim();
   const msNote=document.getElementById('mSocialGoalNote').value.trim();
-  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,health_goal_met:MS.health_goal_met??null,work_goal_met:MS.work_goal_met??null,social_goal_met:MS.social_goal_met??null,monthly_review_note:mrvNote||undefined,health_goal_note:mhNote||undefined,work_goal_note:mwNote||undefined,social_goal_note:msNote||undefined,xp:isFirstSave?25:(prev.xp||0),savedAt:new Date().toISOString()};
+  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,health_goal_met:MS.health_goal_met??null,work_goal_met:MS.work_goal_met??null,social_goal_met:MS.social_goal_met??null,monthly_review_note:mrvNote||undefined,health_goal_note:mhNote||undefined,work_goal_note:mwNote||undefined,social_goal_note:msNote||undefined,xp:prev.xp||0,savedAt:new Date().toISOString()};
   dbS(data);
-  if(isFirstSave)checkLevelUp(beforeXP,getTotalXP());
-  renderSettle();go('home');showToast('🗓️ 本月結算已儲存'+(isFirstSave?' +25 XP':''));
+  renderSettle();go('home');showToast('🗓️ 本月結算已儲存');
 }
 
 function saveYearly(){
