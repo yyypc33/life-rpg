@@ -576,6 +576,12 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         <div class="frow"><div class="flbl"><span>💰 每月消費預算</span><span class="fval" id="ybv">NT$25,000</span></div><input type="range" min="5000" max="60000" step="1000" value="25000" id="ybi" oninput="document.getElementById('ybv').textContent='NT$'+parseInt(this.value).toLocaleString()"><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-top:4px">週預算自動換算（÷4），影響財務日分計算</div></div>
         <button class="btn-save" onclick="saveYearly()">儲存預算</button>
       </div>
+      <div class="card" style="margin-top:12px">
+        <div class="ctitle">自訂維度名稱</div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px">留空則使用預設名稱</div>
+        <div id="dimNameInputs"></div>
+        <button class="btn-save" onclick="saveDimNames()">儲存名稱</button>
+      </div>
     </div>
   </div>
 
@@ -647,6 +653,12 @@ const DIMS=[
   {key:'social', label:'社交',icon:'🤝',color:'#ec4899'},
   {key:'mental', label:'心理',icon:'🧠',color:'#8b5cf6'},
 ];
+const DIM_DEFAULTS={health:'健康',finance:'財務',work:'工作',social:'社交',mental:'心理'};
+const DIM_NAMES_KEY='life_rpg_dim_names';
+function loadDimNames(){
+  const saved=JSON.parse(localStorage.getItem(DIM_NAMES_KEY)||'{}');
+  DIMS.forEach(d=>{d.label=saved[d.key]||DIM_DEFAULTS[d.key];});
+}
 
 // Keyword classifier
 const KW={
@@ -1424,6 +1436,7 @@ function renderSettle(){
   if(curMoDays.some(d=>data.daily[d]?.socialToday!==undefined)){msEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月社交 <span style="font-weight:700;color:#a5b4fc">${mSocialDays2} 天</span>（貢獻社交 ${Math.min(5,mSocialDays2)} / 5 分）</div>`;}
   else{msEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無社交打卡紀錄</div>';}
   if(Y.monthly_budget!==undefined){document.getElementById('ybi').value=Y.monthly_budget;document.getElementById('ybv').textContent='NT$'+Y.monthly_budget.toLocaleString();}
+  renderDimNameInputs();
 }
 
 // ════════════════════════════════
@@ -1568,11 +1581,7 @@ function renderTrendChart(){
   TC=new Chart(document.getElementById('trendChart').getContext('2d'),{
     type:'line',
     data:{labels,datasets:[
-      mkDs('health','健康','#10b981'),
-      mkDs('finance','財務','#f59e0b'),
-      mkDs('work','工作','#6366f1'),
-      mkDs('social','社交','#ec4899'),
-      mkDs('mental','心理','#8b5cf6'),
+      ...DIMS.map(d=>mkDs(d.key,d.label,d.color)),
       mkDs('total','總分','#1e293b',true),
     ]},
     options:{
@@ -1730,6 +1739,30 @@ function saveYearly(){
   const prev=data.yearly[yk()]||{};
   data.yearly[yk()]={...prev,monthly_budget:parseInt(document.getElementById('ybi').value),savedAt:new Date().toISOString()};
   dbS(data);showToast('🎯 月預算已儲存');
+}
+
+function renderDimNameInputs(){
+  const saved=JSON.parse(localStorage.getItem(DIM_NAMES_KEY)||'{}');
+  const el=document.getElementById('dimNameInputs');if(!el)return;
+  el.innerHTML=DIMS.map(d=>`
+    <div class="frow" style="margin-bottom:8px">
+      <div class="flbl" style="margin-bottom:4px">${d.icon} ${DIM_DEFAULTS[d.key]}</div>
+      <input type="text" id="dn_${d.key}" maxlength="8" placeholder="${DIM_DEFAULTS[d.key]}"
+        value="${saved[d.key]||''}"
+        style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;color:#fff;font-size:.88rem;outline:none">
+    </div>`).join('');
+}
+
+function saveDimNames(){
+  const names={};
+  DIMS.forEach(d=>{
+    const v=(document.getElementById(`dn_${d.key}`)?.value||'').trim();
+    if(v)names[d.key]=v;
+  });
+  localStorage.setItem(DIM_NAMES_KEY,JSON.stringify(names));
+  loadDimNames();
+  showToast('✅ 維度名稱已儲存');
+  renderHome();
 }
 
 // ════════════════════════════════
@@ -2019,6 +2052,7 @@ function editUserName(){
 }
 
 // INIT
+loadDimNames();
 applyUserName();
 if(!getUserName())showWelcome();
 go('home');
