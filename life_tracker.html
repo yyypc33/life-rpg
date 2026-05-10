@@ -1941,8 +1941,13 @@ function showWelcome(){
     <div class="welcome-box">
       <div class="welcome-icon">🎮</div>
       <div class="welcome-title">歡迎來到 Life RPG</div>
-      <div class="welcome-sub">量化你的成長，把生活過成遊戲<br>請輸入你的名字開始</div>
-      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" autofocus>
+      <div class="welcome-sub">量化你的成長，把生活過成遊戲</div>
+      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" autofocus style="margin-bottom:10px">
+      <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">💰 每月預算（NT$）</div>
+      <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" style="margin-bottom:8px">
+      <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
+        ${[15000,20000,25000,35000].map(v=>`<button onclick="document.getElementById('welcomeBudgetInput').value=${v}" style="flex:1;padding:7px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer">${v/1000}k</button>`).join('')}
+      </div>
       <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>
     </div>`;
   document.body.appendChild(el);
@@ -1953,10 +1958,14 @@ function showWelcome(){
 function confirmWelcomeName(){
   const name=(document.getElementById('welcomeNameInput').value||'').trim();
   if(!name){showToast('❌ 請輸入名字');return;}
+  const budget=parseInt(document.getElementById('welcomeBudgetInput').value)||25000;
   localStorage.setItem(NAME_KEY,name);
+  const data=db();const yr=yk();
+  data.yearly[yr]={...(data.yearly[yr]||{}),monthly_budget:budget};
+  dbS(data);
   document.getElementById('welcomeOverlay')?.remove();
   applyUserName();
-  showToast(`👋 歡迎，${name}！`);
+  showToast(`👋 歡迎，${name}！月預算 NT$${budget.toLocaleString()}`);
 }
 
 function editUserName(){
