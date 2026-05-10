@@ -1163,7 +1163,7 @@ function renderDaily(){
 
   // Reset all inputs to neutral before loading
   DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;
-  ['dey','den','dsy','dsn','dfy','dfn','doy','don'].forEach(id=>document.getElementById(id).className='ynb');
+  ['dey','den','dsy','dsn','dfy','dfn'].forEach(id=>document.getElementById(id).className='ynb');
   for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.remove('active');
   ['gr1','gr2','gr3','discomfort','spendAmount','dSpendWhat','workDone','workTomorrow','socialWith','socialNote'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('spendDetail').style.display='none';
