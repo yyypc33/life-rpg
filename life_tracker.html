@@ -843,9 +843,14 @@ function reward(t, isCurrent, daysRecorded){
 function isDayComplete(log){
   if(!log)return false;
   const budgetOk=log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory));
-  return log.exercise!==undefined&&log.sleep!==undefined&&log.fried!==undefined&&
+  const baseOk=log.exercise!==undefined&&log.sleep!==undefined&&log.fried!==undefined&&
     log.mood&&(log.moodTags||[]).length>0&&(log.gratitude||[]).filter(Boolean).length===3&&
-    budgetOk&&log.workDone&&log.workState&&log.workTomorrow&&log.workScore&&log.socialToday!==undefined;
+    budgetOk&&log.workDone&&log.workState&&log.workTomorrow;
+  if(!baseOk)return false;
+  // v1.5+ logs have workScore or socialToday; older logs are complete with just base fields
+  const isNewFormat=log.workScore!==undefined||log.socialToday!==undefined;
+  if(!isNewFormat)return true;
+  return !!log.workScore&&log.socialToday!==undefined;
 }
 
 // ════════════════════════════════
@@ -1080,7 +1085,7 @@ function renderHome(){
 
   // Badges
   const data=db();
-  document.getElementById('dBadge').style.display=!data.daily[dk()]?'block':'none';
+  document.getElementById('dBadge').style.display=!isDayComplete(data.daily[dk()])?'block':'none';
   document.getElementById('sBadge').style.display=(!data.weekly[curWk]||!data.monthly[mk()])?'block':'none';
 
   // Radar
@@ -1618,8 +1623,9 @@ function saveDaily(){
 
 function saveWeekly(){
   const wc=parseInt(document.getElementById('wki').value);
+  const sc=parseInt(document.getElementById('wci').value);
   const data=db();
-  data.weekly[wk()]={work_completion:wc,learning:WS.learning??false,contact:WS.contact??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
+  data.weekly[wk()]={work_completion:wc,social_count:sc,learning:WS.learning??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
   dbS(data);renderSettle();go('home');showToast('📅 本週結算已儲存');
 }
 
