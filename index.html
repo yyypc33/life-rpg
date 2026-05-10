@@ -825,7 +825,7 @@ function calcWeek(wkey){
   const mrvScore=M.monthly_review_note!==undefined?(M.monthly_review_note?2:-1):(M.monthly_review!==undefined?(M.monthly_review?2:-1):0);
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+reflScore+mrvScore+(bonus.mental||0)));
   const total  =r((health+finance+work+social+mental)/5);
-  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays};
+  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_monthSocialCount:monthSocialCount,_workBase:workBase};
 }
 
 function calcMonth(mkey){
@@ -1122,12 +1122,12 @@ function renderHome(){
     if(RV!=='week')return'';
     const b=ws._bonus,W=ws._W,M=ws._M;
     const t={
-      health:`日 運動${ws._ex}天 睡眠${ws._sl}天 未炸${ws._fried}天 | 月 健康目標${M.health_goal??'未填'}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
-      finance:ws._spendDays>0?`本週花費 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
+      health:`日 運動${ws._ex}天 睡眠${ws._sl}天 未炸${ws._fried}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':'未填'}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
+      finance:ws._spendDays>0?`本週 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
-      work:`週 完成${W.work_completion??'未填'}/10 學習${W.learning!==undefined?(W.learning?'✓':'✗'):'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
-      social:`週 互動${W.social_count!==undefined?W.social_count+'次':(W.contact!==undefined?(W.contact?'3次':'0次'):'未填')} | 月 深度${M.deep_social??0}次${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
-      mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週 反思${W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填'}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
+      work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning!==undefined?(W.learning?'✓':'✗'):'未填'} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
+      social:`週 社交 ${ws._socialWeek??0}天 | 月 累計 ${ws._monthSocialCount??0}天 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':'未填'}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
+      mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填')} | 月回顧${M.monthly_review_note?'✓':(M.monthly_review!==undefined?(M.monthly_review?'✓':'✗'):'未填')}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
     };
     return t[d.key]||'';
   }
@@ -1703,7 +1703,8 @@ function saveWeekly(){
   const mn=document.getElementById('wMentalNote').value.trim();
   if(wn)saved.work_note=wn;else delete saved.work_note;
   if(sn)saved.social_note=sn;else delete saved.social_note;
-  if(mn)saved.mental_note=mn;else delete saved.mental_note;
+  saved.mental_note=mn; // always save (empty string → -1 deduction; non-empty → +3)
+  delete saved.reflection; // remove legacy field so mental_note takes precedence
   data.weekly[wk()]=saved;
   dbS(data);renderSettle();go('home');showToast('📅 本週結算已儲存');
 }
