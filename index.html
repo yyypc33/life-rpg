@@ -898,6 +898,9 @@ function calcWeek(wkey){
     spendScore=Math.max(0,Math.min(5,(legacySum+10.5)/17.5*5));
   } else {spendScore=0;}
 
+  const phoneOKDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.phoneOK===true?s+mult(l):s;},0);
+  const phoneRaw=days.filter(d=>{const l=data.daily[d];return l&&l.phoneOK===true;}).length;
+  const phoneScore=(phoneOKDays/7)*1;
   const healthGoal=M.health_goal_met===true?2:M.health_goal_met===false?-1:0;
   const health =r(Math.min(10,(Math.min(exDays,4)/4)*3+(slDays/7)*4+(friedDays/7)*3+phoneScore+healthGoal+(bonus.health||0)));
   const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+(bonus.finance||0)));
@@ -914,9 +917,6 @@ function calcWeek(wkey){
   const socialMonth=Math.min(5,monthSocialCount);
   const socialGoal=M.social_goal_met===true?2:M.social_goal_met===false?-1:0;
   const social =r(Math.min(10,socialWeek+socialMonth+socialGoal+(bonus.social||0)));
-  const phoneOKDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.phoneOK===true?s+mult(l):s;},0);
-  const phoneRaw=days.filter(d=>{const l=data.daily[d];return l&&l.phoneOK===true;}).length;
-  const phoneScore=(phoneOKDays/7)*1;
   const reflScore=W.mental_note?1:0;
   const mrvScore=M.monthly_review_note?1:0;
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*7:0)+phoneScore+reflScore+mrvScore+(bonus.mental||0)));
