@@ -701,7 +701,7 @@ function prevWk(w){const[yr,n]=w.split('-W');return parseInt(n)===1?`${parseInt(
 function prevMk(m){const[yr,mo]=m.split('-').map(Number);return mo===1?`${yr-1}-12`:`${yr}-${String(mo-1).padStart(2,'0')}`}
 function getMk(wkey){const days=wDays(wkey);const t=new Date(days[3]);return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`}
 function getYk(wkey){return new Date(wDays(wkey)[3]).getFullYear().toString()}
-function wkLabel(w){const[y,n]=w.split('-W');return `${y}年 第${parseInt(n)}週`}
+function wkLabel(w){const[y,n]=w.split('-W');const days=wDays(w);const f=days[0].slice(5).replace('-','/');const l=days[6].slice(5).replace('-','/');return `${y}年 第${parseInt(n)}週（${f}–${l}）`;}
 
 // ════════════════════════════════
 // TASK SYSTEM
