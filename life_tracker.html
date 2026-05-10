@@ -920,11 +920,11 @@ function streak(){
 function reward(t, isCurrent, daysRecorded){
   if(isCurrent){
     if(daysRecorded===0)return{icon:'🚀',title:'本週剛開始',desc:'記錄第一天，打好本週基礎。',bg:'rgba(99,102,241,.1)',border:'rgba(99,102,241,.25)',c:'#a5b4fc'};
-    if(t>=8)return{icon:'🏆',title:`已達標 · ${t.toFixed(1)} 分`,desc:'繼續保持到週末，本週按摩獎勵穩了！',bg:'rgba(52,211,153,.1)',border:'rgba(52,211,153,.3)',c:'#34d399'};
+    if(t>=8)return{icon:'🏆',title:`已達標 · ${t.toFixed(1)} 分`,desc:'撐住！週末去好好放鬆一下，你值得。',bg:'rgba(52,211,153,.1)',border:'rgba(52,211,153,.3)',c:'#34d399'};
     if(t>=5)return{icon:'📊',title:`進行中 · ${t.toFixed(1)} 分`,desc:`距達標（8.0）還差 ${(8-t).toFixed(1)} 分，週還沒結束！`,bg:'rgba(251,191,36,.08)',border:'rgba(251,191,36,.25)',c:'#fbbf24'};
     return{icon:'⚡',title:`加把勁 · ${t.toFixed(1)} 分`,desc:`本週還有機會，先把分數拉到 5.0 穩住局面。`,bg:'rgba(129,140,248,.1)',border:'rgba(129,140,248,.25)',c:'#818cf8'};
   }
-  if(t>=8)return{icon:'🏆',title:'達標週 — 去按摩吧！',desc:'這週照顧好自己，犒賞自己一次按摩（NT$700 內）。',bg:'rgba(52,211,153,.1)',border:'rgba(52,211,153,.3)',c:'#34d399'};
+  if(t>=8)return{icon:'🏆',title:'恭喜達標！',desc:'來場放鬆之旅吧，這週你做得很好。',bg:'rgba(52,211,153,.1)',border:'rgba(52,211,153,.3)',c:'#34d399'};
   if(t>=5)return{icon:'💪',title:'繼續保持',desc:'距離獎勵還差一點，下週再衝。',bg:'rgba(251,191,36,.08)',border:'rgba(251,191,36,.25)',c:'#fbbf24'};
   return{icon:'🤲',title:'懲罰週 — 完成社區貢獻',desc:'這週沒有好好照顧自己，用行動照顧他人：志工、幫鄰居、捐款。',bg:'rgba(248,113,113,.08)',border:'rgba(248,113,113,.25)',c:'#f87171'};
 }
