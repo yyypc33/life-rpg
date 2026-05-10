@@ -1396,6 +1396,8 @@ function renderSettle(){
   document.getElementById('wSocialNote').value=W.social_note||'';
   document.getElementById('wMentalNote').value=W.mental_note||'';
   fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);
+  if(M.saving!==undefined)MS.saving=M.saving;
+  if(M.finance_report!==undefined)MS.finance_report=M.finance_report;
   fill('mhgy','mhgn',M.health_goal_met);fill('mwgy','mwgn',M.work_goal_met);fill('mscgy','mscgn',M.social_goal_met);
   if(M.health_goal_met!==undefined)MS.health_goal_met=M.health_goal_met;
   if(M.work_goal_met!==undefined)MS.work_goal_met=M.work_goal_met;
