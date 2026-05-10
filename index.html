@@ -246,6 +246,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
     <div class="hdr-lv" id="hLv" title="點擊查看 XP">Lv.1</div>
   </div>
   <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
+  <div id="xpDetail" style="font-size:.62rem;color:rgba(255,255,255,.38);text-align:right;margin-top:3px;letter-spacing:.3px"></div>
   <div class="stats">
     <div class="stat"><div class="sv" id="hScore">—</div><div class="sl">本週總分</div></div>
     <div class="stat"><div class="sv" id="hXP">0</div><div class="sl">總 XP</div></div>
@@ -730,13 +731,20 @@ const KW={
 
 const MOOD_TAGS=['開心','平靜','焦慮','疲憊','充實','無聊','感恩','沮喪'];
 
+// [門檻, 等級標籤, 等級稱號, 升級獎勵]
 const XP_LEVELS=[
-  [0,'Lv.1 初學者'],[100,'Lv.2 見習生'],[300,'Lv.3 實踐者'],
-  [600,'Lv.4 探索者'],[1000,'Lv.5 成長者'],[2000,'Lv.6 熟練者'],
-  [4000,'Lv.7 精英'],[8000,'Lv.8 大師'],
+  [0,    'Lv.1','踏出第一步',  ''],
+  [150,  'Lv.2','習慣養成中',  '一杯喜歡的手搖飲'],
+  [400,  'Lv.3','開始有感覺了','一本想讀的書'],
+  [800,  'Lv.4','生活在改變',  '一場喜歡的電影或演唱會'],
+  [1500, 'Lv.5','越來越穩了',  '一次好的用餐體驗'],
+  [2500, 'Lv.6','自律成習慣',  '一件讓生活更好的小物'],
+  [4000, 'Lv.7','掌控感真好',  '一雙新鞋或運動裝備'],
+  [6000, 'Lv.8','生活的主人',  '一次國內小旅行'],
+  [9000, 'Lv.9','難以撼動',    '自訂一個夢想獎勵'],
+  [13000,'Lv.10','已是傳說',   '你不再需要外部認可了'],
 ];
-
-const XP_NEXT=[100,300,600,1000,2000,4000,8000,Infinity];
+const XP_NEXT=[150,400,800,1500,2500,4000,6000,9000,13000,Infinity];
 
 // ════════════════════════════════
 // DATA
@@ -822,17 +830,30 @@ function getTaskBonus(wkey){
 
 function getTotalXP(){
   const data=db();
-  return(data.tasks||[]).reduce((sum,t)=>sum+(t.xpEarned||0),0);
+  const taskXP=(data.tasks||[]).reduce((sum,t)=>sum+(t.xpEarned||0),0);
+  const dailyXP=Object.values(data.daily).reduce((sum,l)=>sum+(l.xp||0),0);
+  const weeklyXP=Object.values(data.weekly).reduce((sum,w)=>sum+(w.xp||0),0);
+  const monthlyXP=Object.values(data.monthly).reduce((sum,m)=>sum+(m.xp||0),0);
+  return taskXP+dailyXP+weeklyXP+monthlyXP;
 }
 
 function getXpInfo(xp){
   let lvIdx=0;
   for(let i=0;i<XP_LEVELS.length;i++){if(xp>=XP_LEVELS[i][0])lvIdx=i;}
-  const label=XP_LEVELS[lvIdx][1];
-  const cur=XP_LEVELS[lvIdx][0];
+  const [threshold,lv,title,reward]=XP_LEVELS[lvIdx];
   const next=XP_NEXT[lvIdx];
-  const pct=next===Infinity?100:Math.round((xp-cur)/(next-cur)*100);
-  return{label,pct};
+  const pct=next===Infinity?100:Math.round((xp-threshold)/(next-threshold)*100);
+  const xpToNext=next===Infinity?0:next-xp;
+  const nextReward=lvIdx+1<XP_LEVELS.length?XP_LEVELS[lvIdx+1][3]:'';
+  return{lvIdx,lv,title,reward,pct,xpToNext,nextReward};
+}
+
+function checkLevelUp(beforeXP,afterXP){
+  const bLv=getXpInfo(beforeXP).lvIdx;
+  const aInfo=getXpInfo(afterXP);
+  if(aInfo.lvIdx>bLv){
+    setTimeout(()=>showToast(`🎉 升級！${aInfo.lv} ${aInfo.title}${aInfo.reward?` — 獎勵：${aInfo.reward}`:''}`,4000),600);
+  }
 }
 
 // ════════════════════════════════
@@ -1174,8 +1195,11 @@ function renderHome(){
   const totalXP=getTotalXP();
   document.getElementById('hXP').textContent=totalXP;
   const xpInfo=getXpInfo(totalXP);
-  document.getElementById('hLv').textContent=xpInfo.label;
+  document.getElementById('hLv').textContent=xpInfo.lv;
   document.getElementById('xpBar').style.width=xpInfo.pct+'%';
+  document.getElementById('xpDetail').textContent=xpInfo.xpToNext>0
+    ?`${xpInfo.title} · 距升級 ${xpInfo.xpToNext} XP → ${xpInfo.nextReward}`
+    :`${xpInfo.title} · 已達最高等級`;
 
   // Badges
   const data=db();
@@ -1813,6 +1837,8 @@ function saveDaily(){
   const targetDay=editDay;
   const isRetro=targetDay<today;
   const existing=data.daily[targetDay]||{};
+  const isFirstSave=!existing.savedAt;
+  const beforeXP=isFirstSave?getTotalXP():0;
   data.daily[targetDay]={
     ...existing,
     exercise:DS.exercise,sleep:DS.sleep,fried:DS.fried,phoneOK:DS.phoneOK!==null?DS.phoneOK:undefined,mood:DS.mood,
@@ -1827,19 +1853,23 @@ function saveDaily(){
     workScore:selWorkScore,
     socialToday:selSocialToday,
     ...(selSocialToday?{socialWith:document.getElementById('socialWith').value.trim(),socialNote:document.getElementById('socialNote').value.trim()}:{}),
+    xp:existing.xp||(isFirstSave&&!isRetro?3:0),
     retroactive:isRetro&&!existing.savedAt?true:(existing.retroactive||false),
     savedAt:new Date().toISOString()
   };
   dbS(data);
+  if(isFirstSave&&!isRetro)checkLevelUp(beforeXP,getTotalXP());
   if(isRetro)editDay=today;
   checkAndUnlockAchievements();
   renderDaily();renderHome();
-  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！');
+  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！ +3 XP');
 }
 
 function saveWeekly(){
   const data=db();
   const prev=data.weekly[wk()]||{};
+  const isFirstSave=!prev.savedAt;
+  const beforeXP=isFirstSave?getTotalXP():0;
   const saved={...prev,savedAt:new Date().toISOString()};
   const ln=document.getElementById('wLearningNote').value.trim();
   const wn=document.getElementById('wWorkNote').value.trim();
@@ -1848,20 +1878,28 @@ function saveWeekly(){
   if(ln){saved.learning_note=ln;delete saved.learning;}else{delete saved.learning_note;}
   if(wn)saved.work_note=wn;else delete saved.work_note;
   if(sn)saved.social_note=sn;else delete saved.social_note;
-  saved.mental_note=mn; // always save (empty string → -1 deduction; non-empty → +3)
-  delete saved.reflection; // remove legacy field so mental_note takes precedence
+  saved.mental_note=mn;
+  delete saved.reflection;
+  if(isFirstSave)saved.xp=15;
   data.weekly[wk()]=saved;
-  dbS(data);renderSettle();go('home');showToast('📅 本週結算已儲存');
+  dbS(data);
+  if(isFirstSave)checkLevelUp(beforeXP,getTotalXP());
+  renderSettle();go('home');showToast('📅 本週結算已儲存'+( isFirstSave?' +15 XP':''));
 }
 
 function saveMonthly(){
   const data=db();
+  const prev=data.monthly[mk()]||{};
+  const isFirstSave=!prev.savedAt;
+  const beforeXP=isFirstSave?getTotalXP():0;
   const mrvNote=document.getElementById('mMonthlyReviewNote').value.trim();
   const mhNote=document.getElementById('mHealthGoalNote').value.trim();
   const mwNote=document.getElementById('mWorkGoalNote').value.trim();
   const msNote=document.getElementById('mSocialGoalNote').value.trim();
-  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,health_goal_met:MS.health_goal_met??null,work_goal_met:MS.work_goal_met??null,social_goal_met:MS.social_goal_met??null,monthly_review_note:mrvNote||undefined,health_goal_note:mhNote||undefined,work_goal_note:mwNote||undefined,social_goal_note:msNote||undefined,savedAt:new Date().toISOString()};
-  dbS(data);renderSettle();go('home');showToast('🗓️ 本月結算已儲存');
+  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,health_goal_met:MS.health_goal_met??null,work_goal_met:MS.work_goal_met??null,social_goal_met:MS.social_goal_met??null,monthly_review_note:mrvNote||undefined,health_goal_note:mhNote||undefined,work_goal_note:mwNote||undefined,social_goal_note:msNote||undefined,xp:isFirstSave?25:(prev.xp||0),savedAt:new Date().toISOString()};
+  dbS(data);
+  if(isFirstSave)checkLevelUp(beforeXP,getTotalXP());
+  renderSettle();go('home');showToast('🗓️ 本月結算已儲存'+(isFirstSave?' +25 XP':''));
 }
 
 function saveYearly(){
