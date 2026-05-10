@@ -61,6 +61,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 /* Card */
 .card{background:rgba(10,14,44,.65);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(99,102,241,.2);border-radius:18px;padding:18px;margin-bottom:12px;box-shadow:0 4px 32px rgba(0,0,0,.4),inset 0 1px 0 rgba(165,180,252,.06)}
 .ctitle{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:#6366f1;margin-bottom:14px}
+.ctitle-info{cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.ctitle-info .info-dot{font-size:.62rem;color:rgba(129,140,248,.55);font-style:normal;font-weight:400;letter-spacing:0;text-transform:none;border:1px solid rgba(129,140,248,.35);border-radius:50%;width:14px;height:14px;display:inline-flex;align-items:center;justify-content:center;transition:border-color .15s,color .15s}
+.ctitle-info:hover .info-dot{color:#818cf8;border-color:#818cf8}
+.grid-legend{background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.18);border-radius:12px;padding:11px 14px;margin-bottom:12px;display:none;flex-direction:column;gap:7px}
+.grid-legend.open{display:flex}
+.gl-row{display:flex;align-items:center;gap:9px;font-size:.78rem;color:#c7d2fe}
+.gl-sym{width:16px;text-align:center;font-weight:700;font-size:.82rem;flex-shrink:0}
 
 /* Radar */
 .rwrap{position:relative;height:265px}
@@ -471,7 +478,14 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
       <button class="btn-save" id="btnSaveDaily" onclick="saveDaily()">完成今日紀錄</button>
     </div>
     <div class="card">
-      <div class="ctitle">本週打卡紀錄</div>
+      <div class="ctitle"><span class="ctitle-info" onclick="toggleGridLegend()">本週打卡紀錄 <i class="info-dot">i</i></span></div>
+      <div class="grid-legend" id="gridLegend">
+        <div class="gl-row"><span class="gl-sym" style="color:#34d399">✓</span><span>完整紀錄</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:#fbbf24">●</span><span>已填寫，尚未完整</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:#818cf8">○</span><span>今天，尚未紀錄</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:rgba(252,165,165,.55)">○</span><span>過去未補</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:rgba(165,180,252,.3)">·</span><span>未來</span></div>
+      </div>
       <div id="wGrid"></div>
     </div>
   </div>
@@ -1432,6 +1446,10 @@ function renderDaily(){
 // RENDER TASKS
 // ════════════════════════════════
 let selDims=[],taskFreq='weekly',taskDiff='medium',addFormOpen=false,packPanelOpen=false;
+
+function toggleGridLegend(){
+  document.getElementById('gridLegend').classList.toggle('open');
+}
 
 function togglePackPanel(){
   packPanelOpen=!packPanelOpen;
