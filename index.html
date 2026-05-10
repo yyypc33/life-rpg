@@ -1100,9 +1100,8 @@ function calcWeek(wkey){
   const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
   const socialWeek=dailySocialCount>0?Math.min(3,dailySocialCount):(W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0));
   const monthSocialCount=Object.keys(data.daily).filter(d=>d.startsWith(mkey)&&data.daily[d]?.socialToday===true).length;
-  const socialMonth=Math.min(5,monthSocialCount);
   const socialGoal=M.social_goal_met===true?2:M.social_goal_met===false?-1:0;
-  const social =r(Math.min(10,socialWeek+socialMonth+socialGoal+(bonus.social||0)));
+  const social =r(Math.min(10,socialWeek+socialGoal+(bonus.social||0)));
   const reflScore=W.mental_note?1:0;
   const mrvScore=M.monthly_review_note?1:0;
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*7:0)+phoneScore+reflScore+mrvScore+(bonus.mental||0)));
