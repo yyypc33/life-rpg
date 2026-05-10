@@ -512,11 +512,8 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
       <div class="card">
         <div class="ctitle">每月結算 <span class="fbadge fb-m">月底</span></div>
         <div class="fblock">
-          <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔健康 2分</span></div>
-          <div class="frow">
-            <div class="flbl"><span>本月體能 / 健康目標達成度</span><span class="fval" id="mhv">5 / 10</span></div>
-            <input type="range" min="0" max="10" value="5" id="mhi" oninput="document.getElementById('mhv').textContent=this.value+' / 10'">
-          </div>
+          <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日紀錄計算</span></div>
+          <div id="mHealthSummary"></div>
         </div>
         <hr>
         <div class="fblock">
@@ -532,20 +529,13 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 2分</span></div>
-          <div class="frow">
-            <div class="flbl"><span>本月最重要工作目標完成度</span><span class="fval" id="mwv">5 / 10</span></div>
-            <input type="range" min="0" max="10" value="5" id="mwi" oninput="document.getElementById('mwv').textContent=this.value+' / 10'">
-          </div>
+          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日自評計算</span></div>
+          <div id="mWorkSummary"></div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 5分｜1次即大幅得分</span></div>
-          <div class="frow">
-            <div class="flbl"><span>本月與朋友深度交流幾次？（真正見面／深聊）</span><span class="fval" id="mdv">0 次</span></div>
-            <input type="range" min="0" max="5" value="0" id="mdi" oninput="document.getElementById('mdv').textContent=this.value+' 次'">
-            <div style="font-size:.72rem;color:#6366f1;margin-top:6px">0次→0分　1次→4分　2次以上→5分滿分</div>
-          </div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日打卡計算，最高 5 分</span></div>
+          <div id="mSocialSummary"></div>
         </div>
         <hr>
         <div class="fblock">
@@ -562,15 +552,9 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
     <!-- Yearly -->
     <div class="stview" id="st-y">
       <div class="card">
-        <div class="ctitle">每年設定 <span class="fbadge fb-y">年初填 / 年底更新</span></div>
-        <p style="font-size:.8rem;color:rgba(255,255,255,.38);margin-bottom:14px;line-height:1.4">年度目標為各維度提供基礎加分，代表長期方向。</p>
+        <div class="ctitle">每年設定</div>
         <div class="frow"><div class="flbl"><span>💰 每月消費預算</span><span class="fval" id="ybv">NT$25,000</span></div><input type="range" min="5000" max="60000" step="1000" value="25000" id="ybi" oninput="document.getElementById('ybv').textContent='NT$'+parseInt(this.value).toLocaleString()"><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-top:4px">週預算自動換算（÷4），影響財務日分計算</div></div>
-        <div class="frow"><div class="flbl"><span>🏃 年度健康成就</span><span class="fval" id="yhv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yhi" oninput="document.getElementById('yhv').textContent=this.value+' / 10'"></div>
-        <div class="frow"><div class="flbl"><span>💰 年度財務目標進展</span><span class="fval" id="yfv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yfi" oninput="document.getElementById('yfv').textContent=this.value+' / 10'"></div>
-        <div class="frow"><div class="flbl"><span>💼 年度職涯 / 技能目標</span><span class="fval" id="ycv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yci" oninput="document.getElementById('ycv').textContent=this.value+' / 10'"></div>
-        <div class="frow"><div class="flbl"><span>🤝 重要關係維護</span><span class="fval" id="yrv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="yri" oninput="document.getElementById('yrv').textContent=this.value+' / 10'"></div>
-        <div class="frow"><div class="flbl"><span>🧠 個人成長里程碑</span><span class="fval" id="ygv">5 / 10</span></div><input type="range" min="0" max="10" value="5" id="ygi" oninput="document.getElementById('ygv').textContent=this.value+' / 10'"></div>
-        <button class="btn-save" onclick="saveYearly()">儲存年度設定</button>
+        <button class="btn-save" onclick="saveYearly()">儲存預算</button>
       </div>
     </div>
   </div>
@@ -802,17 +786,18 @@ function calcWeek(wkey){
     spendScore=Math.max(0,Math.min(5,(legacySum+10.5)/17.5*5));
   } else {spendScore=0;}
 
-  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+((M.health_goal||0)/10)*2+(bonus.health||0)));
-  const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+((Y.finance_goal||0)/10)*2+(bonus.finance||0)));
+  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+(bonus.health||0)));
+  const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+(bonus.finance||0)));
   const today=dk();
   const dailyWorkScores=days.filter(d=>d<=today&&data.daily?.[d]?.workScore).map(d=>data.daily[d].workScore);
   const avgWorkScore=dailyWorkScores.length>0?dailyWorkScores.reduce((a,b)=>a+b)/dailyWorkScores.length:null;
   const workBase=avgWorkScore!==null?(avgWorkScore/5)*5:((W.work_completion||0)/10)*5;
-  const work   =r(Math.min(10,workBase+(W.learning?2:0)+((M.work_goal||0)/10)*2+((Y.career_goal||0)/10)*1+(bonus.work||0)));
+  const work   =r(Math.min(10,workBase+(W.learning?2:0)+(bonus.work||0)));
   const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
   const socialWeek=dailySocialCount>0?Math.min(3,dailySocialCount):(W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0));
-  const socialMonth=Math.min(5,(M.deep_social||0)===0?0:(M.deep_social||0)===1?4:5);
-  const social =r(Math.min(10,socialWeek+socialMonth+((Y.relationships||0)/10)*2+(bonus.social||0)));
+  const monthSocialCount=Object.keys(data.daily).filter(d=>d.startsWith(mkey)&&data.daily[d]?.socialToday===true).length;
+  const socialMonth=Math.min(5,monthSocialCount);
+  const social =r(Math.min(10,socialWeek+socialMonth+(bonus.social||0)));
   const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+(W.reflection?3:0)+(M.monthly_review?2:0)+(bonus.mental||0)));
   const total  =r((health+finance+work+social+mental)/5);
   return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays};
@@ -1385,15 +1370,24 @@ function renderSettle(){
   document.getElementById('wSocialNote').value=W.social_note||'';
   document.getElementById('wMentalNote').value=W.mental_note||'';
   fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);fill('mrvy','mrvn',M.monthly_review);
-  if(M.health_goal!==undefined){document.getElementById('mhi').value=M.health_goal;document.getElementById('mhv').textContent=M.health_goal+' / 10';}
-  if(M.work_goal!==undefined){document.getElementById('mwi').value=M.work_goal;document.getElementById('mwv').textContent=M.work_goal+' / 10';}
-  if(M.deep_social!==undefined){document.getElementById('mdi').value=M.deep_social;document.getElementById('mdv').textContent=M.deep_social+' 次';}
+  // Monthly auto-summaries
+  const curMoDays=Object.keys(data.daily).filter(d=>d.startsWith(curMk)).sort();
+  const mExDays=curMoDays.filter(d=>data.daily[d]?.exercise===true).length;
+  const mSlDays=curMoDays.filter(d=>data.daily[d]?.sleep===true).length;
+  const mFrDays=curMoDays.filter(d=>data.daily[d]?.fried===false).length;
+  const mhEl=document.getElementById('mHealthSummary');
+  if(curMoDays.length>0){mhEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月 ${curMoDays.length} 天記錄：運動 ${mExDays} 天 · 充足睡眠 ${mSlDays} 天 · 未炸 ${mFrDays} 天</div>`;}
+  else{mhEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無每日健康紀錄</div>';}
+  const mWorkDays2=curMoDays.filter(d=>data.daily[d]?.workScore);
+  const mAvgWork2=mWorkDays2.length>0?mWorkDays2.reduce((s,d)=>s+data.daily[d].workScore,0)/mWorkDays2.length:null;
+  const mwEl=document.getElementById('mWorkSummary');
+  if(mAvgWork2!==null){mwEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月 ${mWorkDays2.length} 天工作自評：平均 ${mAvgWork2.toFixed(1)} / 5</div>`;}
+  else{mwEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無工作自評紀錄</div>';}
+  const mSocialDays2=curMoDays.filter(d=>data.daily[d]?.socialToday===true).length;
+  const msEl=document.getElementById('mSocialSummary');
+  if(curMoDays.some(d=>data.daily[d]?.socialToday!==undefined)){msEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月社交 <span style="font-weight:700;color:#a5b4fc">${mSocialDays2} 天</span>（貢獻社交 ${Math.min(5,mSocialDays2)} / 5 分）</div>`;}
+  else{msEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無社交打卡紀錄</div>';}
   if(Y.monthly_budget!==undefined){document.getElementById('ybi').value=Y.monthly_budget;document.getElementById('ybv').textContent='NT$'+Y.monthly_budget.toLocaleString();}
-  if(Y.health_achievement!==undefined){document.getElementById('yhi').value=Y.health_achievement;document.getElementById('yhv').textContent=Y.health_achievement+' / 10';}
-  if(Y.finance_goal!==undefined){document.getElementById('yfi').value=Y.finance_goal;document.getElementById('yfv').textContent=Y.finance_goal+' / 10';}
-  if(Y.career_goal!==undefined){document.getElementById('yci').value=Y.career_goal;document.getElementById('ycv').textContent=Y.career_goal+' / 10';}
-  if(Y.relationships!==undefined){document.getElementById('yri').value=Y.relationships;document.getElementById('yrv').textContent=Y.relationships+' / 10';}
-  if(Y.personal_growth!==undefined){document.getElementById('ygi').value=Y.personal_growth;document.getElementById('ygv').textContent=Y.personal_growth+' / 10';}
 }
 
 // ════════════════════════════════
@@ -1683,14 +1677,15 @@ function saveWeekly(){
 
 function saveMonthly(){
   const data=db();
-  data.monthly[mk()]={health_goal:parseInt(document.getElementById('mhi').value),saving:MS.saving??false,finance_report:MS.finance_report??false,work_goal:parseInt(document.getElementById('mwi').value),deep_social:parseInt(document.getElementById('mdi').value),monthly_review:MS.monthly_review??false,savedAt:new Date().toISOString()};
+  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,monthly_review:MS.monthly_review??false,savedAt:new Date().toISOString()};
   dbS(data);renderSettle();go('home');showToast('🗓️ 本月結算已儲存');
 }
 
 function saveYearly(){
   const data=db();
-  data.yearly[yk()]={monthly_budget:parseInt(document.getElementById('ybi').value),health_achievement:parseInt(document.getElementById('yhi').value),finance_goal:parseInt(document.getElementById('yfi').value),career_goal:parseInt(document.getElementById('yci').value),relationships:parseInt(document.getElementById('yri').value),personal_growth:parseInt(document.getElementById('ygi').value),savedAt:new Date().toISOString()};
-  dbS(data);showToast('🎯 年度設定已儲存');
+  const prev=data.yearly[yk()]||{};
+  data.yearly[yk()]={...prev,monthly_budget:parseInt(document.getElementById('ybi').value),savedAt:new Date().toISOString()};
+  dbS(data);showToast('🎯 月預算已儲存');
 }
 
 // ════════════════════════════════
