@@ -11,6 +11,9 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Life RPG">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%);background-attachment:fixed;color:#e2e8f0;min-height:100vh;padding-bottom:72px}
@@ -45,6 +48,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 /* XP bar */
 .xp-bar-wrap{margin:10px 0 2px;background:rgba(255,255,255,.12);border-radius:4px;height:5px;overflow:hidden}
 .xp-bar-fill{height:100%;background:linear-gradient(90deg,#fbbf24,#f59e0b);border-radius:4px;transition:width .5s}
+.sync-row{display:flex;align-items:center;justify-content:flex-end;margin-top:3px;gap:4px;cursor:pointer;min-height:16px}
+.sync-row img{width:14px;height:14px;border-radius:50%;flex-shrink:0}
 
 /* Bottom nav */
 .bnav{position:fixed;bottom:0;left:0;right:0;background:rgba(8,12,32,.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.08);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom)}
@@ -275,6 +280,9 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
   </div>
   <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
   <div id="xpDetail" style="font-size:.62rem;color:rgba(255,255,255,.38);text-align:right;margin-top:3px;letter-spacing:.3px"></div>
+  <div class="sync-row" id="syncStatus" onclick="handleSyncBtn()">
+    <span id="syncTxt" style="font-size:.63rem;letter-spacing:.2px;color:rgba(255,255,255,.32)">☁️ 點擊登入，啟用雲端同步</span>
+  </div>
   <div class="stats">
     <div class="stat"><div class="sv" id="hScore">—</div><div class="sl">本週總分</div></div>
     <div class="stat"><div class="sv" id="hXP">0</div><div class="sl">總 XP</div></div>
@@ -531,6 +539,15 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 
   <!-- ── SETTLE ── -->
   <div class="view" id="view-settle">
+    <div class="card" style="padding:12px 16px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div>
+          <div style="font-size:.82rem;font-weight:700;color:#c7d2fe">🔔 週日結算提醒</div>
+          <div style="font-size:.68rem;color:rgba(255,255,255,.4);margin-top:2px" id="notifStatusTxt">每週日提醒你完成結算</div>
+        </div>
+        <button id="notifToggleBtn" onclick="toggleNotifications()" style="flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:.75rem;font-weight:700;border:1.5px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;white-space:nowrap">開啟</button>
+      </div>
+    </div>
     <div class="card" style="padding:14px 14px 0">
       <div class="stabs" style="margin-bottom:0">
         <div class="stab active" onclick="setST('w')">每週</div>
@@ -668,8 +685,8 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
   <!-- ── HISTORY ── -->
   <div class="view" id="view-history">
     <div class="card">
-      <div class="ctitle">☁️ Gist 雲端同步</div>
-      <div id="syncPanel"></div>
+      <div class="ctitle">☁️ Google 雲端同步</div>
+      <div id="fbSyncCard" style="min-height:48px"></div>
     </div>
     <div class="card">
       <div class="ctitle">資料備份 & 匯出</div>
@@ -802,11 +819,12 @@ const XP_NEXT=[80,200,400,700,1100,1600,2300,3100,4000,Infinity];
 // DATA
 // ════════════════════════════════
 const SK='life_rpg_yu3';
+var _fbUser=null,_syncState='idle',_syncTimer=null;
 function db(){
   const DEF={daily:{},weekly:{},monthly:{},yearly:{},tasks:[]};
   try{return JSON.parse(localStorage.getItem(SK))||DEF;}catch{return DEF;}
 }
-function dbS(d){localStorage.setItem(SK,JSON.stringify(d))}
+function dbS(d){localStorage.setItem(SK,JSON.stringify(d));_scheduleSyncToCloud();}
 
 // ════════════════════════════════
 // DATE HELPERS
@@ -1866,6 +1884,7 @@ function renderSettle(){
   else{msEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無社交打卡紀錄</div>';}
   if(Y.monthly_budget!==undefined){document.getElementById('ybi').value=Y.monthly_budget;document.getElementById('ybv').textContent='NT$'+Y.monthly_budget.toLocaleString();}
   renderDimNameInputs();
+  renderNotifStatus();
 }
 
 // ════════════════════════════════
@@ -2364,7 +2383,7 @@ function renderSyncPanel(){
           <button onclick="setGistIdManual()" style="padding:8px 12px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:700">確認</button>
         </div>
       </div>`:''}
-      <div id="syncStatus" style="font-size:.75rem;color:rgba(255,255,255,.38);text-align:center;min-height:18px;margin-top:8px"></div>`;
+      <div id="gistSyncStatus" style="font-size:.75rem;color:rgba(255,255,255,.38);text-align:center;min-height:18px;margin-top:8px"></div>`;
   }
 }
 
@@ -2397,7 +2416,7 @@ function setGistIdManual(){
   renderSyncPanel();showToast('✅ Gist ID 已設定');
 }
 
-function setSyncStatus(msg){const el=document.getElementById('syncStatus');if(el)el.textContent=msg;}
+function setSyncStatus(msg){const el=document.getElementById('gistSyncStatus');if(el)el.textContent=msg;}
 
 async function findLifeRPGGist(token){
   const res=await fetch('https://api.github.com/gists?per_page=100',
@@ -2464,7 +2483,7 @@ function go(tab){
   if(tab==='daily')renderDaily();
   if(tab==='tasks')renderTasks();
   if(tab==='settle')renderSettle();
-  if(tab==='history'){renderHistory();renderSpendStats();renderAchievements();renderTrendChart();renderSyncPanel();}
+  if(tab==='history'){renderHistory();renderSpendStats();renderAchievements();renderTrendChart();renderSyncStatus();}
 }
 
 // ════════════════════════════════
@@ -2547,11 +2566,198 @@ function editUserName(){
   if(changed)dbS(data);
 })();
 
+// ════════════════════════════════
+// FIREBASE CLOUD SYNC
+// ════════════════════════════════
+firebase.initializeApp({
+  apiKey:"AIzaSyCpdFRAgsenOHWn3nSUVvb5ocnyIJ5fXYU",
+  authDomain:"life-rpg-ypc.firebaseapp.com",
+  projectId:"life-rpg-ypc",
+  storageBucket:"life-rpg-ypc.firebasestorage.app",
+  messagingSenderId:"431543131297",
+  appId:"1:431543131297:web:be0f48ba00dd68ce7fe4e0"
+});
+const _auth=firebase.auth();
+const _fs=firebase.firestore();
+_fs.enablePersistence().catch(()=>{});
+
+function _userDoc(){return _fs.collection('users').doc(_fbUser.uid).collection('data').doc('main');}
+
+function _mergeData(local,cloud){
+  const m=(l={},c={})=>({...l,...c});
+  return{
+    daily:m(local.daily,cloud.daily),
+    weekly:m(local.weekly,cloud.weekly),
+    monthly:m(local.monthly,cloud.monthly),
+    yearly:m(local.yearly,cloud.yearly),
+    tasks:(cloud.tasks||[]).length>=(local.tasks||[]).length?cloud.tasks:local.tasks,
+    achievements:m(local.achievements,cloud.achievements),
+    milestones:m(local.milestones,cloud.milestones),
+  };
+}
+
+function renderSyncStatus(){
+  // Header sync row
+  const row=document.getElementById('syncStatus');
+  const txt=document.getElementById('syncTxt');
+  if(row&&txt){
+    if(!_fbUser){
+      txt.textContent='☁️ 點擊登入，啟用雲端同步';
+      txt.style.color='rgba(255,255,255,.32)';
+      row.querySelector('img')?.remove();
+    }else{
+      let img=row.querySelector('img');
+      if(_fbUser.photoURL){
+        if(!img){img=document.createElement('img');row.insertBefore(img,txt);}
+        img.src=_fbUser.photoURL;
+      }else{img?.remove();}
+      const name=(_fbUser.displayName||_fbUser.email||'').split(' ')[0];
+      if(_syncState==='syncing'){txt.textContent=`${name} · 同步中…`;txt.style.color='rgba(251,191,36,.75)';}
+      else if(_syncState==='synced'){txt.textContent=`${name} · ✓ 已同步`;txt.style.color='rgba(52,211,153,.75)';}
+      else if(_syncState==='error'){txt.textContent=`${name} · ⚠️ 同步失敗`;txt.style.color='rgba(248,113,113,.75)';}
+      else{txt.textContent=`${name} · ☁️`;txt.style.color='rgba(165,180,252,.6)';}
+    }
+  }
+  // History tab Firebase card
+  const card=document.getElementById('fbSyncCard');
+  if(!card)return;
+  if(!_fbUser){
+    card.innerHTML=`
+      <div style="font-size:.82rem;color:rgba(255,255,255,.55);margin-bottom:12px;line-height:1.6">用 Google 帳號登入後，資料自動同步雲端，換裝置也不怕遺失。</div>
+      <button onclick="handleSyncBtn()" style="width:100%;padding:13px;background:linear-gradient(135deg,#4285f4,#1a73e8);color:#fff;border:none;border-radius:14px;font-size:.88rem;font-weight:800;cursor:pointer;letter-spacing:.3px">🔵 用 Google 帳號登入同步</button>`;
+  }else{
+    const name=_fbUser.displayName||_fbUser.email;
+    const avatar=_fbUser.photoURL?`<img src="${_fbUser.photoURL}" style="width:32px;height:32px;border-radius:50%;flex-shrink:0">`:'<div style="width:32px;height:32px;border-radius:50%;background:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem">${(name||'?')[0]}</div>';
+    const stateLabel=_syncState==='syncing'?'同步中…':_syncState==='synced'?'✓ 已同步':_syncState==='error'?'⚠️ 同步失敗':'已連線';
+    const stateColor=_syncState==='syncing'?'#fbbf24':_syncState==='synced'?'#34d399':_syncState==='error'?'#f87171':'#a5b4fc';
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        ${avatar}
+        <div style="flex:1">
+          <div style="font-size:.85rem;font-weight:700;color:#e2e8f0">${name}</div>
+          <div style="font-size:.72rem;color:${stateColor};margin-top:2px">${stateLabel}</div>
+        </div>
+      </div>
+      <button onclick="handleSyncBtn()" style="width:100%;padding:10px;background:rgba(248,113,113,.1);border:1.5px solid rgba(248,113,113,.3);color:#f87171;border-radius:12px;font-size:.8rem;font-weight:700;cursor:pointer">登出</button>`;
+  }
+}
+
+function _scheduleSyncToCloud(){
+  if(!_fbUser)return;
+  _syncState='syncing';renderSyncStatus();
+  clearTimeout(_syncTimer);
+  _syncTimer=setTimeout(async()=>{
+    try{await _userDoc().set(db());_syncState='synced';}
+    catch(e){_syncState='error';}
+    renderSyncStatus();
+  },1500);
+}
+
+_auth.onAuthStateChanged(async user=>{
+  _fbUser=user;
+  if(user){
+    if(!getUserName()&&user.displayName){
+      localStorage.setItem(NAME_KEY,user.displayName.split(' ')[0]);
+      applyUserName();
+    }
+    document.getElementById('welcomeOverlay')?.remove();
+    try{
+      _syncState='syncing';renderSyncStatus();
+      const doc=await _userDoc().get();
+      if(doc.exists()){
+        const merged=_mergeData(db(),doc.data());
+        localStorage.setItem(SK,JSON.stringify(merged));
+        showToast(`☁️ 雲端同步成功！歡迎 ${user.displayName||getUserName()}`);
+      }else{
+        await _userDoc().set(db());
+        showToast(`☁️ 資料已備份！歡迎 ${user.displayName||getUserName()}`);
+      }
+      _syncState='synced';
+      renderHome();renderTasks();renderDaily();
+    }catch(e){
+      console.error('sync error',e);
+      _syncState='error';
+      showToast('⚠️ 雲端同步失敗，請檢查網路');
+    }
+  }else{
+    _syncState='idle';
+    if(!getUserName())showWelcome();
+  }
+  renderSyncStatus();
+});
+
+async function handleSyncBtn(){
+  if(!_fbUser){
+    const provider=new firebase.auth.GoogleAuthProvider();
+    try{await _auth.signInWithPopup(provider);}
+    catch(e){if(e.code!=='auth/popup-closed-by-user')showToast('❌ 登入失敗：'+e.message);}
+  }else{
+    if(confirm(`已登入 ${_fbUser.displayName||_fbUser.email}\n\n確定要登出嗎？`)){
+      await _auth.signOut();
+      showToast('已登出，資料仍保留在本機');
+    }
+  }
+}
+
+// ════════════════════════════════
+// NOTIFICATIONS
+// ════════════════════════════════
+const NOTIF_KEY='life_rpg_notif';
+function getNotifPref(){try{return JSON.parse(localStorage.getItem(NOTIF_KEY)||'{}')}catch{return{}}}
+function saveNotifPref(p){localStorage.setItem(NOTIF_KEY,JSON.stringify(p))}
+
+async function toggleNotifications(){
+  const pref=getNotifPref();
+  if(pref.enabled){saveNotifPref({...pref,enabled:false});renderNotifStatus();showToast('🔕 週日提醒已關閉');return;}
+  if(!('Notification' in window)){showToast('⚠️ 此裝置不支援通知');return;}
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){saveNotifPref({enabled:true,lastWeek:''});renderNotifStatus();showToast('🔔 週日結算提醒已開啟');}
+  else{showToast('❌ 請在瀏覽器設定中允許通知權限');}
+}
+
+function renderNotifStatus(){
+  const pref=getNotifPref();
+  const btn=document.getElementById('notifToggleBtn');
+  const txt=document.getElementById('notifStatusTxt');
+  if(!btn||!txt)return;
+  if(!('Notification' in window)){txt.textContent='此裝置不支援通知';btn.style.display='none';return;}
+  if(pref.enabled&&Notification.permission==='granted'){
+    txt.textContent='已開啟 · 每週日提醒結算';
+    btn.textContent='關閉';btn.style.borderColor='rgba(52,211,153,.4)';btn.style.color='#34d399';btn.style.background='rgba(52,211,153,.08)';
+    btn.disabled=false;btn.style.opacity='1';
+  }else if(Notification.permission==='denied'){
+    txt.textContent='已被封鎖，請至瀏覽器設定開啟';
+    btn.textContent='無法開啟';btn.disabled=true;btn.style.opacity='.4';
+  }else{
+    txt.textContent='每週日提醒你完成結算';
+    btn.textContent='開啟';btn.style.borderColor='rgba(99,102,241,.3)';btn.style.color='#818cf8';btn.style.background='rgba(99,102,241,.1)';
+    btn.disabled=false;btn.style.opacity='1';
+  }
+}
+
+function checkAndSendWeeklyReminder(){
+  const pref=getNotifPref();
+  if(!pref.enabled)return;
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  if(new Date().getDay()!==0)return;
+  const curWk=wk();
+  if(pref.lastWeek===curWk)return;
+  const data=db();
+  if(data.weekly&&data.weekly[curWk])return;
+  const doSend=()=>new Notification('📋 Life RPG 週結算提醒',{body:`本週（${curWk}）還沒結算，花 2 分鐘完成吧 ✨`,icon:'./icon.svg'});
+  if(navigator.serviceWorker?.controller){
+    navigator.serviceWorker.ready
+      .then(r=>r.showNotification('📋 Life RPG 週結算提醒',{body:`本週（${curWk}）還沒結算，花 2 分鐘完成吧 ✨`,icon:'./icon.svg',badge:'./icon.svg'}))
+      .catch(()=>doSend());
+  }else{doSend();}
+  saveNotifPref({...pref,lastWeek:curWk});
+}
+
 // INIT
 loadDimNames();
 applyUserName();
-if(!getUserName())showWelcome();
 go('home');
+checkAndSendWeeklyReminder();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 }

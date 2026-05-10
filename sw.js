@@ -1,4 +1,4 @@
-const CACHE = 'life-rpg-v2';
+const CACHE = 'life-rpg-v4';
 const PRECACHE = [
   './',
   './index.html',
@@ -24,7 +24,7 @@ self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
   // CDN assets: cache-first
-  if (url.hostname.includes('jsdelivr') || url.hostname.includes('cdn.')) {
+  if (url.hostname.includes('jsdelivr') || url.hostname.includes('cdn.') || url.hostname.includes('gstatic.com')) {
     e.respondWith(
       caches.match(e.request).then(cached =>
         cached || fetch(e.request).then(res => {
