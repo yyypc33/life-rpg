@@ -10,10 +10,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Life RPG">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%);background-attachment:fixed;color:#e2e8f0;min-height:100vh;padding-bottom:72px}
@@ -740,6 +736,10 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
   <div class="ni" id="n-history" onclick="go('history')"><div class="ni-icon">📈</div><div class="ni-lbl">歷史</div></div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ════════════════════════════════
 // CONSTANTS
@@ -2579,7 +2579,6 @@ firebase.initializeApp({
 });
 const _auth=firebase.auth();
 const _fs=firebase.firestore();
-_fs.enablePersistence().catch(()=>{});
 
 function _userDoc(){return _fs.collection('users').doc(_fbUser.uid).collection('data').doc('main');}
 
@@ -2756,6 +2755,7 @@ function checkAndSendWeeklyReminder(){
 // INIT
 loadDimNames();
 applyUserName();
+if(!getUserName())showWelcome();
 go('home');
 checkAndSendWeeklyReminder();
 if('serviceWorker' in navigator){
