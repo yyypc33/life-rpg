@@ -143,7 +143,8 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .diff-btn.on-easy{border-color:#34d399;background:rgba(52,211,153,.15);color:#34d399}
 .diff-btn.on-medium{border-color:#818cf8;background:rgba(129,140,248,.15);color:#a5b4fc}
 .diff-btn.on-hard{border-color:#f87171;background:rgba(248,113,113,.15);color:#f87171}
-.task-diff{font-size:.65rem;padding:1px 5px;border-radius:6px;font-weight:700}
+.task-diff{font-size:.65rem;padding:1px 5px;border-radius:6px;font-weight:700;cursor:pointer;border:none;transition:opacity .2s;line-height:1.4}
+.task-diff:hover{opacity:.7}
 .pts-preview{font-size:.8rem;color:#818cf8;margin-bottom:10px;text-align:center;min-height:18px}
 .btn-add-confirm{width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;border:none;border-radius:11px;font-size:.88rem;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(79,70,229,.4)}
 
@@ -772,7 +773,10 @@ const XP_NEXT=[80,200,400,700,1100,1600,2300,3100,4000,Infinity];
 // DATA
 // ════════════════════════════════
 const SK='life_rpg_yu3';
-function db(){return JSON.parse(localStorage.getItem(SK)||'{"daily":{},"weekly":{},"monthly":{},"yearly":{},"tasks":[]}')}
+function db(){
+  const DEF={daily:{},weekly:{},monthly:{},yearly:{},tasks:[]};
+  try{return JSON.parse(localStorage.getItem(SK))||DEF;}catch{return DEF;}
+}
 function dbS(d){localStorage.setItem(SK,JSON.stringify(d))}
 
 // ════════════════════════════════
@@ -1508,7 +1512,7 @@ function renderPtsPreview(){
   const el=document.getElementById('ptsPreview');
   if(!selDims.length){el.innerHTML='<span style="color:rgba(255,255,255,.38)">請選擇至少一個領域</span>';return;}
   const pts=taskPtsPerDim(selDims),xp=taskXPVal(taskFreq,taskDiff);
-  const icons=selDims.map(d=>DIMS.find(x=>x.key===d).icon).join(' ');
+  const icons=selDims.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join(' ');
   const dc=DIFF_CFG[taskDiff];
   el.innerHTML=`完成可得：<b style="color:#4f46e5">${icons} 各 +${pts}分</b> · <b style="color:#f59e0b">+${xp} XP</b> · <span style="color:${dc.color};font-weight:700">${dc.icon} ${dc.label}</span>`;
 }
@@ -1545,9 +1549,22 @@ function completeTask(id){
     t.xpEarned=(t.xpEarned||0)+xpGain;
     dbS(data);renderTasks();renderHome();
     const pts=taskPtsPerDim(t.dimensions);
-    const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d).icon).join('');
+    const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join('');
     showToast(`🎉 ${t.title}！${dimIcons} 各 +${pts}分 · +${xpGain} XP`);
   }
+}
+
+function cycleDiff(id){
+  const data=db();
+  const t=(data.tasks||[]).find(x=>x.id===id);if(!t)return;
+  const order=['easy','medium','hard'];
+  const cur=order.indexOf(t.difficulty||'medium');
+  const newDiff=order[(cur+1)%3];
+  t.difficulty=newDiff;
+  t.xpEarned=(t.completedPeriods||[]).length*taskXPVal(t.frequency,newDiff);
+  dbS(data);renderTasks();renderHome();
+  const dc=DIFF_CFG[newDiff];
+  showToast(`${dc.icon} 難度改為 ${dc.label}，XP 已更新`);
 }
 
 function deleteTask(id){
@@ -1579,12 +1596,12 @@ function renderTasks(){
       const diff=t.difficulty||'medium';
       const dc=DIFF_CFG[diff];
       const pts=taskPtsPerDim(t.dimensions),xp=taskXPVal(t.frequency,diff);
-      const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
+      const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);if(!dim)return'';return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
       html+=`<div class="task-item${isDone?' done':''}">
         <button class="task-check${isDone?' done':''}" onclick="completeTask('${t.id}')">${isDone?'✓':''}</button>
         <div class="task-body">
           <div class="task-title">${t.title}</div>
-          <div class="task-meta">${dimChips}<span class="task-diff" style="background:${dc.bg};color:${dc.color}">${dc.icon} ${dc.label}</span><span class="task-pts">各+${pts}分</span><span class="task-xp">+${xp}XP</span></div>
+          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="點擊切換難度">${dc.icon} ${dc.label}</button><span class="task-pts">各+${pts}分</span><span class="task-xp">+${xp}XP</span></div>
         </div>
         <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
       </div>`;
@@ -2296,11 +2313,17 @@ function editUserName(){
   showToast(`✅ 名字已更新為「${trimmed}」`);
 }
 
-// Migrate old tasks: fill missing difficulty via keyword classification
+// Migrate old tasks: fill missing difficulty + recalc xpEarned accordingly
 (function migrateDifficulty(){
   const data=db();
   let changed=false;
-  (data.tasks||[]).forEach(t=>{if(!t.difficulty){t.difficulty=classifyDiff(t.title);changed=true;}});
+  (data.tasks||[]).forEach(t=>{
+    if(!t.difficulty){
+      t.difficulty=classifyDiff(t.title);
+      t.xpEarned=(t.completedPeriods||[]).length*taskXPVal(t.frequency,t.difficulty);
+      changed=true;
+    }
+  });
   if(changed)dbS(data);
 })();
 
