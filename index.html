@@ -2666,7 +2666,7 @@ if(_auth)_auth.onAuthStateChanged(async user=>{
     try{
       _syncState='syncing';renderSyncStatus();
       const doc=await _userDoc().get();
-      if(doc.exists()){
+      if(doc.exists){
         const merged=_mergeData(db(),doc.data());
         localStorage.setItem(SK,JSON.stringify(merged));
         showToast(`☁️ 雲端同步成功！歡迎 ${user.displayName||getUserName()}`);
