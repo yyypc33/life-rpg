@@ -226,9 +226,10 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .empty p{font-size:.84rem;line-height:1.5}
 
 /* Daily journal extended */
-.txt-input{width:100%;padding:10px 14px;border:1.5px solid rgba(99,102,241,.25);border-radius:10px;font-size:.88rem;outline:none;background:rgba(10,14,44,.7);font-family:inherit;color:#c7d2fe}
+.txt-input{width:100%;padding:10px 14px;border:1.5px solid rgba(99,102,241,.25);border-radius:10px;font-size:.88rem;outline:none;background:rgba(10,14,44,.7);font-family:inherit;color:#c7d2fe;vertical-align:top}
 .txt-input:focus{border-color:#818cf8;box-shadow:0 0 0 3px rgba(129,140,248,.15)}
 .txt-input::placeholder{color:#4f46e5}
+textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
 .tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .tag-chip{padding:6px 12px;border-radius:20px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
 .tag-chip.on{border-color:#a78bfa;background:rgba(167,139,250,.15);color:#c4b5fd;box-shadow:0 0 8px rgba(167,139,250,.2)}
@@ -567,11 +568,11 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           <div id="wWorkSummary" style="margin-bottom:10px"></div>
           <div class="frow">
             <div class="flbl">本週學到什麼新東西？ <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
-            <input type="text" class="txt-input" id="wLearningNote" placeholder="技能、知識、工具、洞察…（填寫即加分）">
+            <textarea class="txt-input" id="wLearningNote" placeholder="技能、知識、工具、洞察…（填寫即加分）" rows="4"></textarea>
           </div>
           <div class="frow">
             <div class="flbl">本週工作心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <input type="text" class="txt-input" id="wWorkNote" placeholder="這週最大的收穫或挑戰…">
+            <textarea class="txt-input" id="wWorkNote" placeholder="這週最大的收穫或挑戰…" rows="4"></textarea>
           </div>
         </div>
         <hr>
@@ -580,7 +581,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           <div id="wSocialSummary" style="margin-bottom:10px"></div>
           <div class="frow">
             <div class="flbl">本週社交心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <input type="text" class="txt-input" id="wSocialNote" placeholder="印象最深的互動或關係心得…">
+            <textarea class="txt-input" id="wSocialNote" placeholder="印象最深的互動或關係心得…" rows="4"></textarea>
           </div>
         </div>
         <hr>
@@ -588,7 +589,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 3分</span></div>
           <div class="frow">
             <div class="flbl">本週回顧與反思 <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
-            <input type="text" class="txt-input" id="wMentalNote" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…">
+            <textarea class="txt-input" id="wMentalNote" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…" rows="4"></textarea>
           </div>
         </div>
         <button class="btn-save" onclick="saveWeekly()">儲存本週結算</button>
@@ -609,7 +610,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           </div>
           <div class="frow">
             <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <input type="text" class="txt-input" id="mHealthGoalNote" placeholder="本月健康目標的回顧…">
+            <textarea class="txt-input" id="mHealthGoalNote" placeholder="本月健康目標的回顧…" rows="4"></textarea>
           </div>
         </div>
         <hr>
@@ -634,7 +635,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           </div>
           <div class="frow">
             <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <input type="text" class="txt-input" id="mWorkGoalNote" placeholder="本月工作目標的回顧…">
+            <textarea class="txt-input" id="mWorkGoalNote" placeholder="本月工作目標的回顧…" rows="4"></textarea>
           </div>
         </div>
         <hr>
@@ -647,7 +648,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           </div>
           <div class="frow">
             <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <input type="text" class="txt-input" id="mSocialGoalNote" placeholder="本月社交目標的回顧…">
+            <textarea class="txt-input" id="mSocialGoalNote" placeholder="本月社交目標的回顧…" rows="4"></textarea>
           </div>
         </div>
         <hr>
@@ -655,7 +656,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 2分</span></div>
           <div class="frow">
             <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +2 分</span><span style="font-size:.7rem;color:rgba(255,255,255,.35)"> · 未填 −1 分</span></div>
-            <input type="text" class="txt-input" id="mMonthlyReviewNote" placeholder="這個月的收穫、遺憾或下個月計畫…">
+            <textarea class="txt-input" id="mMonthlyReviewNote" placeholder="這個月的收穫、遺憾或下個月計畫…" rows="5"></textarea>
           </div>
         </div>
         <button class="btn-save" onclick="saveMonthly()">儲存本月結算</button>
