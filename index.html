@@ -75,6 +75,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 .rtoggle,.stabs{display:flex;background:rgba(10,14,44,.8);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:3px;margin-bottom:12px}
 .rtab,.stab{flex:1;padding:6px;text-align:center;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
 .rtab.active,.stab.active{background:rgba(99,102,241,.25);color:#a5b4fc;box-shadow:0 0 12px rgba(99,102,241,.2)}
+.gtabs{display:flex;background:rgba(10,14,44,.8);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:3px;margin:10px 0 12px}
+.gtab{flex:1;padding:6px;text-align:center;border-radius:6px;font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
+.gtab.active{background:rgba(99,102,241,.25);color:#a5b4fc;box-shadow:0 0 12px rgba(99,102,241,.2)}
 .rlegend{display:flex;justify-content:center;gap:16px;margin-top:8px}
 .rleg-item{display:flex;align-items:center;gap:5px;font-size:.72rem;color:#94a3b8}
 .rleg-dot{width:9px;height:9px;border-radius:50%}
@@ -508,6 +511,33 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
 
   <!-- ── TASKS ── -->
   <div class="view" id="view-tasks">
+    <!-- Goals Card -->
+    <div class="card" id="goalsCard">
+      <div class="ctitle" style="display:flex;align-items:center;justify-content:space-between">目標設定<span style="font-size:.7rem;color:rgba(255,255,255,.38)">週 · 月 · 年量化目標</span></div>
+      <div class="gtabs">
+        <div class="gtab" id="gp-w" onclick="setGoalPeriod('w')">本週</div>
+        <div class="gtab active" id="gp-m" onclick="setGoalPeriod('m')">本月</div>
+        <div class="gtab" id="gp-y" onclick="setGoalPeriod('y')">今年</div>
+      </div>
+      <div id="goalList"></div>
+      <button id="goalAddBtn" onclick="toggleGoalForm()" style="width:100%;padding:10px;background:rgba(99,102,241,.12);border:1.5px dashed rgba(99,102,241,.4);border-radius:12px;color:#818cf8;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:4px">＋ 新增目標</button>
+      <div id="goalForm" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
+        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">目標類別</div>
+        <div class="dim-chips" id="goalDimChips"></div>
+        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin:8px 0 5px">快速範本（點選套用）</div>
+        <div id="goalTemplateChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
+        <input type="text" id="goalTitle" placeholder="目標描述，例如：運動 20 天" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="number" id="goalTarget" placeholder="目標數字（選填）" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none">
+          <input type="text" id="goalUnit" placeholder="單位（天/元/次…）" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-save" style="flex:1;margin:0;padding:12px" onclick="addGoal()">儲存目標</button>
+          <button onclick="toggleGoalForm()" style="padding:12px 18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;color:rgba(255,255,255,.5);cursor:pointer;font-size:.88rem">取消</button>
+        </div>
+      </div>
+    </div>
+    <!-- Tasks Card -->
     <div class="card">
       <div class="task-header">
         <div class="task-group-lbl">自訂任務</div>
@@ -615,6 +645,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fblock">
           <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日紀錄計算</span></div>
           <div id="mHealthSummary"></div>
+          <div id="mHealthGoalRef"></div>
           <div class="frow" style="margin-top:8px">
             <div class="flbl">本月健康目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
             <div class="yn"><button class="ynb" id="mhgy" onclick="setM('health_goal_met',true)">✅ 有</button><button class="ynb" id="mhgn" onclick="setM('health_goal_met',false)">❌ 沒有</button></div>
@@ -640,6 +671,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fblock">
           <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日自評計算</span></div>
           <div id="mWorkSummary"></div>
+          <div id="mWorkGoalRef"></div>
           <div class="frow" style="margin-top:8px">
             <div class="flbl">本月工作目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
             <div class="yn"><button class="ynb" id="mwgy" onclick="setM('work_goal_met',true)">✅ 有</button><button class="ynb" id="mwgn" onclick="setM('work_goal_met',false)">❌ 沒有</button></div>
@@ -653,6 +685,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fblock">
           <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日打卡計算，最高 5 分</span></div>
           <div id="mSocialSummary"></div>
+          <div id="mSocialGoalRef"></div>
           <div class="frow" style="margin-top:8px">
             <div class="flbl">本月社交目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
             <div class="yn"><button class="ynb" id="mscgy" onclick="setM('social_goal_met',true)">✅ 有</button><button class="ynb" id="mscgn" onclick="setM('social_goal_met',false)">❌ 沒有</button></div>
@@ -682,10 +715,12 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <button class="btn-save" onclick="saveYearly()">儲存預算</button>
       </div>
       <div class="card" style="margin-top:12px">
-        <div class="ctitle">自訂維度名稱</div>
-        <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px">留空則使用預設名稱</div>
-        <div id="dimNameInputs"></div>
-        <button class="btn-save" onclick="saveDimNames()">儲存名稱</button>
+        <div class="ctitle" onclick="toggleDimNames()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">自訂維度名稱<span id="dimNamesChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span></div>
+        <div id="dimNamesContent" style="display:none;margin-top:8px">
+          <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px">留空則使用預設名稱</div>
+          <div id="dimNameInputs"></div>
+          <button class="btn-save" onclick="saveDimNames()">儲存名稱</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1486,7 +1521,7 @@ function renderHome(){
   function srcTxt(d){
     if(RV!=='week')return'';
     const b=ws._bonus,W=ws._W,M=ws._M;
-    const lnk=`<span onclick="go('settle')" style="color:#f59e0b;cursor:pointer;text-decoration:underline dotted">未填→</span>`;
+    const lnk=`<span onclick="go('tasks')" style="color:#f59e0b;cursor:pointer;text-decoration:underline dotted">未填→</span>`;
     const now=new Date();
     const lastWeekOfMonth=(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate())<7;
     const t={
@@ -1837,6 +1872,7 @@ function renderTasks(){
   });
   if(!tasks.length)html=`<div class="empty"><div class="ei">✅</div><p>還沒有自訂任務<br>點擊「＋ 新增任務」開始</p></div>`;
   document.getElementById('taskList').innerHTML=html;
+  renderGoals();
 }
 
 // ════════════════════════════════
@@ -1910,7 +1946,10 @@ function renderSettle(){
   if(curMoDays.some(d=>data.daily[d]?.socialToday!==undefined)){msEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月社交 <span style="font-weight:700;color:#a5b4fc">${mSocialDays2} 天</span>（貢獻社交 ${Math.min(5,mSocialDays2)} / 5 分）</div>`;}
   else{msEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無社交打卡紀錄</div>';}
   if(Y.monthly_budget!==undefined){document.getElementById('ybi').value=Y.monthly_budget;document.getElementById('ybv').textContent='NT$'+Y.monthly_budget.toLocaleString();}
-  renderDimNameInputs();
+  // Show set goals in monthly section
+  _renderGoalRef('mHealthGoalRef','m',curMk,'health');
+  _renderGoalRef('mWorkGoalRef','m',curMk,'work');
+  _renderGoalRef('mSocialGoalRef','m',curMk,'social');
   renderNotifStatus();
 }
 
@@ -2614,6 +2653,155 @@ function toggleAch(){
   const open=el.style.display!=='none';
   el.style.display=open?'none':'block';
   ch.textContent=open?'▶':'▼';
+}
+function toggleDimNames(){
+  const el=document.getElementById('dimNamesContent');
+  const ch=document.getElementById('dimNamesChevron');
+  if(!el||!ch)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  ch.textContent=open?'▶':'▼';
+  if(!open)renderDimNameInputs();
+}
+
+// ════════════════════════════════
+// GOALS
+// ════════════════════════════════
+let _goalPeriod='m',_goalDim='health';
+
+const GOAL_TEMPLATES={
+  w:{
+    health: [{t:'運動 4 天',n:4,u:'天'},{t:'睡眠達標 5 天',n:5,u:'天'}],
+    finance:[{t:'支出不超週預算',n:null,u:''}],
+    work:   [{t:'學習筆記 1 篇',n:1,u:'篇'},{t:'工作自評均 3.5 分',n:3.5,u:'分'}],
+    social: [{t:'社交 2 天',n:2,u:'天'}],
+    mental: [{t:'反思筆記 1 篇',n:1,u:'篇'},{t:'冥想 4 天',n:4,u:'天'}],
+  },
+  m:{
+    health: [{t:'運動 20 天',n:20,u:'天'},{t:'跑步 30 公里',n:30,u:'公里'},{t:'睡眠達標 22 天',n:22,u:'天'}],
+    finance:[{t:'月儲蓄 5,000 元',n:5000,u:'元'},{t:'支出控制在預算內',n:null,u:''}],
+    work:   [{t:'工作自評均 3.5 分',n:3.5,u:'分'},{t:'學習筆記 4 篇',n:4,u:'篇'}],
+    social: [{t:'社交 10 天',n:10,u:'天'},{t:'朋友聚餐 2 次',n:2,u:'次'}],
+    mental: [{t:'冥想 15 天',n:15,u:'天'},{t:'閱讀 1 本',n:1,u:'本'}],
+  },
+  y:{
+    health: [{t:'運動 200 天',n:200,u:'天'},{t:'半馬完成 1 次',n:1,u:'次'}],
+    finance:[{t:'年儲蓄 60,000 元',n:60000,u:'元'},{t:'建立緊急預備金 3 月薪',n:3,u:'月薪'}],
+    work:   [{t:'完成技能課程 2 個',n:2,u:'個'},{t:'升遷或加薪',n:null,u:''}],
+    social: [{t:'家庭旅遊 2 次',n:2,u:'次'},{t:'老友聚會 6 次',n:6,u:'次'}],
+    mental: [{t:'閱讀 12 本',n:12,u:'本'},{t:'旅行 2 次',n:2,u:'次'}],
+  }
+};
+
+function _goalPKey(){return _goalPeriod==='w'?wk():_goalPeriod==='m'?mk():yk();}
+
+function renderGoals(){
+  const data=db();
+  const list=((data.goals||{})[_goalPeriod]||{})[_goalPKey()]||[];
+  const el=document.getElementById('goalList');
+  if(!el)return;
+  if(!list.length){
+    el.innerHTML='<div style="text-align:center;padding:10px 0;font-size:.82rem;color:rgba(255,255,255,.28)">尚無目標，點下方新增</div>';
+    return;
+  }
+  el.innerHTML=list.map(g=>{
+    const dim=DIMS.find(d=>d.key===g.dim);
+    const badge=g.target!=null?`<span style="font-size:.7rem;color:rgba(255,255,255,.4);margin-left:4px">→ ${g.target} ${g.unit||''}</span>`:'';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.05);border-radius:10px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+        <span style="font-size:1rem;flex-shrink:0">${dim?.icon||'🎯'}</span>
+        <div>
+          <div style="font-size:.85rem;color:#e2e8f0;font-weight:600">${g.title}${badge}</div>
+          <div style="font-size:.7rem;color:${dim?.color||'#818cf8'};margin-top:1px">${dim?.label||''}</div>
+        </div>
+      </div>
+      <button onclick="deleteGoal('${g.id}')" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:1.1rem;padding:2px 6px;flex-shrink:0">×</button>
+    </div>`;
+  }).join('');
+}
+
+function setGoalPeriod(p){
+  _goalPeriod=p;
+  ['w','m','y'].forEach(x=>document.getElementById('gp-'+x)?.classList.toggle('active',x===p));
+  document.getElementById('goalForm').style.display='none';
+  document.getElementById('goalAddBtn').style.display='';
+  renderGoals();
+}
+
+function toggleGoalForm(){
+  const f=document.getElementById('goalForm');
+  const b=document.getElementById('goalAddBtn');
+  const open=f.style.display!=='none';
+  f.style.display=open?'none':'block';
+  b.style.display=open?'':'none';
+  if(!open){_goalDim='health';renderGoalDimChips();renderGoalTemplates();}
+}
+
+function renderGoalDimChips(){
+  const el=document.getElementById('goalDimChips');
+  if(!el)return;
+  el.innerHTML=DIMS.map(d=>`<span onclick="selectGoalDim('${d.key}')" style="padding:5px 10px;border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer;border:1.5px solid ${d.color};background:${d.key===_goalDim?d.color+'33':'transparent'};color:${d.key===_goalDim?d.color:'rgba(255,255,255,.45)'};">${d.icon} ${d.label}</span>`).join('');
+}
+
+function selectGoalDim(key){
+  _goalDim=key;
+  renderGoalDimChips();
+  renderGoalTemplates();
+}
+
+function renderGoalTemplates(){
+  const el=document.getElementById('goalTemplateChips');
+  if(!el)return;
+  const tpls=(GOAL_TEMPLATES[_goalPeriod]||{})[_goalDim]||[];
+  el.innerHTML=tpls.map(tp=>`<span onclick="applyGoalTemplate(this)" data-t="${tp.t.replace(/"/g,'&quot;')}" data-n="${tp.n??''}" data-u="${tp.u||''}" style="padding:5px 10px;border-radius:20px;font-size:.75rem;cursor:pointer;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc">${tp.t}</span>`).join('');
+}
+
+function applyGoalTemplate(el){
+  document.getElementById('goalTitle').value=el.dataset.t;
+  document.getElementById('goalTarget').value=el.dataset.n||'';
+  document.getElementById('goalUnit').value=el.dataset.u||'';
+}
+
+function addGoal(){
+  const title=(document.getElementById('goalTitle').value||'').trim();
+  if(!title)return showToast('請輸入目標描述');
+  const targetVal=document.getElementById('goalTarget').value;
+  const unit=(document.getElementById('goalUnit').value||'').trim();
+  const data=db();
+  if(!data.goals)data.goals={};
+  if(!data.goals[_goalPeriod])data.goals[_goalPeriod]={};
+  const pk=_goalPKey();
+  if(!data.goals[_goalPeriod][pk])data.goals[_goalPeriod][pk]=[];
+  data.goals[_goalPeriod][pk].push({id:'g_'+Date.now(),title,dim:_goalDim,target:targetVal!==''?parseFloat(targetVal):null,unit});
+  dbS(data);
+  document.getElementById('goalTitle').value='';
+  document.getElementById('goalTarget').value='';
+  document.getElementById('goalUnit').value='';
+  toggleGoalForm();
+  renderGoals();
+  showToast('🎯 目標已設定');
+}
+
+function deleteGoal(id){
+  const data=db();
+  const pk=_goalPKey();
+  if(data.goals?.[_goalPeriod]?.[pk]){
+    data.goals[_goalPeriod][pk]=data.goals[_goalPeriod][pk].filter(g=>g.id!==id);
+    dbS(data);renderGoals();
+  }
+}
+
+function _renderGoalRef(elId,period,pKey,dim){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const goals=((db().goals||{})[period]||{})[pKey]||[];
+  const dGoals=goals.filter(g=>g.dim===dim);
+  const dimDef=DIMS.find(d=>d.key===dim);
+  if(dGoals.length){
+    el.innerHTML=`<div style="padding:6px 0 2px">`+dGoals.map(g=>`<div style="font-size:.75rem;color:${dimDef?.color||'#818cf8'};margin-bottom:2px">🎯 ${g.title}${g.target!=null?` (${g.target} ${g.unit||''})`:''}</div>`).join('')+`</div>`;
+  }else{
+    el.innerHTML=`<div style="font-size:.72rem;color:rgba(255,255,255,.3);padding:4px 0 2px">尚未設定目標 <span onclick="go('tasks')" style="cursor:pointer;color:#818cf8;text-decoration:underline dotted">→ 去設定</span></div>`;
+  }
 }
 
 // ════════════════════════════════
