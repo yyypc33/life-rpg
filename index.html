@@ -473,8 +473,8 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 7分，自動從每日自評計算</span></div>
           <div id="wWorkSummary" style="margin-bottom:10px"></div>
           <div class="frow">
-            <div class="flbl">本週有主動學習新東西嗎？</div>
-            <div class="yn"><button class="ynb" id="wly" onclick="setW('learning',true)">✅ 有</button><button class="ynb yn-n" id="wln" onclick="setW('learning',false)">❌ 沒有</button></div>
+            <div class="flbl">本週學到什麼新東西？ <span style="font-size:.7rem;color:#34d399">填寫 +2 分</span></div>
+            <input type="text" class="txt-input" id="wLearningNote" placeholder="技能、知識、工具、洞察…（填寫即加分）">
           </div>
           <div class="frow">
             <div class="flbl">本週工作心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
@@ -814,7 +814,8 @@ function calcWeek(wkey){
   const avgWorkScore=dailyWorkScores.length>0?dailyWorkScores.reduce((a,b)=>a+b)/dailyWorkScores.length:null;
   const workBase=avgWorkScore!==null?(avgWorkScore/5)*5:((W.work_completion||0)/10)*5;
   const workGoal=M.work_goal_met===true?2:M.work_goal_met===false?-1:0;
-  const work   =r(Math.min(10,workBase+(W.learning?2:0)+workGoal+(bonus.work||0)));
+  const learningScore=W.learning_note!==undefined?(W.learning_note?2:0):(W.learning?2:0);
+  const work   =r(Math.min(10,workBase+learningScore+workGoal+(bonus.work||0)));
   const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
   const socialWeek=dailySocialCount>0?Math.min(3,dailySocialCount):(W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0));
   const monthSocialCount=Object.keys(data.daily).filter(d=>d.startsWith(mkey)&&data.daily[d]?.socialToday===true).length;
@@ -1125,7 +1126,7 @@ function renderHome(){
       health:`日 運動${ws._ex}天 睡眠${ws._sl}天 未炸${ws._fried}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':'未填'}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
       finance:ws._spendDays>0?`本週 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
-      work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning!==undefined?(W.learning?'✓':'✗'):'未填'} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
+      work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):'未填')} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
       social:`週 社交 ${ws._socialWeek??0}天 | 月 累計 ${ws._monthSocialCount??0}天 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':'未填'}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
       mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填')} | 月回顧${M.monthly_review_note?'✓':(M.monthly_review!==undefined?(M.monthly_review?'✓':'✗'):'未填')}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
     };
@@ -1368,7 +1369,7 @@ function renderSettle(){
   document.getElementById('wDone').style.display=data.weekly[curWk]?'flex':'none';
   document.getElementById('mDone').style.display=data.monthly[curMk]?'flex':'none';
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
-  fill('wly','wln',W.learning);fill('wry','wrn',W.reflection);
+  document.getElementById('wLearningNote').value=W.learning_note||'';
   // Auto-summary: finance
   const curDays=wDays(curWk);const today2=dk();
   const weeklyBudget2=(Y.monthly_budget||25000)/4;
@@ -1591,14 +1592,14 @@ function renderTrendChart(){
 // FORM STATE
 // ════════════════════════════════
 const DS={exercise:null,sleep:null,mood:null,fried:null};
-const WS={learning:null};
+const WS={};
 const MS={saving:null,finance_report:null,health_goal_met:null,work_goal_met:null,social_goal_met:null};
 let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=[],selSocialToday=null,editDay=dk();
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
-function setW(k,v){WS[k]=v;const m={learning:['wly','wln']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setW(k,v){WS[k]=v;}
 function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],health_goal_met:['mhgy','mhgn'],work_goal_met:['mwgy','mwgn'],social_goal_met:['mscgy','mscgn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 
 function renderMoodTags(){
@@ -1698,10 +1699,12 @@ function saveDaily(){
 function saveWeekly(){
   const data=db();
   const prev=data.weekly[wk()]||{};
-  const saved={...prev,learning:WS.learning??false,savedAt:new Date().toISOString()};
+  const saved={...prev,savedAt:new Date().toISOString()};
+  const ln=document.getElementById('wLearningNote').value.trim();
   const wn=document.getElementById('wWorkNote').value.trim();
   const sn=document.getElementById('wSocialNote').value.trim();
   const mn=document.getElementById('wMentalNote').value.trim();
+  if(ln){saved.learning_note=ln;delete saved.learning;}else{delete saved.learning_note;}
   if(wn)saved.work_note=wn;else delete saved.work_note;
   if(sn)saved.social_note=sn;else delete saved.social_note;
   saved.mental_note=mn; // always save (empty string → -1 deduction; non-empty → +3)
