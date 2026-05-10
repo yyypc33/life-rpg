@@ -317,7 +317,18 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
       <div class="dim-list" id="dimList"></div>
     </div>
     <div class="card" id="rwCard" style="display:none">
-      <div class="ctitle">本週狀態</div>
+      <div class="ctitle" style="display:flex;justify-content:space-between;align-items:center">
+        本週狀態
+        <span onclick="toggleRwLegend()" style="font-size:.7rem;color:rgba(255,255,255,.38);cursor:pointer;font-weight:500;letter-spacing:.2px">規則 ℹ️</span>
+      </div>
+      <div id="rwLegend" style="display:none;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid rgba(255,255,255,.08)">
+        <div style="display:flex;flex-direction:column;gap:6px;font-size:.75rem">
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🏆</span><span style="color:#34d399;font-weight:700">≥ 8.0</span><span style="color:rgba(255,255,255,.55)">達標週 — 自由消費，好好放鬆</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">💪</span><span style="color:#fbbf24;font-weight:700">5.0 – 7.9</span><span style="color:rgba(255,255,255,.55)">繼續保持 — 下週再衝</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🤲</span><span style="color:#f87171;font-weight:700">< 5.0</span><span style="color:rgba(255,255,255,.55)">懲罰週 — 完成一項社區貢獻</span></div>
+          <div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);line-height:1.5">總分 = (健康 + 財務 + 工作 + 社交 + 心理) ÷ 5，各維度 0–10 分</div>
+        </div>
+      </div>
       <div class="rbox" id="rwBox"></div>
     </div>
   </div>
@@ -686,21 +697,26 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
       <div id="fbSyncCard" style="min-height:48px"></div>
     </div>
     <div class="card">
-      <div class="ctitle">資料備份 & 匯出</div>
-      <div style="display:flex;gap:8px;margin-bottom:8px">
-        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)" onclick="exportBackup()">📦 JSON 備份</button>
-        <label class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">
-          📂 匯入還原
-          <input type="file" accept=".json" style="display:none" onchange="importBackup(this)">
-        </label>
+      <div class="ctitle" onclick="toggleBackup()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
+        資料備份 & 匯出
+        <span id="backupChevron" style="font-size:.75rem;color:rgba(255,255,255,.35);transition:transform .2s">▶</span>
       </div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)" onclick="exportDailyCSV()">📊 每日紀錄 CSV</button>
-        <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed)" onclick="exportWeeklyCSV()">📈 週分數 CSV</button>
-      </div>
-      <div style="font-size:.75rem;color:rgba(255,255,255,.38);line-height:1.6">
-        JSON：完整備份含任務，建議每週存 iCloud / OneDrive。<br>
-        CSV：可直接用 Excel / Google Sheets 開啟分析。
+      <div id="backupContent" style="display:none;margin-top:12px">
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)" onclick="exportBackup()">📦 JSON 備份</button>
+          <label class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#f59e0b,#d97706);text-align:center;cursor:pointer;display:flex;align-items:center;justify-content:center">
+            📂 匯入還原
+            <input type="file" accept=".json" style="display:none" onchange="importBackup(this)">
+          </label>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px">
+          <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)" onclick="exportDailyCSV()">📊 每日紀錄 CSV</button>
+          <button class="btn-save" style="flex:1;padding:12px;background:linear-gradient(135deg,#8b5cf6,#7c3aed)" onclick="exportWeeklyCSV()">📈 週分數 CSV</button>
+        </div>
+        <div style="font-size:.75rem;color:rgba(255,255,255,.38);line-height:1.6">
+          JSON：完整備份含任務，建議每週存 iCloud / OneDrive。<br>
+          CSV：可直接用 Excel / Google Sheets 開啟分析。
+        </div>
       </div>
     </div>
     <div class="card">
@@ -2566,6 +2582,19 @@ function editUserName(){
   });
   if(changed)dbS(data);
 })();
+
+function toggleRwLegend(){
+  const el=document.getElementById('rwLegend');
+  el.style.display=el.style.display==='none'?'block':'none';
+}
+function toggleBackup(){
+  const el=document.getElementById('backupContent');
+  const ch=document.getElementById('backupChevron');
+  if(!el||!ch)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  ch.textContent=open?'▶':'▼';
+}
 
 // ════════════════════════════════
 // FIREBASE CLOUD SYNC
