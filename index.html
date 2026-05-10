@@ -466,30 +466,28 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         <div class="ctitle">每週結算 <span class="fbadge fb-w">週日</span></div>
         <div class="fblock">
           <div class="fbtitle">💰 財務消費 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
-          <div style="font-size:.8rem;color:rgba(255,255,255,.45);background:rgba(255,255,255,.05);border-radius:10px;padding:10px 12px;line-height:1.6">
-            未超過 NT$1,000 <b style="color:#10b981">+1</b>　超過 NT$1,000 <b style="color:#ef4444">−1.5</b><br>
-            <span style="font-size:.72rem;color:rgba(255,255,255,.38)">每天打卡時填寫，週分數自動加總</span>
-          </div>
+          <div id="wFinanceSummary"></div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 7分</span></div>
-          <div class="frow">
-            <div class="flbl"><span>本週工作目標完成度</span><span class="fval" id="wkv">5 / 10</span></div>
-            <input type="range" min="0" max="10" value="5" id="wki" oninput="document.getElementById('wkv').textContent=this.value+' / 10'">
-          </div>
+          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 7分，自動從每日自評計算</span></div>
+          <div id="wWorkSummary" style="margin-bottom:10px"></div>
           <div class="frow">
             <div class="flbl">本週有主動學習新東西嗎？</div>
             <div class="yn"><button class="ynb" id="wly" onclick="setW('learning',true)">✅ 有</button><button class="ynb yn-n" id="wln" onclick="setW('learning',false)">❌ 沒有</button></div>
           </div>
+          <div class="frow">
+            <div class="flbl">本週工作心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <input type="text" class="txt-input" id="wWorkNote" placeholder="這週最大的收穫或挑戰…">
+          </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 3分｜3次以上滿分</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔社交 3分，自動從每日打卡計算</span></div>
+          <div id="wSocialSummary" style="margin-bottom:10px"></div>
           <div class="frow">
-            <div class="flbl"><span>本週與朋友／陌生人／家人互動幾次？</span><span class="fval" id="wcv">0 次</span></div>
-            <input type="range" min="0" max="7" value="0" id="wci" oninput="setW('social_count',+this.value);document.getElementById('wcv').textContent=this.value+' 次'">
-            <div style="font-size:.72rem;color:#6366f1;margin-top:6px">0次→0分　1次→1分　2次→2分　3次以上→3分滿分</div>
+            <div class="flbl">本週社交心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <input type="text" class="txt-input" id="wSocialNote" placeholder="印象最深的互動或關係心得…">
           </div>
         </div>
         <hr>
@@ -498,6 +496,10 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
           <div class="frow">
             <div class="flbl">本週有完成週反思嗎？</div>
             <div class="yn"><button class="ynb" id="wry" onclick="setW('reflection',true)">✅ 有</button><button class="ynb yn-n" id="wrn" onclick="setW('reflection',false)">❌ 沒有</button></div>
+          </div>
+          <div class="frow">
+            <div class="flbl">本週心理心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <input type="text" class="txt-input" id="wMentalNote" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…">
           </div>
         </div>
         <button class="btn-save" onclick="saveWeekly()">儲存本週結算</button>
@@ -1357,9 +1359,31 @@ function renderSettle(){
   document.getElementById('mDone').style.display=data.monthly[curMk]?'flex':'none';
   const fill=(yid,nid,val)=>{if(val===undefined||val===null)return;document.getElementById(yid).className='ynb'+(val?' yn-y':'');document.getElementById(nid).className='ynb'+(val?'':' yn-n');};
   fill('wly','wln',W.learning);fill('wry','wrn',W.reflection);
-  const sc=W.social_count!==undefined?W.social_count:(W.contact?3:0);
-  document.getElementById('wci').value=sc;document.getElementById('wcv').textContent=sc+' 次';
-  if(W.work_completion!==undefined){document.getElementById('wki').value=W.work_completion;document.getElementById('wkv').textContent=W.work_completion+' / 10';}
+  // Auto-summary: finance
+  const curDays=wDays(curWk);const today2=dk();
+  const weeklyBudget2=(Y.monthly_budget||25000)/4;
+  const spendDays2=curDays.filter(d=>data.daily[d]?.spendAmount!==undefined);
+  const totalSpend=spendDays2.reduce((s,d)=>s+(data.daily[d].spendAmount||0),0);
+  const finEl=document.getElementById('wFinanceSummary');
+  if(spendDays2.length>0){const over=totalSpend>weeklyBudget2;finEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週花費 <span style="font-weight:700;color:${over?'#f87171':'#34d399'}">NT$${totalSpend.toLocaleString()}</span> / 預算 NT$${Math.round(weeklyBudget2).toLocaleString()}（${spendDays2.length}/7天記帳）</div>`;}
+  else{finEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無每日記帳資料，請在「每日」tab 記錄花費</div>';}
+  // Auto-summary: work
+  const WEMOJI=['','😔','😕','😐','😊','🔥'];
+  const workDays2=curDays.filter(d=>d<=today2&&data.daily[d]?.workScore);
+  const avgWork=workDays2.length>0?workDays2.reduce((s,d)=>s+data.daily[d].workScore,0)/workDays2.length:null;
+  const wkEl=document.getElementById('wWorkSummary');
+  if(avgWork!==null){wkEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週 ${workDays2.length} 天自評：平均 ${WEMOJI[Math.round(avgWork)]} ${avgWork.toFixed(1)} / 5（折算工作 ${(avgWork/5*5).toFixed(1)} / 5 分）</div>`;}
+  else{wkEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無工作自評，請在「每日」tab 填寫</div>';}
+  // Auto-summary: social
+  const socialDays2=curDays.filter(d=>d<=today2&&data.daily[d]?.socialToday===true);
+  const hasSocialData=curDays.some(d=>d<=today2&&data.daily[d]?.socialToday!==undefined);
+  const scEl=document.getElementById('wSocialSummary');
+  if(hasSocialData){scEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週社交 <span style="font-weight:700;color:#a5b4fc">${socialDays2.length} 天</span>（貢獻社交 ${Math.min(3,socialDays2.length)} / 3 分）</div>`;}
+  else{scEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無社交打卡，請在「每日」tab 填寫</div>';}
+  // Load saved notes
+  document.getElementById('wWorkNote').value=W.work_note||'';
+  document.getElementById('wSocialNote').value=W.social_note||'';
+  document.getElementById('wMentalNote').value=W.mental_note||'';
   fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);fill('mrvy','mrvn',M.monthly_review);
   if(M.health_goal!==undefined){document.getElementById('mhi').value=M.health_goal;document.getElementById('mhv').textContent=M.health_goal+' / 10';}
   if(M.work_goal!==undefined){document.getElementById('mwi').value=M.work_goal;document.getElementById('mwv').textContent=M.work_goal+' / 10';}
@@ -1644,10 +1668,16 @@ function saveDaily(){
 }
 
 function saveWeekly(){
-  const wc=parseInt(document.getElementById('wki').value);
-  const sc=parseInt(document.getElementById('wci').value);
   const data=db();
-  data.weekly[wk()]={work_completion:wc,social_count:sc,learning:WS.learning??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
+  const prev=data.weekly[wk()]||{};
+  const saved={...prev,learning:WS.learning??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
+  const wn=document.getElementById('wWorkNote').value.trim();
+  const sn=document.getElementById('wSocialNote').value.trim();
+  const mn=document.getElementById('wMentalNote').value.trim();
+  if(wn)saved.work_note=wn;else delete saved.work_note;
+  if(sn)saved.social_note=sn;else delete saved.social_note;
+  if(mn)saved.mental_note=mn;else delete saved.mental_note;
+  data.weekly[wk()]=saved;
   dbS(data);renderSettle();go('home');showToast('📅 本週結算已儲存');
 }
 
