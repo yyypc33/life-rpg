@@ -2372,10 +2372,12 @@ function editUserName(){
   if(changed)dbS(data);
 })();
 
-// Migrate daily XP: old +3 → new +10
+// Migrate daily XP: any non-retroactive record with xp < 10 → 10
 (function migrateDailyXP(){
   const data=db();let changed=false;
-  Object.values(data.daily).forEach(log=>{if(log&&log.xp===3){log.xp=10;changed=true;}});
+  Object.values(data.daily||{}).forEach(log=>{
+    if(log&&!log.retroactive&&(log.xp||0)<10){log.xp=10;changed=true;}
+  });
   if(changed)dbS(data);
 })();
 
