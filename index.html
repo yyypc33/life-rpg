@@ -494,11 +494,7 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         <div class="fblock">
           <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 3分</span></div>
           <div class="frow">
-            <div class="flbl">本週有完成週反思嗎？</div>
-            <div class="yn"><button class="ynb" id="wry" onclick="setW('reflection',true)">✅ 有</button><button class="ynb yn-n" id="wrn" onclick="setW('reflection',false)">❌ 沒有</button></div>
-          </div>
-          <div class="frow">
-            <div class="flbl">本週心理心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <div class="flbl">本週回顧與反思 <span style="font-size:.7rem;color:#34d399">填寫 +3 分</span><span style="font-size:.7rem;color:rgba(255,255,255,.35)"> · 未填 −1 分</span></div>
             <input type="text" class="txt-input" id="wMentalNote" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…">
           </div>
         </div>
@@ -514,6 +510,14 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         <div class="fblock">
           <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日紀錄計算</span></div>
           <div id="mHealthSummary"></div>
+          <div class="frow" style="margin-top:8px">
+            <div class="flbl">本月健康目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
+            <div class="yn"><button class="ynb" id="mhgy" onclick="setM('health_goal_met',true)">✅ 有</button><button class="ynb" id="mhgn" onclick="setM('health_goal_met',false)">❌ 沒有</button></div>
+          </div>
+          <div class="frow">
+            <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <input type="text" class="txt-input" id="mHealthGoalNote" placeholder="本月健康目標的回顧…">
+          </div>
         </div>
         <hr>
         <div class="fblock">
@@ -531,18 +535,34 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
         <div class="fblock">
           <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日自評計算</span></div>
           <div id="mWorkSummary"></div>
+          <div class="frow" style="margin-top:8px">
+            <div class="flbl">本月工作目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
+            <div class="yn"><button class="ynb" id="mwgy" onclick="setM('work_goal_met',true)">✅ 有</button><button class="ynb" id="mwgn" onclick="setM('work_goal_met',false)">❌ 沒有</button></div>
+          </div>
+          <div class="frow">
+            <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <input type="text" class="txt-input" id="mWorkGoalNote" placeholder="本月工作目標的回顧…">
+          </div>
         </div>
         <hr>
         <div class="fblock">
           <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日打卡計算，最高 5 分</span></div>
           <div id="mSocialSummary"></div>
+          <div class="frow" style="margin-top:8px">
+            <div class="flbl">本月社交目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
+            <div class="yn"><button class="ynb" id="mscgy" onclick="setM('social_goal_met',true)">✅ 有</button><button class="ynb" id="mscgn" onclick="setM('social_goal_met',false)">❌ 沒有</button></div>
+          </div>
+          <div class="frow">
+            <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <input type="text" class="txt-input" id="mSocialGoalNote" placeholder="本月社交目標的回顧…">
+          </div>
         </div>
         <hr>
         <div class="fblock">
           <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 2分</span></div>
           <div class="frow">
-            <div class="flbl">本月有完成月度回顧嗎？</div>
-            <div class="yn"><button class="ynb" id="mrvy" onclick="setM('monthly_review',true)">✅ 有</button><button class="ynb yn-n" id="mrvn" onclick="setM('monthly_review',false)">❌ 沒有</button></div>
+            <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +2 分</span><span style="font-size:.7rem;color:rgba(255,255,255,.35)"> · 未填 −1 分</span></div>
+            <input type="text" class="txt-input" id="mMonthlyReviewNote" placeholder="這個月的收穫、遺憾或下個月計畫…">
           </div>
         </div>
         <button class="btn-save" onclick="saveMonthly()">儲存本月結算</button>
@@ -786,19 +806,24 @@ function calcWeek(wkey){
     spendScore=Math.max(0,Math.min(5,(legacySum+10.5)/17.5*5));
   } else {spendScore=0;}
 
-  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+(bonus.health||0)));
+  const healthGoal=M.health_goal_met===true?2:M.health_goal_met===false?-1:0;
+  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+healthGoal+(bonus.health||0)));
   const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+(bonus.finance||0)));
   const today=dk();
   const dailyWorkScores=days.filter(d=>d<=today&&data.daily?.[d]?.workScore).map(d=>data.daily[d].workScore);
   const avgWorkScore=dailyWorkScores.length>0?dailyWorkScores.reduce((a,b)=>a+b)/dailyWorkScores.length:null;
   const workBase=avgWorkScore!==null?(avgWorkScore/5)*5:((W.work_completion||0)/10)*5;
-  const work   =r(Math.min(10,workBase+(W.learning?2:0)+(bonus.work||0)));
+  const workGoal=M.work_goal_met===true?2:M.work_goal_met===false?-1:0;
+  const work   =r(Math.min(10,workBase+(W.learning?2:0)+workGoal+(bonus.work||0)));
   const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
   const socialWeek=dailySocialCount>0?Math.min(3,dailySocialCount):(W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0));
   const monthSocialCount=Object.keys(data.daily).filter(d=>d.startsWith(mkey)&&data.daily[d]?.socialToday===true).length;
   const socialMonth=Math.min(5,monthSocialCount);
-  const social =r(Math.min(10,socialWeek+socialMonth+(bonus.social||0)));
-  const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+(W.reflection?3:0)+(M.monthly_review?2:0)+(bonus.mental||0)));
+  const socialGoal=M.social_goal_met===true?2:M.social_goal_met===false?-1:0;
+  const social =r(Math.min(10,socialWeek+socialMonth+socialGoal+(bonus.social||0)));
+  const reflScore=W.mental_note!==undefined?(W.mental_note?3:-1):(W.reflection!==undefined?(W.reflection?3:-1):0);
+  const mrvScore=M.monthly_review_note!==undefined?(M.monthly_review_note?2:-1):(M.monthly_review!==undefined?(M.monthly_review?2:-1):0);
+  const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+reflScore+mrvScore+(bonus.mental||0)));
   const total  =r((health+finance+work+social+mental)/5);
   return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays};
 }
@@ -1369,7 +1394,15 @@ function renderSettle(){
   document.getElementById('wWorkNote').value=W.work_note||'';
   document.getElementById('wSocialNote').value=W.social_note||'';
   document.getElementById('wMentalNote').value=W.mental_note||'';
-  fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);fill('mrvy','mrvn',M.monthly_review);
+  fill('msy','msn',M.saving);fill('mfry','mfrn',M.finance_report);
+  fill('mhgy','mhgn',M.health_goal_met);fill('mwgy','mwgn',M.work_goal_met);fill('mscgy','mscgn',M.social_goal_met);
+  if(M.health_goal_met!==undefined)MS.health_goal_met=M.health_goal_met;
+  if(M.work_goal_met!==undefined)MS.work_goal_met=M.work_goal_met;
+  if(M.social_goal_met!==undefined)MS.social_goal_met=M.social_goal_met;
+  document.getElementById('mHealthGoalNote').value=M.health_goal_note||'';
+  document.getElementById('mWorkGoalNote').value=M.work_goal_note||'';
+  document.getElementById('mSocialGoalNote').value=M.social_goal_note||'';
+  document.getElementById('mMonthlyReviewNote').value=M.monthly_review_note||'';
   // Monthly auto-summaries
   const curMoDays=Object.keys(data.daily).filter(d=>d.startsWith(curMk)).sort();
   const mExDays=curMoDays.filter(d=>data.daily[d]?.exercise===true).length;
@@ -1557,15 +1590,15 @@ function renderTrendChart(){
 // FORM STATE
 // ════════════════════════════════
 const DS={exercise:null,sleep:null,mood:null,fried:null};
-const WS={learning:null,contact:null,reflection:null};
-const MS={saving:null,finance_report:null,monthly_review:null};
+const WS={learning:null};
+const MS={saving:null,finance_report:null,health_goal_met:null,work_goal_met:null,social_goal_met:null};
 let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=null,selSocialToday=null,editDay=dk();
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
-function setW(k,v){WS[k]=v;const m={learning:['wly','wln'],contact:['wcy','wcn'],reflection:['wry','wrn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
-function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],monthly_review:['mrvy','mrvn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setW(k,v){WS[k]=v;const m={learning:['wly','wln']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],health_goal_met:['mhgy','mhgn'],work_goal_met:['mwgy','mwgn'],social_goal_met:['mscgy','mscgn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 
 function renderMoodTags(){
   document.getElementById('moodTags').innerHTML=MOOD_TAGS.map(tag=>`<button class="tag-chip${selMoodTags.includes(tag)?' on':''}" onclick="toggleMoodTag('${tag}')">${tag}</button>`).join('');
@@ -1664,7 +1697,7 @@ function saveDaily(){
 function saveWeekly(){
   const data=db();
   const prev=data.weekly[wk()]||{};
-  const saved={...prev,learning:WS.learning??false,reflection:WS.reflection??false,savedAt:new Date().toISOString()};
+  const saved={...prev,learning:WS.learning??false,savedAt:new Date().toISOString()};
   const wn=document.getElementById('wWorkNote').value.trim();
   const sn=document.getElementById('wSocialNote').value.trim();
   const mn=document.getElementById('wMentalNote').value.trim();
@@ -1677,7 +1710,11 @@ function saveWeekly(){
 
 function saveMonthly(){
   const data=db();
-  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,monthly_review:MS.monthly_review??false,savedAt:new Date().toISOString()};
+  const mrvNote=document.getElementById('mMonthlyReviewNote').value.trim();
+  const mhNote=document.getElementById('mHealthGoalNote').value.trim();
+  const mwNote=document.getElementById('mWorkGoalNote').value.trim();
+  const msNote=document.getElementById('mSocialGoalNote').value.trim();
+  data.monthly[mk()]={saving:MS.saving??false,finance_report:MS.finance_report??false,health_goal_met:MS.health_goal_met??null,work_goal_met:MS.work_goal_met??null,social_goal_met:MS.social_goal_met??null,monthly_review_note:mrvNote||undefined,health_goal_note:mhNote||undefined,work_goal_note:mwNote||undefined,social_goal_note:msNote||undefined,savedAt:new Date().toISOString()};
   dbS(data);renderSettle();go('home');showToast('🗓️ 本月結算已儲存');
 }
 
