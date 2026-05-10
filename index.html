@@ -313,6 +313,13 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
             <button class="ynb" id="dfn" onclick="setFried(false)">✅ 沒有</button>
           </div>
         </div>
+        <div class="frow">
+          <div class="flbl">手機使用 ≤ 7 小時？<span style="font-size:.7rem;color:#8b5cf6;font-weight:400"> 計入心理</span></div>
+          <div class="yn">
+            <button class="ynb" id="phy" onclick="setPhone(true)">✅ 有控制</button>
+            <button class="ynb yn-n" id="phn" onclick="setPhone(false)">📱 超過了</button>
+          </div>
+        </div>
       </div>
       <hr>
 
@@ -886,11 +893,14 @@ function calcWeek(wkey){
   const socialMonth=Math.min(5,monthSocialCount);
   const socialGoal=M.social_goal_met===true?2:M.social_goal_met===false?-1:0;
   const social =r(Math.min(10,socialWeek+socialMonth+socialGoal+(bonus.social||0)));
+  const phoneOKDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.phoneOK===true?s+mult(l):s;},0);
+  const phoneRaw=days.filter(d=>{const l=data.daily[d];return l&&l.phoneOK===true;}).length;
+  const phoneScore=(phoneOKDays/7)*1;
   const reflScore=W.mental_note!==undefined?(W.mental_note?3:-1):(W.reflection!==undefined?(W.reflection?3:-1):0);
   const mrvScore=M.monthly_review_note!==undefined?(M.monthly_review_note?2:-1):(M.monthly_review!==undefined?(M.monthly_review?2:-1):0);
-  const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+reflScore+mrvScore+(bonus.mental||0)));
+  const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*5:0)+phoneScore+reflScore+mrvScore+(bonus.mental||0)));
   const total  =r((health+finance+work+social+mental)/5);
-  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_monthSocialCount:monthSocialCount,_workBase:workBase};
+  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_phone:phoneRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_monthSocialCount:monthSocialCount,_workBase:workBase};
 }
 
 function calcMonth(mkey){
@@ -1192,7 +1202,7 @@ function renderHome(){
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):'未填'}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
       work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):'未填')} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':'未填'}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
       social:`週 社交 ${ws._socialWeek??0}天 | 月 累計 ${ws._monthSocialCount??0}天 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':'未填'}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
-      mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填')} | 月回顧${M.monthly_review_note?'✓':(M.monthly_review!==undefined?(M.monthly_review?'✓':'✗'):'未填')}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
+      mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 手機${ws._phone??0}天達標 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):'未填')} | 月回顧${M.monthly_review_note?'✓':(M.monthly_review!==undefined?(M.monthly_review?'✓':'✗'):'未填')}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
     };
     return t[d.key]||'';
   }
@@ -1237,8 +1247,8 @@ function renderDaily(){
   document.getElementById('dDone').style.display=isComplete?'flex':'none';
 
   // Reset all inputs to neutral before loading
-  DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;
-  ['dey','den','dsy','dsn','dfy','dfn'].forEach(id=>document.getElementById(id).className='ynb');
+  DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;DS.phoneOK=null;
+  ['dey','den','dsy','dsn','dfy','dfn','phy','phn'].forEach(id=>document.getElementById(id).className='ynb');
   for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.remove('active');
   ['gr1','gr2','gr3','discomfort','spendAmount','dSpendWhat','workDone','workTomorrow','socialWith','socialNote'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('spendDetail').style.display='none';
@@ -1251,6 +1261,7 @@ function renderDaily(){
   if(todayLog.exercise!==undefined){DS.exercise=todayLog.exercise;fill('dey','den',todayLog.exercise);}
   if(todayLog.sleep!==undefined){DS.sleep=todayLog.sleep;fill('dsy','dsn',todayLog.sleep);}
   if(todayLog.fried!==undefined){DS.fried=todayLog.fried;setFried(todayLog.fried);}
+  if(todayLog.phoneOK!==undefined){DS.phoneOK=todayLog.phoneOK;setPhone(todayLog.phoneOK);}
   if(todayLog.mood){DS.mood=todayLog.mood;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===todayLog.mood);}
   selMoodTags=todayLog.moodTags||[];
   renderMoodTags();
@@ -1287,7 +1298,7 @@ function renderDaily(){
     const border=isEditing?'#7c3aed':(isTd?'#4f46e5':(full?'#10b981':(log?'#f59e0b':(isPast?'#fca5a5':'#e2e8f0'))));
     const clickFn=isFuture?'':(isTd?`onclick="backToToday()"`:`onclick="editPastDay('${day}')"`);
     const retro=log&&log.retroactive?`<div style="font-size:.45rem;color:#f59e0b;font-weight:700">補</div>`:'';
-    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border};cursor:${isFuture?'default':'pointer'}" ${clickFn}>${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div><div style="font-size:.55rem;font-weight:700;color:${log.spendAmount===0?'#34d399':log.spendAmount>0?'#fbbf24':'rgba(255,255,255,.3)'}">${log.spendAmount!==undefined?(log.spendAmount===0?'$0':log.spendAmount>=1000?'$'+(log.spendAmount/1000).toFixed(1)+'k':'$'+log.spendAmount):(log.overBudget===false?'💰':log.overBudget===true?'💸':'—')}</div>${retro}`:(isPast?'<div style="opacity:.3;font-size:.6rem">補?</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
+    html+=`<div class="day-col"><div class="day-lbl">${DLBLS[i]}</div><div class="day-box" style="background:${bg};border-color:${border};cursor:${isFuture?'default':'pointer'}" ${clickFn}>${log?`<div>${log.exercise?'🏃':'❌'}</div><div>${log.sleep?'😴':'❌'}</div><div>${log.mood?MJ[log.mood]:'—'}</div><div style="font-size:.55rem;font-weight:700;color:${log.spendAmount===0?'#34d399':log.spendAmount>0?'#fbbf24':'rgba(255,255,255,.3)'}">${log.spendAmount!==undefined?(log.spendAmount===0?'$0':log.spendAmount>=1000?'$'+(log.spendAmount/1000).toFixed(1)+'k':'$'+log.spendAmount):(log.overBudget===false?'💰':log.overBudget===true?'💸':'—')}</div>${log.phoneOK!==undefined?`<div style="font-size:.6rem">${log.phoneOK?'📵':'📱'}</div>`:''} ${retro}`:(isPast?'<div style="opacity:.3;font-size:.6rem">補?</div>':'<div style="opacity:.15">·</div>')}</div></div>`;
   });
   html+='</div>';
   document.getElementById('wGrid').innerHTML=html;
@@ -1646,11 +1657,11 @@ function renderHistory(){
         const log=data.daily[day];
         if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:rgba(255,255,255,.2);font-size:.7rem">未打卡</td></tr>`;
         const socialCell=log.socialToday===true?`<div>🤝</div>${log.socialWith?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(165,180,252,.65);font-size:.62rem">${log.socialWith}</div>`:''}`:log.socialToday===false?`<span style="color:rgba(255,255,255,.25)">—</span>`:`<span style="color:rgba(255,255,255,.15)">?</span>`;
-        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.phoneOK===true?'📵':log.phoneOK===false?'📱':'—'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
       }).join('');
       detail=`<div class="wk-detail" onclick="event.stopPropagation()">
         <div class="wk-summary">${genWeeklySummary(w)}</div>
-        <table class="wk-day-tbl"><thead><tr><th style="text-align:left">日期</th><th>運動</th><th>睡眠</th><th>心情</th><th>記帳</th><th>狀態</th><th style="text-align:left;padding-left:2px">社交</th><th style="text-align:left;padding-left:4px">工作成就 / 明日</th></tr></thead><tbody>${dayRows}</tbody></table>
+        <table class="wk-day-tbl"><thead><tr><th style="text-align:left">日期</th><th>運動</th><th>睡眠</th><th>📵</th><th>心情</th><th>記帳</th><th>狀態</th><th style="text-align:left;padding-left:2px">社交</th><th style="text-align:left;padding-left:4px">工作成就 / 明日</th></tr></thead><tbody>${dayRows}</tbody></table>
       </div>`;
     }
     return`<div class="week-row" onclick="toggleWeekDetail('${w}')">
@@ -1727,6 +1738,7 @@ let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=[],selSocialToday=
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
+function setPhone(v){DS.phoneOK=v;document.getElementById('phy').className='ynb'+(v?' yn-y':'');document.getElementById('phn').className='ynb'+(v?'':' yn-n');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
 function setW(k,v){WS[k]=v;}
 function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],health_goal_met:['mhgy','mhgn'],work_goal_met:['mwgy','mwgn'],social_goal_met:['mscgy','mscgn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
@@ -1803,7 +1815,7 @@ function saveDaily(){
   const existing=data.daily[targetDay]||{};
   data.daily[targetDay]={
     ...existing,
-    exercise:DS.exercise,sleep:DS.sleep,fried:DS.fried,mood:DS.mood,
+    exercise:DS.exercise,sleep:DS.sleep,fried:DS.fried,phoneOK:DS.phoneOK!==null?DS.phoneOK:undefined,mood:DS.mood,
     moodTags:selMoodTags,
     gratitude:[gr1,gr2,gr3],
     discomfort:document.getElementById('discomfort').value.trim(),
