@@ -2887,6 +2887,30 @@ function _userDoc(){if(!_fs||!_fbUser)return null;return _fs.collection('users')
 
 function _mergeData(local,cloud){
   const m=(l={},c={})=>({...l,...c});
+  // Deep merge goals: for each period (w/m/y) → each key → merge arrays by id,
+  // taking the union of completedPeriods from both sides.
+  function mergeGoals(l={},c={}){
+    const out={};
+    const periods=['w','m','y'];
+    periods.forEach(p=>{
+      const lp=l[p]||{},cp=c[p]||{};
+      out[p]={};
+      const keys=new Set([...Object.keys(lp),...Object.keys(cp)]);
+      keys.forEach(k=>{
+        const lg=lp[k]||[],cg=cp[k]||[];
+        const byId={};
+        [...lg,...cg].forEach(g=>{
+          if(!byId[g.id]){byId[g.id]={...g,completedPeriods:[...( g.completedPeriods||[])]};}
+          else{
+            const merged=byId[g.id];
+            (g.completedPeriods||[]).forEach(p=>{if(!merged.completedPeriods.includes(p))merged.completedPeriods.push(p);});
+          }
+        });
+        out[p][k]=Object.values(byId);
+      });
+    });
+    return out;
+  }
   return{
     daily:m(local.daily,cloud.daily),
     weekly:m(local.weekly,cloud.weekly),
@@ -2895,6 +2919,7 @@ function _mergeData(local,cloud){
     tasks:(cloud.tasks||[]).length>=(local.tasks||[]).length?cloud.tasks:local.tasks,
     achievements:m(local.achievements,cloud.achievements),
     milestones:m(local.milestones,cloud.milestones),
+    goals:mergeGoals(local.goals,cloud.goals),
   };
 }
 
