@@ -878,7 +878,7 @@ function calcWeek(wkey){
   } else {spendScore=0;}
 
   const healthGoal=M.health_goal_met===true?2:M.health_goal_met===false?-1:0;
-  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*3+(friedDays/7)*2+phoneScore+healthGoal+(bonus.health||0)));
+  const health =r(Math.min(10,(exDays/7)*3+(slDays/7)*4+(friedDays/7)*3+phoneScore+healthGoal+(bonus.health||0)));
   const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+(bonus.finance||0)));
   const today=dk();
   const dailyWorkScores=days.filter(d=>d<=today&&data.daily?.[d]?.workScore).map(d=>data.daily[d].workScore);
