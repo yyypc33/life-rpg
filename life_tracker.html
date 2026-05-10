@@ -2296,6 +2296,14 @@ function editUserName(){
   showToast(`✅ 名字已更新為「${trimmed}」`);
 }
 
+// Migrate old tasks: fill missing difficulty via keyword classification
+(function migrateDifficulty(){
+  const data=db();
+  let changed=false;
+  (data.tasks||[]).forEach(t=>{if(!t.difficulty){t.difficulty=classifyDiff(t.title);changed=true;}});
+  if(changed)dbS(data);
+})();
+
 // INIT
 loadDimNames();
 applyUserName();
