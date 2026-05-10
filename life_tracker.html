@@ -693,13 +693,39 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
   <!-- ── HISTORY ── -->
   <div class="view" id="view-history">
     <div class="card">
+      <div class="ctitle">趨勢分析</div>
+      <div class="rtoggle" id="trendToggle" style="margin-bottom:12px">
+        <div class="rtab active" onclick="setTrendView('month')">月趨勢（週）</div>
+        <div class="rtab" onclick="setTrendView('year')">年趨勢（月）</div>
+        <div class="rtab" onclick="setTrendView('xp')">XP 進度</div>
+      </div>
+      <div id="trendWrap" style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">週歷史紀錄</div>
+      <div id="hist"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle">💸 消費統計</div>
+      <div id="spendStats"></div>
+    </div>
+    <div class="card">
+      <div class="ctitle" onclick="toggleAch()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
+        成就系統 🏅
+        <span id="achChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span>
+      </div>
+      <div id="achContent" style="display:none;margin-top:4px">
+        <div id="achList"><div class="empty" style="padding:16px 0"><p style="font-size:.84rem">載入中…</p></div></div>
+      </div>
+    </div>
+    <div class="card">
       <div class="ctitle">☁️ Google 雲端同步</div>
       <div id="fbSyncCard" style="min-height:48px"></div>
     </div>
     <div class="card">
       <div class="ctitle" onclick="toggleBackup()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
         資料備份 & 匯出
-        <span id="backupChevron" style="font-size:.75rem;color:rgba(255,255,255,.35);transition:transform .2s">▶</span>
+        <span id="backupChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span>
       </div>
       <div id="backupContent" style="display:none;margin-top:12px">
         <div style="display:flex;gap:8px;margin-bottom:8px">
@@ -718,27 +744,6 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
           CSV：可直接用 Excel / Google Sheets 開啟分析。
         </div>
       </div>
-    </div>
-    <div class="card">
-      <div class="ctitle">趨勢分析</div>
-      <div class="rtoggle" id="trendToggle" style="margin-bottom:12px">
-        <div class="rtab active" onclick="setTrendView('month')">月趨勢（週）</div>
-        <div class="rtab" onclick="setTrendView('year')">年趨勢（月）</div>
-        <div class="rtab" onclick="setTrendView('xp')">XP 進度</div>
-      </div>
-      <div id="trendWrap" style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
-    </div>
-    <div class="card">
-      <div class="ctitle">💸 消費統計</div>
-      <div id="spendStats"></div>
-    </div>
-    <div class="card">
-      <div class="ctitle">成就系統 🏅</div>
-      <div id="achList"><div class="empty" style="padding:16px 0"><p style="font-size:.84rem">載入中…</p></div></div>
-    </div>
-    <div class="card">
-      <div class="ctitle">週歷史紀錄</div>
-      <div id="hist"></div>
     </div>
   </div>
 
@@ -2594,6 +2599,14 @@ function toggleRwLegend(){
 function toggleBackup(){
   const el=document.getElementById('backupContent');
   const ch=document.getElementById('backupChevron');
+  if(!el||!ch)return;
+  const open=el.style.display!=='none';
+  el.style.display=open?'none':'block';
+  ch.textContent=open?'▶':'▼';
+}
+function toggleAch(){
+  const el=document.getElementById('achContent');
+  const ch=document.getElementById('achChevron');
   if(!el||!ch)return;
   const open=el.style.display!=='none';
   el.style.display=open?'none':'block';
