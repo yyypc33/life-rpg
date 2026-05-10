@@ -2569,18 +2569,21 @@ function editUserName(){
 // ════════════════════════════════
 // FIREBASE CLOUD SYNC
 // ════════════════════════════════
-firebase.initializeApp({
-  apiKey:"AIzaSyCpdFRAgsenOHWn3nSUVvb5ocnyIJ5fXYU",
-  authDomain:"life-rpg-ypc.firebaseapp.com",
-  projectId:"life-rpg-ypc",
-  storageBucket:"life-rpg-ypc.firebasestorage.app",
-  messagingSenderId:"431543131297",
-  appId:"1:431543131297:web:be0f48ba00dd68ce7fe4e0"
-});
-const _auth=firebase.auth();
-const _fs=firebase.firestore();
+let _auth=null,_fs=null;
+try{
+  firebase.initializeApp({
+    apiKey:"AIzaSyCpdFRAgsenOHWn3nSUVvb5ocnyIJ5fXYU",
+    authDomain:"life-rpg-ypc.firebaseapp.com",
+    projectId:"life-rpg-ypc",
+    storageBucket:"life-rpg-ypc.firebasestorage.app",
+    messagingSenderId:"431543131297",
+    appId:"1:431543131297:web:be0f48ba00dd68ce7fe4e0"
+  });
+  _auth=firebase.auth();
+  _fs=firebase.firestore();
+}catch(e){console.warn('Firebase init failed:',e);}
 
-function _userDoc(){return _fs.collection('users').doc(_fbUser.uid).collection('data').doc('main');}
+function _userDoc(){if(!_fs||!_fbUser)return null;return _fs.collection('users').doc(_fbUser.uid).collection('data').doc('main');}
 
 function _mergeData(local,cloud){
   const m=(l={},c={})=>({...l,...c});
@@ -2642,7 +2645,7 @@ function renderSyncStatus(){
 }
 
 function _scheduleSyncToCloud(){
-  if(!_fbUser)return;
+  if(!_fbUser||!_fs)return;
   _syncState='syncing';renderSyncStatus();
   clearTimeout(_syncTimer);
   _syncTimer=setTimeout(async()=>{
@@ -2652,7 +2655,7 @@ function _scheduleSyncToCloud(){
   },1500);
 }
 
-_auth.onAuthStateChanged(async user=>{
+if(_auth)_auth.onAuthStateChanged(async user=>{
   _fbUser=user;
   if(user){
     if(!getUserName()&&user.displayName){
@@ -2686,6 +2689,7 @@ _auth.onAuthStateChanged(async user=>{
 });
 
 async function handleSyncBtn(){
+  if(!_auth){showToast('⚠️ 同步功能暫時無法使用');return;}
   if(!_fbUser){
     const provider=new firebase.auth.GoogleAuthProvider();
     try{await _auth.signInWithPopup(provider);}
