@@ -1519,13 +1519,15 @@ function renderDaily(){
   const data=db();
   const today=dk();
   const targetDay=editDay;
-  const isRetro=targetDay<today;
   const todayLog=data.daily[targetDay]||{};
+  const isDatePast=targetDay<today;
+  const isRetro=isDatePast&&!todayLog.savedAt;     // 真正的補救：過去 + 從未存過
+  const isEditPast=isDatePast&&!!todayLog.savedAt; // 修改已存的過去紀錄
 
   // Retro banner + labels
   document.getElementById('retroBanner').style.display=isRetro?'block':'none';
-  document.getElementById('editDayInfo').textContent=isRetro?targetDay:'今天';
-  document.getElementById('btnSaveDaily').textContent=isRetro?'儲存補救紀錄':'完成今日紀錄';
+  document.getElementById('editDayInfo').textContent=isDatePast?targetDay:'今天';
+  document.getElementById('btnSaveDaily').textContent=isRetro?'儲存補救紀錄':isEditPast?'更新紀錄':'完成今日紀錄';
 
   // Done badge
   const isComplete=isDayComplete(todayLog);
@@ -2180,8 +2182,10 @@ function saveDaily(){
   const data=db();
   const today=dk();
   const targetDay=editDay;
-  const isRetro=targetDay<today;
   const existing=data.daily[targetDay]||{};
+  const isDatePast=targetDay<today;
+  const isRetro=isDatePast&&!existing.savedAt;     // 真正補救：過去 + 從未存過
+  const isEditPast=isDatePast&&!!existing.savedAt; // 修改已存的過去紀錄
   const isFirstSave=!existing.savedAt;
   const beforeXP=isFirstSave?getTotalXP():0;
   data.daily[targetDay]={
@@ -2203,12 +2207,12 @@ function saveDaily(){
     savedAt:new Date().toISOString()
   };
   dbS(data);
-  if(isFirstSave&&!isRetro)checkLevelUp(beforeXP,getTotalXP());
-  if(isRetro)editDay=today;
+  if(isFirstSave&&!isRetro)checkLevelUp(beforeXP,getTotalXP()); // 只有今日首次存才檢查升級
+  if(isRetro)editDay=today; // 補救完成後跳回今天；修改已存紀錄則留在原頁
   checkAndUnlockAchievements();
   checkAndUnlockMilestones();
   renderDaily();renderHome();
-  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:'☀️ 今日紀錄完成！ +10 XP');
+  showToast(isRetro?`⏪ ${targetDay} 補救完成（×0.8）`:isEditPast?`✏️ ${targetDay} 紀錄已更新`:'☀️ 今日紀錄完成！ +10 XP');
 }
 
 function saveWeekly(){
