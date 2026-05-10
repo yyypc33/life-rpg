@@ -2629,7 +2629,7 @@ function renderSyncStatus(){
       <button onclick="handleSyncBtn()" style="width:100%;padding:13px;background:linear-gradient(135deg,#4285f4,#1a73e8);color:#fff;border:none;border-radius:14px;font-size:.88rem;font-weight:800;cursor:pointer;letter-spacing:.3px">🔵 用 Google 帳號登入同步</button>`;
   }else{
     const name=_fbUser.displayName||_fbUser.email;
-    const avatar=_fbUser.photoURL?`<img src="${_fbUser.photoURL}" style="width:32px;height:32px;border-radius:50%;flex-shrink:0">`:'<div style="width:32px;height:32px;border-radius:50%;background:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem">${(name||'?')[0]}</div>';
+    const avatar=_fbUser.photoURL?`<img src="${_fbUser.photoURL}" style="width:32px;height:32px;border-radius:50%;flex-shrink:0">`:`<div style="width:32px;height:32px;border-radius:50%;background:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem">${(name||'?')[0]}</div>`;
     const stateLabel=_syncState==='syncing'?'同步中…':_syncState==='synced'?'✓ 已同步':_syncState==='error'?'⚠️ 同步失敗':'已連線';
     const stateColor=_syncState==='syncing'?'#fbbf24':_syncState==='synced'?'#34d399':_syncState==='error'?'#f87171':'#a5b4fc';
     card.innerHTML=`
