@@ -1045,7 +1045,24 @@ function showLvModal(){
 // ════════════════════════════════
 // SCORING
 // ════════════════════════════════
-function r(n){return Math.round(Math.max(0,Math.min(10,n))*10)/10}
+function r(n){return Math.round(Math.max(0,Math.min(15,n))*10)/10}
+
+// Goal-card completion bonuses: weekly goal +3 (single-dim) or +1 each (multi-dim)
+//                               monthly/yearly goal +2 or +1 each
+function calcGoalBonuses(){
+  const data=db();
+  const curWk=wk(),curMk=mk(),curYk=yk();
+  const gb={health:0,finance:0,work:0,social:0,mental:0};
+  [['w',curWk,3],['m',curMk,2],['y',curYk,2]].forEach(([period,pKey,pts])=>{
+    const goals=((data.goals||{})[period]?.[pKey]||[]).filter(g=>(g.completedPeriods||[]).includes(pKey));
+    goals.forEach(g=>{
+      const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
+      const each=dims.length>1?1:pts;
+      dims.forEach(d=>{if(gb[d]!==undefined)gb[d]+=each;});
+    });
+  });
+  return gb;
+}
 
 function calcWeek(wkey){
   const data=db();
@@ -1065,6 +1082,7 @@ function calcWeek(wkey){
   const M=data.monthly[mkey]||{};
   const Y=data.yearly[ykey]||{};
   const bonus=getTaskBonus(wkey);
+  const goalB=calcGoalBonuses();
 
   // Finance: new = sum spendAmount vs weeklyBudget; legacy = +1/-1.5 formula
   const weeklyBudget=(Y.monthly_budget||25000)/4;
@@ -1086,27 +1104,31 @@ function calcWeek(wkey){
 
   const phoneOKDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.phoneOK===true?s+mult(l):s;},0);
   const phoneRaw=days.filter(d=>{const l=data.daily[d];return l&&l.phoneOK===true;}).length;
-  const phoneScore=(phoneOKDays/7)*1;
+  // Health: exercise(2) + sleep(3) + clean(2) + phone(1) = max 8 from daily habits
   const healthGoal=M.health_goal_met===true?2:M.health_goal_met===false?-1:0;
-  const health =r(Math.min(10,(Math.min(exDays,4)/4)*3+(slDays/7)*4+(friedDays/7)*3+phoneScore+healthGoal+(bonus.health||0)));
-  const finance=r(Math.min(10,spendScore+(M.saving?2:0)+(M.finance_report?1:0)+(bonus.finance||0)));
+  const health =r((Math.min(exDays,4)/4)*2+(slDays/7)*3+(friedDays/7)*2+(phoneOKDays/7)*1+healthGoal+(bonus.health||0)+(goalB.health||0));
+  // Finance: spend(5) + saving(2) + report(1) = max 8
+  const finance=r(spendScore+(M.saving?2:0)+(M.finance_report?1:0)+(bonus.finance||0)+(goalB.finance||0));
   const today=dk();
   const dailyWorkScores=days.filter(d=>d<=today&&data.daily?.[d]?.workScore).map(d=>data.daily[d].workScore);
   const avgWorkScore=dailyWorkScores.length>0?dailyWorkScores.reduce((a,b)=>a+b)/dailyWorkScores.length:null;
+  // Work: workBase(7) + learning(1) = max 8
   const workBase=avgWorkScore!==null?(avgWorkScore/5)*7:((W.work_completion||0)/10)*7;
   const workGoal=M.work_goal_met===true?2:M.work_goal_met===false?-1:0;
   const learningScore=W.learning_note!==undefined?(W.learning_note?1:0):(W.learning?1:0);
-  const work   =r(Math.min(10,workBase+learningScore+workGoal+(bonus.work||0)));
+  const work   =r(workBase+learningScore+workGoal+(bonus.work||0)+(goalB.work||0));
+  // Social: each day = 1 pt, max 8 from daily habits (cap at 8 days)
   const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
-  const socialWeek=dailySocialCount>0?Math.min(3,dailySocialCount):(W.social_count!==undefined?Math.min(3,W.social_count):(W.contact?3:0));
+  const socialWeek=dailySocialCount>0?Math.min(8,dailySocialCount*2):(W.social_count!==undefined?Math.min(8,W.social_count*2):(W.contact?6:0));
   const monthSocialCount=Object.keys(data.daily).filter(d=>d.startsWith(mkey)&&data.daily[d]?.socialToday===true).length;
   const socialGoal=M.social_goal_met===true?2:M.social_goal_met===false?-1:0;
-  const social =r(Math.min(10,socialWeek+socialGoal+(bonus.social||0)));
+  const social =r(socialWeek+socialGoal+(bonus.social||0)+(goalB.social||0));
+  // Mental: mood(6) + phone(0.5) + refl(1) + mrv(0.5) = max 8
   const reflScore=W.mental_note?1:0;
-  const mrvScore=M.monthly_review_note?1:0;
-  const mental =r(Math.min(10,(moodAvg>0?(moodAvg/5)*7:0)+phoneScore+reflScore+mrvScore+(bonus.mental||0)));
+  const mrvScore=M.monthly_review_note?0.5:0;
+  const mental =r((moodAvg>0?(moodAvg/5)*6:0)+(phoneOKDays/7)*0.5+reflScore+mrvScore+(bonus.mental||0)+(goalB.mental||0));
   const total  =r((health+finance+work+social+mental)/5);
-  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_phone:phoneRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_monthSocialCount:monthSocialCount,_workBase:workBase};
+  return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_phone:phoneRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_scDays:dailySocialCount,_monthSocialCount:monthSocialCount,_workBase:workBase};
 }
 
 function calcMonth(mkey){
@@ -1511,7 +1533,7 @@ function renderHome(){
   if(RC)RC.destroy();
   const ds=[{label:RV==='week'?'本週':'本月',data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:'rgba(99,102,241,.18)',borderColor:'#818cf8',pointBackgroundColor:DIMS.map(d=>d.color),pointBorderColor:'#0f1535',pointRadius:5,borderWidth:2.5}];
   if(prv&&prv.total>0)ds.push({label:RV==='week'?'上週':'上月',data:DIMS.map(d=>prv[d.key]),backgroundColor:'rgba(34,211,238,.07)',borderColor:'rgba(34,211,238,.45)',pointBackgroundColor:'rgba(34,211,238,.45)',pointRadius:3,borderWidth:1.5});
-  RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'rgba(165,180,252,.6)',backdropColor:'transparent'},grid:{color:'rgba(99,102,241,.25)'},angleLines:{color:'rgba(99,102,241,.35)'},pointLabels:{font:{size:13,weight:'700'},color:'#a5b4fc'}}},plugins:{legend:{display:false}}}});
+  RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:15,ticks:{stepSize:3,font:{size:10},color:'rgba(165,180,252,.6)',backdropColor:'transparent'},grid:{color:'rgba(99,102,241,.25)'},angleLines:{color:'rgba(99,102,241,.35)'},pointLabels:{font:{size:13,weight:'700'},color:'#a5b4fc'}}},plugins:{legend:{display:false}}}});
 
   // Dim list
   const el=document.getElementById('dimList');
@@ -1528,7 +1550,7 @@ function renderHome(){
       finance:ws._spendDays>0?`本週 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
       work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
-      social:`週 社交 ${ws._socialWeek??0}天 | 月 累計 ${ws._monthSocialCount??0}天 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':lnk}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
+      social:`週 社交 ${ws._scDays??0}天（${(ws._socialWeek??0).toFixed(0)}分）| 月 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':lnk}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
       mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 手機${ws._phone??0}天達標 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):lnk)}${(lastWeekOfMonth||M.monthly_review_note)?` | 月回顧${M.monthly_review_note?'✓':lnk}`:''}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
     };
     return t[d.key]||'';
@@ -2134,7 +2156,7 @@ function renderTrendChart(){
       responsive:true,maintainAspectRatio:false,
       interaction:{mode:'index',intersect:false},
       scales:{
-        y:{min:0,max:10,ticks:{stepSize:2,font:{size:10},color:'rgba(165,180,252,.6)'},grid:{color:'rgba(99,102,241,.15)'},border:{display:false}},
+        y:{min:0,max:15,ticks:{stepSize:3,font:{size:10},color:'rgba(165,180,252,.6)'},grid:{color:'rgba(99,102,241,.15)'},border:{display:false}},
         x:{ticks:{font:{size:10},color:'rgba(165,180,252,.6)',maxRotation:0,maxTicksLimit:12},grid:{display:false},border:{display:false}},
       },
       plugins:{
@@ -2666,7 +2688,7 @@ function toggleDimNames(){
 // ════════════════════════════════
 // GOALS
 // ════════════════════════════════
-let _goalPeriod='m',_goalDim='health';
+let _goalPeriod='m',_goalDims=['health'];
 
 const GOAL_TEMPLATES={
   w:{
@@ -2696,25 +2718,36 @@ function _goalPKey(){return _goalPeriod==='w'?wk():_goalPeriod==='m'?mk():yk();}
 
 function renderGoals(){
   const data=db();
-  const list=((data.goals||{})[_goalPeriod]||{})[_goalPKey()]||[];
+  const pk=_goalPKey();
+  const list=((data.goals||{})[_goalPeriod]||{})[pk]||[];
   const el=document.getElementById('goalList');
   if(!el)return;
   if(!list.length){
     el.innerHTML='<div style="text-align:center;padding:10px 0;font-size:.82rem;color:rgba(255,255,255,.28)">尚無目標，點下方新增</div>';
     return;
   }
+  const pts=_goalPeriod==='w'?'+3':'+2';
   el.innerHTML=list.map(g=>{
-    const dim=DIMS.find(d=>d.key===g.dim);
+    const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
+    const isMulti=dims.length>1;
+    const icons=dims.map(k=>DIMS.find(d=>d.key===k)?.icon||'').join('');
+    const color=DIMS.find(d=>d.key===dims[0])?.color||'#818cf8';
+    const dimLabel=dims.map(k=>DIMS.find(d=>d.key===k)?.label||'').join(' · ');
     const badge=g.target!=null?`<span style="font-size:.7rem;color:rgba(255,255,255,.4);margin-left:4px">→ ${g.target} ${g.unit||''}</span>`:'';
-    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:rgba(255,255,255,.05);border-radius:10px;margin-bottom:6px">
+    const bonusBadge=`<span style="font-size:.68rem;color:#a5b4fc;margin-left:6px">${isMulti?'各+1':pts}</span>`;
+    const done=(g.completedPeriods||[]).includes(pk);
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:${done?'rgba(52,211,153,.08)':'rgba(255,255,255,.05)'};border:1px solid ${done?'rgba(52,211,153,.25)':'transparent'};border-radius:10px;margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-        <span style="font-size:1rem;flex-shrink:0">${dim?.icon||'🎯'}</span>
+        <span style="font-size:1rem;flex-shrink:0">${icons}</span>
         <div>
-          <div style="font-size:.85rem;color:#e2e8f0;font-weight:600">${g.title}${badge}</div>
-          <div style="font-size:.7rem;color:${dim?.color||'#818cf8'};margin-top:1px">${dim?.label||''}</div>
+          <div style="font-size:.85rem;color:${done?'#34d399':'#e2e8f0'};font-weight:600">${done?'✓ ':''} ${g.title}${badge}${bonusBadge}</div>
+          <div style="font-size:.7rem;color:${color};margin-top:1px">${dimLabel}</div>
         </div>
       </div>
-      <button onclick="deleteGoal('${g.id}')" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:1.1rem;padding:2px 6px;flex-shrink:0">×</button>
+      <div style="display:flex;gap:4px;flex-shrink:0">
+        <button onclick="toggleGoalComplete('${g.id}')" style="padding:4px 8px;border-radius:8px;font-size:.72rem;font-weight:700;cursor:pointer;border:1px solid ${done?'rgba(52,211,153,.4)':'rgba(99,102,241,.3)'};background:${done?'rgba(52,211,153,.15)':'rgba(99,102,241,.1)'};color:${done?'#34d399':'#818cf8'}">${done?'已達成':'標記達成'}</button>
+        <button onclick="deleteGoal('${g.id}')" style="background:none;border:none;color:rgba(255,255,255,.3);cursor:pointer;font-size:1.1rem;padding:2px 6px">×</button>
+      </div>
     </div>`;
   }).join('');
 }
@@ -2733,17 +2766,21 @@ function toggleGoalForm(){
   const open=f.style.display!=='none';
   f.style.display=open?'none':'block';
   b.style.display=open?'':'none';
-  if(!open){_goalDim='health';renderGoalDimChips();renderGoalTemplates();}
+  if(!open){_goalDims=['health'];renderGoalDimChips();renderGoalTemplates();}
 }
 
 function renderGoalDimChips(){
   const el=document.getElementById('goalDimChips');
   if(!el)return;
-  el.innerHTML=DIMS.map(d=>`<span onclick="selectGoalDim('${d.key}')" style="padding:5px 10px;border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer;border:1.5px solid ${d.color};background:${d.key===_goalDim?d.color+'33':'transparent'};color:${d.key===_goalDim?d.color:'rgba(255,255,255,.45)'};">${d.icon} ${d.label}</span>`).join('');
+  el.innerHTML=DIMS.map(d=>`<span onclick="toggleGoalDimSel('${d.key}')" style="padding:5px 10px;border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer;border:1.5px solid ${d.color};background:${_goalDims.includes(d.key)?d.color+'33':'transparent'};color:${_goalDims.includes(d.key)?d.color:'rgba(255,255,255,.45)'};">${d.icon} ${d.label}</span>`).join('');
 }
 
-function selectGoalDim(key){
-  _goalDim=key;
+function toggleGoalDimSel(key){
+  if(_goalDims.includes(key)){
+    if(_goalDims.length>1)_goalDims=_goalDims.filter(d=>d!==key);
+  }else{
+    _goalDims=[..._goalDims,key];
+  }
   renderGoalDimChips();
   renderGoalTemplates();
 }
@@ -2751,7 +2788,7 @@ function selectGoalDim(key){
 function renderGoalTemplates(){
   const el=document.getElementById('goalTemplateChips');
   if(!el)return;
-  const tpls=(GOAL_TEMPLATES[_goalPeriod]||{})[_goalDim]||[];
+  const tpls=(GOAL_TEMPLATES[_goalPeriod]||{})[_goalDims[0]]||[];
   el.innerHTML=tpls.map(tp=>`<span onclick="applyGoalTemplate(this)" data-t="${tp.t.replace(/"/g,'&quot;')}" data-n="${tp.n??''}" data-u="${tp.u||''}" style="padding:5px 10px;border-radius:20px;font-size:.75rem;cursor:pointer;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);color:#a5b4fc">${tp.t}</span>`).join('');
 }
 
@@ -2771,7 +2808,12 @@ function addGoal(){
   if(!data.goals[_goalPeriod])data.goals[_goalPeriod]={};
   const pk=_goalPKey();
   if(!data.goals[_goalPeriod][pk])data.goals[_goalPeriod][pk]=[];
-  data.goals[_goalPeriod][pk].push({id:'g_'+Date.now(),title,dim:_goalDim,target:targetVal!==''?parseFloat(targetVal):null,unit});
+  data.goals[_goalPeriod][pk].push({
+    id:'g_'+Date.now(),title,
+    dim:_goalDims[0],dims:[..._goalDims],
+    target:targetVal!==''?parseFloat(targetVal):null,
+    unit,completedPeriods:[]
+  });
   dbS(data);
   document.getElementById('goalTitle').value='';
   document.getElementById('goalTarget').value='';
@@ -2786,8 +2828,29 @@ function deleteGoal(id){
   const pk=_goalPKey();
   if(data.goals?.[_goalPeriod]?.[pk]){
     data.goals[_goalPeriod][pk]=data.goals[_goalPeriod][pk].filter(g=>g.id!==id);
-    dbS(data);renderGoals();
+    dbS(data);renderGoals();renderHome();
   }
+}
+
+function toggleGoalComplete(id){
+  const data=db();
+  const pk=_goalPKey();
+  const goals=data.goals?.[_goalPeriod]?.[pk];
+  if(!goals)return;
+  const g=goals.find(x=>x.id===id);
+  if(!g)return;
+  if(!g.completedPeriods)g.completedPeriods=[];
+  if(g.completedPeriods.includes(pk)){
+    g.completedPeriods=g.completedPeriods.filter(p=>p!==pk);
+    showToast('目標已取消達成');
+  }else{
+    g.completedPeriods.push(pk);
+    const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim];
+    const pts=_goalPeriod==='w'?3:2;
+    const bonus=dims.length>1?`各 +1分`:` +${pts}分`;
+    showToast(`🎯 達成！${dims.map(k=>DIMS.find(d=>d.key===k)?.icon||'').join('')}${bonus}`);
+  }
+  dbS(data);renderGoals();renderHome();
 }
 
 function _renderGoalRef(elId,period,pKey,dim){
