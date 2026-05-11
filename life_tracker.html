@@ -363,7 +363,7 @@ body.theme-warm .empty{color:#b45309}
   </div>
   <div class="stats">
     <div class="stat"><div class="sv" id="hScore">—</div><div class="sl">本週總分</div></div>
-    <div class="stat"><div class="sv" id="hXP">0</div><div class="sl">總 XP</div></div>
+    <div class="stat" onclick="showXPBreakdown()" style="cursor:pointer"><div class="sv" id="hXP">0</div><div class="sl">總 XP ℹ️</div></div>
     <div class="stat"><div class="sv" id="hStreak">0W</div><div class="sl">連勝週數</div></div>
   </div>
 </div>
@@ -374,6 +374,14 @@ body.theme-warm .empty{color:#b45309}
     <div style="font-size:.88rem;font-weight:800;color:#a5b4fc;text-align:center;margin-bottom:16px;letter-spacing:.5px">⚔️ 等級系統</div>
     <div id="lvList"></div>
     <button onclick="document.getElementById('lvModal').style.display='none'" style="width:100%;margin-top:14px;padding:10px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:12px;color:#a5b4fc;font-size:.82rem;font-weight:700;cursor:pointer">關閉</button>
+  </div>
+</div>
+
+<!-- 概念說明 / XP明細 彈窗 -->
+<div id="conceptModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:999;align-items:center;justify-content:center" onclick="this.style.display='none'">
+  <div style="background:#0f1629;border-radius:20px;padding:22px 20px;width:min(340px,90vw);border:1px solid rgba(99,102,241,.3);max-height:85vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div id="conceptModalContent"></div>
+    <button onclick="document.getElementById('conceptModal').style.display='none'" style="width:100%;margin-top:14px;padding:10px;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);border-radius:12px;color:#a5b4fc;font-size:.82rem;font-weight:700;cursor:pointer">關閉</button>
   </div>
 </div>
 
@@ -599,7 +607,7 @@ body.theme-warm .empty{color:#b45309}
   <div class="view" id="view-tasks">
     <!-- Goals Card -->
     <div class="card" id="goalsCard">
-      <div class="ctitle" style="display:flex;align-items:center;justify-content:space-between">目標設定<span style="font-size:.7rem;color:rgba(255,255,255,.38)">週 · 月 · 年量化目標</span></div>
+      <div class="ctitle" style="display:flex;align-items:center;justify-content:space-between"><span class="ctitle-info" onclick="showConceptModal('goal')">目標設定 <i class="info-dot">i</i></span><span style="font-size:.7rem;color:rgba(255,255,255,.38)">週 · 月 · 年量化目標</span></div>
       <div class="gtabs">
         <div class="gtab" id="gp-w" onclick="setGoalPeriod('w')">本週</div>
         <div class="gtab active" id="gp-m" onclick="setGoalPeriod('m')">本月</div>
@@ -626,7 +634,7 @@ body.theme-warm .empty{color:#b45309}
     <!-- Tasks Card -->
     <div class="card">
       <div class="task-header">
-        <div class="task-group-lbl">自訂任務</div>
+        <div class="task-group-lbl"><span class="ctitle-info" onclick="showConceptModal('task')">自訂任務 <i class="info-dot">i</i></span></div>
         <div style="display:flex;gap:8px">
           <button class="btn-pack" onclick="togglePackPanel()">📦 模板</button>
           <button class="btn-add-task" onclick="toggleAddForm()">＋ 新增</button>
@@ -1136,6 +1144,76 @@ function checkLevelUp(beforeXP,afterXP){
   if(aInfo.lvIdx>bLv){
     setTimeout(()=>showToast(`🎉 升級！${aInfo.lv} ${aInfo.title}`,3500),600);
   }
+}
+
+function showConceptModal(type){
+  const modal=document.getElementById('conceptModal');
+  const box=document.getElementById('conceptModalContent');
+  const ac=_theme==='warm'?{h:'#fcd34d',a:'#f59e0b',d:'#d97706',muted:'rgba(252,211,77,.45)'}:{h:'#a5b4fc',a:'#818cf8',d:'#6366f1',muted:'rgba(129,140,248,.45)'};
+  const row=(label,pts,color)=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span style="font-size:1rem">${pts}</span><span style="flex:1;font-size:.78rem;color:#94a3b8">${label}</span></div>`;
+  if(type==='task'){
+    box.innerHTML=`
+<div style="font-size:.88rem;font-weight:800;color:${ac.h};text-align:center;margin-bottom:14px">✅ 自訂任務是什麼？</div>
+<div style="font-size:.82rem;color:#c7d2fe;line-height:1.65;margin-bottom:12px">你計劃「<strong>定期去做</strong>」的具體行為。<br>每次完成打勾就能獲得分數。</div>
+${row('週任務完成：簡單/中/難','10 / 20 / 35 XP',ac.a)}
+${row('月任務完成：簡單/中/難','25 / 50 / 87 XP',ac.a)}
+${row('年任務完成：簡單/中/難','75 / 150 / 262 XP',ac.a)}
+<div style="font-size:.75rem;color:#94a3b8;margin-top:8px;line-height:1.6">完成任務同時對應維度雷達圖加分（每維度上限 +1.5~0.7 分）。</div>
+<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0">
+<div style="font-size:.78rem;font-weight:700;color:${ac.a};margin-bottom:8px">任務 vs 目標的差別</div>
+<div style="font-size:.78rem;color:#94a3b8;line-height:1.7">
+<strong style="color:#c7d2fe">任務</strong> = 你打算「做什麼」（行為、過程）<br>
+<strong style="color:#c7d2fe">目標</strong> = 你想「達到什麼」（結果、里程碑）<br><br>
+建議搭配：先設定目標（月跑 20 天），再建立任務（週跑步 4 次）幫助達成。
+</div>`;
+  }else{
+    box.innerHTML=`
+<div style="font-size:.88rem;font-weight:800;color:${ac.h};text-align:center;margin-bottom:14px">🎯 目標設定是什麼？</div>
+<div style="font-size:.82rem;color:#c7d2fe;line-height:1.65;margin-bottom:12px">你想在某段期間「<strong>達到的結果</strong>」。<br>期末勾選是否達成，達成後獲得加分與 XP。</div>
+${row('週目標達成 → 該維度','+1 分 · +15 XP',ac.a)}
+${row('月目標達成 → 該維度','+3 分 · +50 XP',ac.a)}
+${row('年目標達成 → 該維度','+7 分 · +200 XP',ac.a)}
+<div style="font-size:.75rem;color:#94a3b8;margin-top:8px;line-height:1.6">跨維度目標（如同時屬健康+工作）達成時，各維度 +1 分。</div>
+<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:14px 0">
+<div style="font-size:.78rem;font-weight:700;color:${ac.a};margin-bottom:8px">任務 vs 目標的差別</div>
+<div style="font-size:.78rem;color:#94a3b8;line-height:1.7">
+<strong style="color:#c7d2fe">目標</strong> = 你想「達到什麼」（結果、里程碑）<br>
+<strong style="color:#c7d2fe">任務</strong> = 你打算「做什麼」（行為、過程）<br><br>
+目標定方向，任務是每天的具體行動。目前目標需手動勾選達成，未來計劃加入「建議相關任務」功能。
+</div>`;
+  }
+  modal.style.display='flex';
+}
+
+function showXPBreakdown(){
+  const data=db();
+  const dailyXP=Object.values(data.daily||{}).reduce((s,l)=>s+(l.xp||0),0);
+  const taskXP=(data.tasks||[]).reduce((s,t)=>s+(t.xpEarned||0),0);
+  const goalXP=Object.values(data.goals||{}).flatMap(pp=>Object.values(pp).flatMap(gl=>gl.map(g=>g.xpEarned||0))).reduce((a,b)=>a+b,0);
+  const weeklyXP=Object.values(data.weekly||{}).reduce((s,w)=>s+(w.xp||0),0);
+  const monthlyXP=Object.values(data.monthly||{}).reduce((s,m)=>s+(m.xp||0),0);
+  const total=dailyXP+taskXP+goalXP+weeklyXP+monthlyXP;
+  const ac=_theme==='warm'?{h:'#fcd34d',a:'#f59e0b'}:{h:'#fbbf24',a:'#fbbf24'};
+  const r=(lbl,xp)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06)"><span style="font-size:.78rem;color:#94a3b8">${lbl}</span><span style="color:${ac.a};font-weight:700;font-size:.82rem">${xp.toLocaleString()} XP</span></div>`;
+  const modal=document.getElementById('conceptModal');
+  document.getElementById('conceptModalContent').innerHTML=`
+<div style="font-size:.88rem;font-weight:800;color:${ac.h};text-align:center;margin-bottom:16px">⚡ 經驗值 (XP) 明細</div>
+${r('每日打卡完成（+10/天）',dailyXP)}
+${r('任務完成',taskXP)}
+${r('目標達成',goalXP)}
+${r('週 / 月結算',weeklyXP+monthlyXP)}
+<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;font-size:.88rem"><span style="font-weight:700;color:#e2e8f0">總計</span><span style="color:${ac.h};font-weight:800;font-size:1rem">${total.toLocaleString()} XP</span></div>
+<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:12px 0">
+<div style="font-size:.76rem;font-weight:700;color:#6366f1;margin-bottom:7px">XP 獲取方式</div>
+<div style="font-size:.75rem;color:#94a3b8;line-height:1.75">
+• 每天完整填完每日紀錄 → +10 XP<br>
+• 任務（簡單/中等/難）<br>
+&emsp;週：10 / 20 / 35 &emsp;月：25 / 50 / 87 &emsp;年：75 / 150 / 262<br>
+• 週目標達成 → +15 XP<br>
+• 月目標達成 → +50 XP<br>
+• 年目標達成 → +200 XP
+</div>`;
+  modal.style.display='flex';
 }
 
 function showLvModal(){
