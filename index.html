@@ -243,10 +243,8 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
 .wst-btn{padding:8px 12px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s}
 .wst-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);color:#a5b4fc;box-shadow:0 0 10px rgba(129,140,248,.2)}
 .wsc-row{display:flex;gap:6px;margin-top:4px}
-.wsc-row>div{flex:1;text-align:center}
-.wsc-btn{width:100%;padding:10px 2px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:1.3rem;cursor:pointer;text-align:center;transition:all .15s;line-height:1.2}
-.wsc-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);transform:scale(1.08);box-shadow:0 0 14px rgba(129,140,248,.3)}
-.wsc-lbl{font-size:.58rem;color:#6366f1;margin-top:2px;text-align:center;font-weight:600}
+.wsc-btn{flex:1;padding:8px 4px;border:1.5px solid rgba(99,102,241,.2);background:rgba(10,14,44,.5);border-radius:12px;font-size:.8rem;font-weight:600;cursor:pointer;color:#6366f1;transition:all .15s;text-align:center;line-height:1.4}
+.wsc-btn.on{border-color:#818cf8;background:rgba(99,102,241,.2);color:#a5b4fc;box-shadow:0 0 10px rgba(129,140,248,.2)}
 .gr-inputs{display:flex;flex-direction:column;gap:6px}
 .spend-expand{background:rgba(10,14,44,.6);border-radius:12px;padding:12px;margin-top:8px;border:1px solid rgba(99,102,241,.2)}
 
@@ -446,7 +444,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fbtitle">💼 工作回顧</div>
         <div class="frow">
           <div class="flbl">今天完成的最重要一件事</div>
-          <input type="text" class="txt-input" id="workDone" placeholder="一句話就好">
+          <textarea class="txt-input" id="workDone" rows="5" placeholder="一句話就好，或寫多一點也沒關係" style="resize:vertical"></textarea>
         </div>
         <div class="frow">
           <div class="flbl">今天的工作狀態</div>
@@ -459,16 +457,16 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         </div>
         <div class="frow">
           <div class="flbl">明天最優先一件事</div>
-          <input type="text" class="txt-input" id="workTomorrow" placeholder="讓明天的自己有個開始方向">
+          <textarea class="txt-input" id="workTomorrow" rows="5" placeholder="讓明天的自己有個開始方向" style="resize:vertical"></textarea>
         </div>
         <div class="frow">
           <div class="flbl">今天工作表現自評（1-5）</div>
           <div class="wsc-row">
-            <div><button class="wsc-btn" data-wsc="1" onclick="setWorkScore(1)">😔</button><div class="wsc-lbl">1</div></div>
-            <div><button class="wsc-btn" data-wsc="2" onclick="setWorkScore(2)">😕</button><div class="wsc-lbl">2</div></div>
-            <div><button class="wsc-btn" data-wsc="3" onclick="setWorkScore(3)">😐</button><div class="wsc-lbl">3</div></div>
-            <div><button class="wsc-btn" data-wsc="4" onclick="setWorkScore(4)">😊</button><div class="wsc-lbl">4</div></div>
-            <div><button class="wsc-btn" data-wsc="5" onclick="setWorkScore(5)">🔥</button><div class="wsc-lbl">5</div></div>
+            <button class="wsc-btn" data-wsc="1" onclick="setWorkScore(1)">😔<br>1</button>
+            <button class="wsc-btn" data-wsc="2" onclick="setWorkScore(2)">😕<br>2</button>
+            <button class="wsc-btn" data-wsc="3" onclick="setWorkScore(3)">😐<br>3</button>
+            <button class="wsc-btn" data-wsc="4" onclick="setWorkScore(4)">😊<br>4</button>
+            <button class="wsc-btn" data-wsc="5" onclick="setWorkScore(5)">🔥<br>5</button>
           </div>
         </div>
       </div>
