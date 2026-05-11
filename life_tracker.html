@@ -990,7 +990,8 @@ function getTotalXP(){
   const dailyXP=Object.values(data.daily||{}).reduce((sum,l)=>sum+(l.xp||0),0);
   const weeklyXP=Object.values(data.weekly||{}).reduce((sum,w)=>sum+(w.xp||0),0);
   const monthlyXP=Object.values(data.monthly||{}).reduce((sum,m)=>sum+(m.xp||0),0);
-  return taskXP+dailyXP+weeklyXP+monthlyXP;
+  const goalXP=Object.values(data.goals||{}).flatMap(pp=>Object.values(pp).flatMap(gl=>gl.map(g=>g.xpEarned||0))).reduce((a,b)=>a+b,0);
+  return taskXP+dailyXP+weeklyXP+monthlyXP+goalXP;
 }
 
 function cumulativeXPAt(wkey){
@@ -1005,7 +1006,12 @@ function cumulativeXPAt(wkey){
     const count=(t.completedPeriods||[]).filter(p=>t.frequency==='weekly'?p<=wkey:t.frequency==='monthly'?p<=mkey:p<=ykey).length;
     return sum+count*xpPer;
   },0);
-  return dailyXP+weeklyXP+monthlyXP+taskXP;
+  const goalXP=Object.entries(data.goals||{}).reduce((sum,[period,periods])=>
+    sum+Object.entries(periods).reduce((s2,[pKey,goals])=>{
+      const inRange=period==='w'?pKey<=wkey:period==='m'?pKey<=mkey:pKey<=ykey;
+      return s2+(inRange?goals.reduce((s3,g)=>s3+(g.xpEarned||0),0):0);
+    },0),0);
+  return dailyXP+weeklyXP+monthlyXP+taskXP+goalXP;
 }
 
 function getXpInfo(xp){
@@ -1064,7 +1070,7 @@ function calcGoalBonuses(){
   // periodUsed tracks how much bonus each dim has already received from each period,
   // capped at pts — so multiple goals in the same dim+period don't stack beyond the cap.
   const periodUsed={};
-  [['w',curWk,1],['m',curMk,2],['y',curYk,3]].forEach(([period,pKey,pts])=>{
+  [['w',curWk,1],['m',curMk,3],['y',curYk,7]].forEach(([period,pKey,pts])=>{
     const goals=((data.goals||{})[period]?.[pKey]||[]).filter(g=>(g.completedPeriods||[]).includes(pKey));
     goals.forEach(g=>{
       const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
@@ -2746,7 +2752,7 @@ function renderGoals(){
     el.innerHTML='<div style="text-align:center;padding:10px 0;font-size:.82rem;color:rgba(255,255,255,.28)">尚無目標，點下方新增</div>';
     return;
   }
-  const pts=_goalPeriod==='w'?'+1':_goalPeriod==='m'?'+2':'+3';
+  const pts=_goalPeriod==='w'?'+1':_goalPeriod==='m'?'+3':'+7';
   el.innerHTML=list.map(g=>{
     const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
     const isMulti=dims.length>1;
@@ -2852,6 +2858,8 @@ function deleteGoal(id){
   }
 }
 
+const GOAL_XP={w:15,m:50,y:200};
+
 function toggleGoalComplete(id){
   const data=db();
   const pk=_goalPKey();
@@ -2860,17 +2868,21 @@ function toggleGoalComplete(id){
   const g=goals.find(x=>x.id===id);
   if(!g)return;
   if(!g.completedPeriods)g.completedPeriods=[];
+  const beforeXP=getTotalXP();
   if(g.completedPeriods.includes(pk)){
     g.completedPeriods=g.completedPeriods.filter(p=>p!==pk);
+    g.xpEarned=Math.max(0,(g.xpEarned||0)-GOAL_XP[_goalPeriod]);
     showToast('目標已取消達成');
   }else{
     g.completedPeriods.push(pk);
+    g.xpEarned=(g.xpEarned||0)+GOAL_XP[_goalPeriod];
     const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim];
-    const pts=_goalPeriod==='w'?1:_goalPeriod==='m'?2:3;
+    const pts=_goalPeriod==='w'?1:_goalPeriod==='m'?3:7;
     const bonus=dims.length>1?`各 +1分`:` +${pts}分`;
-    showToast(`🎯 達成！${dims.map(k=>DIMS.find(d=>d.key===k)?.icon||'').join('')}${bonus}`);
+    showToast(`🎯 達成！${dims.map(k=>DIMS.find(d=>d.key===k)?.icon||'').join('')}${bonus} · +${GOAL_XP[_goalPeriod]} XP`);
   }
   dbS(data);renderGoals();renderHome();
+  checkLevelUp(beforeXP,getTotalXP());
 }
 
 function _renderGoalRef(elId,period,pKey,dim){
