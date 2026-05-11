@@ -444,7 +444,11 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fbtitle">💼 工作回顧</div>
         <div class="frow">
           <div class="flbl">今天完成的重要事項</div>
-          <textarea class="txt-input" id="workDone" rows="5" placeholder="一句話就好，或寫多一點也沒關係" style="resize:vertical"></textarea>
+          <div class="gr-inputs">
+            <input type="text" class="txt-input" id="wd1" placeholder="1.">
+            <input type="text" class="txt-input" id="wd2" placeholder="2.">
+            <input type="text" class="txt-input" id="wd3" placeholder="3.">
+          </div>
         </div>
         <div class="frow">
           <div class="flbl">今天的工作狀態</div>
@@ -457,7 +461,11 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         </div>
         <div class="frow">
           <div class="flbl">明天優先事項</div>
-          <textarea class="txt-input" id="workTomorrow" rows="5" placeholder="讓明天的自己有個開始方向" style="resize:vertical"></textarea>
+          <div class="gr-inputs">
+            <input type="text" class="txt-input" id="wt1" placeholder="1.">
+            <input type="text" class="txt-input" id="wt2" placeholder="2.">
+            <input type="text" class="txt-input" id="wt3" placeholder="3.">
+          </div>
         </div>
         <div class="frow">
           <div class="flbl">今天工作表現自評（1-5）</div>
@@ -1601,7 +1609,7 @@ function renderDaily(){
   DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;DS.phoneOK=null;
   ['dey','den','dsy','dsn','dfy','dfn','phy','phn'].forEach(id=>document.getElementById(id).className='ynb');
   for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.remove('active');
-  ['gr1','gr2','gr3','discomfort','spendAmount','dSpendWhat','workDone','workTomorrow','socialWith','socialNote'].forEach(id=>{document.getElementById(id).value='';});
+  ['gr1','gr2','gr3','discomfort','spendAmount','dSpendWhat','wd1','wd2','wd3','wt1','wt2','wt3','socialWith','socialNote'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('spendDetail').style.display='none';
   document.getElementById('socialDetail').style.display='none';
   document.getElementById('scy').className='ynb';document.getElementById('scn').className='ynb';
@@ -1628,10 +1636,10 @@ function renderDaily(){
   if(todayLog.spendDetail)document.getElementById('dSpendWhat').value=todayLog.spendDetail;
   const rawCat=todayLog.spendCategory;selCat=Array.isArray(rawCat)?rawCat:(rawCat?[rawCat]:[]);
   renderCatBtns();
-  if(todayLog.workDone)document.getElementById('workDone').value=todayLog.workDone;
+  if(todayLog.workDone){const p=todayLog.workDone.split('\n');['wd1','wd2','wd3'].forEach((id,i)=>{document.getElementById(id).value=p[i]||'';});}
   selWorkState=todayLog.workState||null;
   renderWorkState();
-  if(todayLog.workTomorrow)document.getElementById('workTomorrow').value=todayLog.workTomorrow;
+  if(todayLog.workTomorrow){const p=todayLog.workTomorrow.split('\n');['wt1','wt2','wt3'].forEach((id,i)=>{document.getElementById(id).value=p[i]||'';});}
   if(todayLog.workScore){selWorkScore=todayLog.workScore;setWorkScore(todayLog.workScore);}
   if(todayLog.socialToday!==undefined){setSocialToday(todayLog.socialToday);}
   if(todayLog.socialWith)document.getElementById('socialWith').value=todayLog.socialWith;
@@ -2240,9 +2248,9 @@ function saveDaily(){
   const spendAmt=spendAmtStr===''?null:Math.max(0,parseInt(spendAmtStr)||0);
   if(spendAmt===null)errs.push('記帳：請填今日花費（沒花填 0）');
   if(spendAmt>0&&selCat.length===0)errs.push('記帳：消費類別');
-  if(!document.getElementById('workDone').value.trim())errs.push('工作：完成事項');
+  if(!['wd1','wd2','wd3'].some(id=>document.getElementById(id).value.trim()))errs.push('工作：完成事項（至少填一項）');
   if(!selWorkState)errs.push('工作：工作狀態');
-  if(!document.getElementById('workTomorrow').value.trim())errs.push('工作：明日優先');
+  if(!['wt1','wt2','wt3'].some(id=>document.getElementById(id).value.trim()))errs.push('工作：明日優先（至少填一項）');
   if(selWorkScore===null)errs.push('工作：今日自評');
   if(selSocialToday===null)errs.push('社交：今天是否有互動');
   if(errs.length){showToast('⚠️ 未填：'+errs[0]);return;}
@@ -2264,9 +2272,9 @@ function saveDaily(){
     discomfort:document.getElementById('discomfort').value.trim(),
     spendAmount:spendAmt,
     ...(spendAmt>0?{spendDetail:document.getElementById('dSpendWhat').value.trim(),spendCategory:[...selCat]}:{}),
-    workDone:document.getElementById('workDone').value.trim(),
+    workDone:['wd1','wd2','wd3'].map(id=>document.getElementById(id).value.trim()).filter(Boolean).join('\n'),
     workState:selWorkState,
-    workTomorrow:document.getElementById('workTomorrow').value.trim(),
+    workTomorrow:['wt1','wt2','wt3'].map(id=>document.getElementById(id).value.trim()).filter(Boolean).join('\n'),
     workScore:selWorkScore,
     socialToday:selSocialToday,
     ...(selSocialToday?{socialWith:document.getElementById('socialWith').value.trim(),socialNote:document.getElementById('socialNote').value.trim()}:{}),
