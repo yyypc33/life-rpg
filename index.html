@@ -707,7 +707,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fblock">
           <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 2分</span></div>
           <div class="frow">
-            <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +0.5 分</span></div>
+            <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
             <textarea class="txt-input" id="mMonthlyReviewNote" placeholder="這個月的收穫、遺憾或下個月計畫…" rows="5"></textarea>
           </div>
         </div>
@@ -1064,7 +1064,7 @@ function calcGoalBonuses(){
   // periodUsed tracks how much bonus each dim has already received from each period,
   // capped at pts — so multiple goals in the same dim+period don't stack beyond the cap.
   const periodUsed={};
-  [['w',curWk,3],['m',curMk,2],['y',curYk,2]].forEach(([period,pKey,pts])=>{
+  [['w',curWk,1],['m',curMk,2],['y',curYk,3]].forEach(([period,pKey,pts])=>{
     const goals=((data.goals||{})[period]?.[pKey]||[]).filter(g=>(g.completedPeriods||[]).includes(pKey));
     goals.forEach(g=>{
       const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
@@ -1145,7 +1145,7 @@ function calcWeek(wkey){
   const social =r(socialWeek+socialGoal+(bonus.social||0)+(goalB.social||0));
   // Mental: mood(6) + phone(0.5) + refl(1) + mrv(0.5) = max 8
   const reflScore=W.mental_note?1:0;
-  const mrvScore=M.monthly_review_note?0.5:0;
+  const mrvScore=M.monthly_review_note?1:0;
   const mental =r((moodAvg>0?(moodAvg/5)*6:0)+(phoneOKDays/7)*0.5+reflScore+mrvScore+(bonus.mental||0)+(goalB.mental||0));
   const total  =r((health+finance+work+social+mental)/5);
   return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_phone:phoneRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_scDays:dailySocialCount,_monthSocialCount:monthSocialCount,_workBase:workBase};
@@ -2746,7 +2746,7 @@ function renderGoals(){
     el.innerHTML='<div style="text-align:center;padding:10px 0;font-size:.82rem;color:rgba(255,255,255,.28)">尚無目標，點下方新增</div>';
     return;
   }
-  const pts=_goalPeriod==='w'?'+3':'+2';
+  const pts=_goalPeriod==='w'?'+1':_goalPeriod==='m'?'+2':'+3';
   el.innerHTML=list.map(g=>{
     const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
     const isMulti=dims.length>1;
@@ -2866,7 +2866,7 @@ function toggleGoalComplete(id){
   }else{
     g.completedPeriods.push(pk);
     const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim];
-    const pts=_goalPeriod==='w'?3:2;
+    const pts=_goalPeriod==='w'?1:_goalPeriod==='m'?2:3;
     const bonus=dims.length>1?`各 +1分`:` +${pts}分`;
     showToast(`🎯 達成！${dims.map(k=>DIMS.find(d=>d.key===k)?.icon||'').join('')}${bonus}`);
   }
