@@ -329,7 +329,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
           <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🏆</span><span style="color:#34d399;font-weight:700">≥ 8.0</span><span style="color:rgba(255,255,255,.55)">達標週 — 自由消費，好好放鬆</span></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">💪</span><span style="color:#fbbf24;font-weight:700">5.0 – 7.9</span><span style="color:rgba(255,255,255,.55)">繼續保持 — 下週再衝</span></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🤲</span><span style="color:#f87171;font-weight:700">< 5.0</span><span style="color:rgba(255,255,255,.55)">懲罰週 — 完成一項社區貢獻</span></div>
-          <div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);line-height:1.5">總分 = (健康 + 財務 + 工作 + 社交 + 心理) ÷ 5，各維度 0–10 分</div>
+          <div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);line-height:1.5">總分 = (健康 + 財務 + 工作 + 社交 + 心理) ÷ 5，各維度 0–15 分</div>
         </div>
       </div>
       <div class="rbox" id="rwBox"></div>
@@ -635,7 +635,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 3分</span></div>
+          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">反思 +1 分</span></div>
           <div class="frow">
             <div class="flbl">本週回顧與反思 <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
             <textarea class="txt-input" id="wMentalNote" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…" rows="4"></textarea>
@@ -691,7 +691,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日打卡計算，最高 5 分</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日打卡計算，最高 8 分</span></div>
           <div id="mSocialSummary"></div>
           <div id="mSocialGoalRef"></div>
           <div class="frow" style="margin-top:8px">
@@ -707,7 +707,7 @@ textarea.txt-input{resize:none;line-height:1.6;overflow-y:auto}
         <div class="fblock">
           <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔心理 2分</span></div>
           <div class="frow">
-            <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +2 分</span><span style="font-size:.7rem;color:rgba(255,255,255,.35)"> · 未填 −1 分</span></div>
+            <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +0.5 分</span></div>
             <textarea class="txt-input" id="mMonthlyReviewNote" placeholder="這個月的收穫、遺憾或下個月計畫…" rows="5"></textarea>
           </div>
         </div>
@@ -1061,12 +1061,24 @@ function calcGoalBonuses(){
   const data=db();
   const curWk=wk(),curMk=mk(),curYk=yk();
   const gb={health:0,finance:0,work:0,social:0,mental:0};
+  // periodUsed tracks how much bonus each dim has already received from each period,
+  // capped at pts — so multiple goals in the same dim+period don't stack beyond the cap.
+  const periodUsed={};
   [['w',curWk,3],['m',curMk,2],['y',curYk,2]].forEach(([period,pKey,pts])=>{
     const goals=((data.goals||{})[period]?.[pKey]||[]).filter(g=>(g.completedPeriods||[]).includes(pKey));
     goals.forEach(g=>{
       const dims=Array.isArray(g.dims)&&g.dims.length?g.dims:[g.dim].filter(Boolean);
       const each=dims.length>1?1:pts;
-      dims.forEach(d=>{if(gb[d]!==undefined)gb[d]+=each;});
+      dims.forEach(d=>{
+        if(gb[d]===undefined)return;
+        const capKey=`${period}_${d}`;
+        const used=periodUsed[capKey]||0;
+        const room=pts-used;
+        if(room<=0)return;
+        const add=Math.min(each,room);
+        gb[d]+=add;
+        periodUsed[capKey]=(used+add);
+      });
     });
   });
   return gb;
@@ -1174,7 +1186,7 @@ function isDayComplete(log){
     ?(log.spendAmount===0||(Array.isArray(log.spendCategory)?log.spendCategory.length>0:!!log.spendCategory)) // new format
     :(log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory))); // old
   const baseOk=log.exercise!==undefined&&log.sleep!==undefined&&log.fried!==undefined&&
-    log.mood&&(log.moodTags||[]).length>0&&(log.gratitude||[]).filter(Boolean).length===3&&
+    log.mood&&(log.moodTags||[]).length>0&&(log.gratitude||[]).filter(Boolean).length>=1&&
     budgetOk&&log.workDone&&log.workState&&log.workTomorrow;
   if(!baseOk)return false;
   // v1.5+ logs have workScore or socialToday; older logs are complete with just base fields
@@ -1222,7 +1234,7 @@ const ACHIEVEMENTS=[
     {id:'platinum',days:180,icon:'💎',reward:'一次說走就走的小旅行（1–2 天）'},
     {id:'legend',days:365,icon:'👑',reward:'給自己的心理健康大禮（自訂體驗）'},
   ]},
-  {key:'gratitude',label:'感恩習慣',icon:'🙏',color:'#ec4899',check:l=>(l.gratitude||[]).filter(Boolean).length===3,tiers:[
+  {key:'gratitude',label:'感恩習慣',icon:'🙏',color:'#ec4899',check:l=>(l.gratitude||[]).filter(Boolean).length>=1,tiers:[
     {id:'bronze',days:7,  icon:'🥉',reward:'寫一封感謝信給某個重要的人'},
     {id:'silver',days:30, icon:'🥈',reward:'安排一次和感謝對象的聚餐'},
     {id:'gold',  days:90, icon:'🥇',reward:'買一本喜歡的書或訂閱喜歡的課程'},
@@ -2243,7 +2255,7 @@ function saveDaily(){
   if(DS.fried===null)errs.push('健康：垃圾食物');
   if(DS.mood===null)errs.push('心情分數');
   if(!selMoodTags.length)errs.push('心情關鍵詞');
-  if(!gr1||!gr2||!gr3)errs.push('感恩三件事（三項都要填）');
+  if(!gr1&&!gr2&&!gr3)errs.push('感恩三件事（至少填一項）');
   const spendAmtStr=document.getElementById('spendAmount').value.trim();
   const spendAmt=spendAmtStr===''?null:Math.max(0,parseInt(spendAmtStr)||0);
   if(spendAmt===null)errs.push('記帳：請填今日花費（沒花填 0）');
