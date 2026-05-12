@@ -2501,7 +2501,7 @@ function renderTrendChart(){
     TC=new Chart(document.getElementById('trendChart').getContext('2d'),{
       type:'line',
       data:{labels,datasets:[
-        {label:'累積 XP',data:xpData,borderColor:'#fbbf24',backgroundColor:'rgba(251,191,36,.1)',borderWidth:2.5,pointRadius:xpRecent.length>16?2:3,pointHoverRadius:6,tension:.35,fill:true},
+        {label:'累積 XP',data:xpData,borderColor:'rgba(251,191,36,.6)',backgroundColor:'rgba(251,191,36,.08)',borderWidth:2,pointRadius:xpRecent.length>16?2:3,pointHoverRadius:6,tension:.35,fill:true},
         ...XP_LEVELS.filter(([t])=>t>0).map(([t,lv,title])=>({label:`${lv} ${title}`,data:labels.map(()=>t),borderColor:'rgba(251,191,36,.2)',borderWidth:1,borderDash:[4,4],pointRadius:0,fill:false})),
       ]},
       options:{
@@ -2538,8 +2538,8 @@ function renderTrendChart(){
   const pR=pts.length>16?2:pts.length>8?3:4;
   const mkDs=(key,lbl,color,bold)=>({
     label:lbl,data:pts.map(s=>s?parseFloat(s[key].toFixed(1)):null),
-    borderColor:color,backgroundColor:bold?color+'18':color+'08',
-    borderWidth:bold?2.5:1.5,pointRadius:pR,pointHoverRadius:6,
+    borderColor:color+(bold?'99':'77'),backgroundColor:bold?color+'12':color+'06',
+    borderWidth:bold?2:1.5,pointRadius:pR,pointHoverRadius:6,
     tension:.35,fill:bold,spanGaps:true,
   });
   TC=new Chart(document.getElementById('trendChart').getContext('2d'),{
