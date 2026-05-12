@@ -904,7 +904,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日打卡計算，最高 8 分</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天3分／2天6分／3天+8分，有心得+2，最高10分</span></div>
           <div id="mSocialSummary"></div>
           <div id="mSocialGoalRef"></div>
           <div class="frow" style="margin-top:8px">
@@ -1940,7 +1940,7 @@ function renderHome(){
       health:`日 運動${ws._ex}天 睡眠${ws._sl}天 忌口${ws._fried}天 手機${ws._phone??0}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':lnk}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
       finance:ws._spendDays>0?`本週 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
-      work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/5 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
+      work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/10 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
       social:`週 社交 ${ws._scDays??0}天（${(ws._socialWeek??0).toFixed(0)}分）| 月 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':lnk}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
       mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 手機${ws._phone??0}天達標 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):lnk)}${(lastWeekOfMonth||M.monthly_review_note)?` | 月回顧${M.monthly_review_note?'✓':lnk}`:''}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
     };
@@ -2317,7 +2317,7 @@ function renderSettle(){
   const workDays2=curDays.filter(d=>d<=today2&&data.daily[d]?.workScore);
   const avgWork=workDays2.length>0?workDays2.reduce((s,d)=>s+data.daily[d].workScore,0)/workDays2.length:null;
   const wkEl=document.getElementById('wWorkSummary');
-  if(avgWork!==null){wkEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週 ${workDays2.length} 天自評：平均 ${WEMOJI[Math.round(avgWork)]} ${avgWork.toFixed(1)} / 5（折算工作 ${(avgWork/5*5).toFixed(1)} / 5 分）</div>`;}
+  if(avgWork!==null){wkEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週 ${workDays2.length} 天自評：平均 ${WEMOJI[Math.round(avgWork)]} ${avgWork.toFixed(1)} / 5（折算工作 ${(avgWork/5*10).toFixed(1)} / 10 分）</div>`;}
   else{wkEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無工作自評，請在「每日」tab 填寫</div>';}
   // Auto-summary: social
   const socialDays2=curDays.filter(d=>d<=today2&&data.daily[d]?.socialToday===true);
