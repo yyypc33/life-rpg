@@ -1137,7 +1137,7 @@ function getThemeColors(){
 }
 
 const SK='life_rpg_yu3';
-var _fbUser=null,_syncState='idle',_syncTimer=null,_snapshotUnsub=null,_suppressSnapshotUntil=0;
+var _fbUser=null,_syncState='idle',_syncTimer=null,_snapshotUnsub=null,_suppressSnapshotUntil=0,_syncError='';
 function db(){
   const DEF={daily:{},weekly:{},monthly:{},yearly:{},tasks:[]};
   try{return JSON.parse(localStorage.getItem(SK))||DEF;}catch{return DEF;}
@@ -1615,13 +1615,7 @@ const ACHIEVEMENTS=[
 // ── MILESTONES (weekly streak based) ──
 const MILESTONES=[
   {key:'wstreak',label:'連勝週',icon:'🔥',color:'#f59e0b',desc:'連續達標週數（總分 ≥ 5）',
-   calc(){
-     const cur=wk();
-     let n=calcWeek(cur).total>=5?1:0;
-     let w=prevWk(cur);
-     for(let i=0;i<52;i++){if(calcWeek(w).total>=5)n++;else break;w=prevWk(w);}
-     return n;
-   },
+   calc(){return streak();},
    tiers:[
      {id:'w2', weeks:2,  icon:'⭐', reward:'一杯喜歡的飲料犒賞自己'},
      {id:'w4', weeks:4,  icon:'🥉', reward:'去一間一直想試的餐廳'},
@@ -2760,7 +2754,10 @@ function importBackup(e){
     try{
       const data=JSON.parse(ev.target.result);
       if(!data.daily||!data.weekly)throw new Error();
-      if(!confirm('確定匯入備份？現有資料將被完整覆蓋。'))return;
+      const days=Object.keys(data.daily||{}).sort();
+      const dr=days.length?`${days[0]} ~ ${days[days.length-1]}`:'無';
+      const msg=`確定匯入這份備份？\n\n每日紀錄：${days.length} 天（${dr}）\n任務數量：${(data.tasks||[]).length} 個\n\n匯入後現有資料將被完整覆蓋，無法還原。`;
+      if(!confirm(msg))return;
       const normalized={daily:{},weekly:{},monthly:{},yearly:{},tasks:[],...data};
       dbS(normalized);renderHome();renderHistory();
       showToast('✅ 備份還原成功');
@@ -3393,12 +3390,23 @@ function _mergeData(local,cloud){
     });
     return out;
   }
+  function mergeTasks(l=[],c=[]){
+    const map={};
+    [...l,...c].forEach(t=>{
+      if(!map[t.id]){map[t.id]={...t,completedPeriods:[...(t.completedPeriods||[])]};}
+      else{
+        (t.completedPeriods||[]).forEach(p=>{if(!map[t.id].completedPeriods.includes(p))map[t.id].completedPeriods.push(p);});
+        if((t.xpEarned||0)>(map[t.id].xpEarned||0))map[t.id].xpEarned=t.xpEarned;
+      }
+    });
+    return Object.values(map);
+  }
   return{
     daily:m(local.daily,cloud.daily),
     weekly:m(local.weekly,cloud.weekly),
     monthly:m(local.monthly,cloud.monthly),
     yearly:m(local.yearly,cloud.yearly),
-    tasks:(cloud.tasks||[]).length>=(local.tasks||[]).length?cloud.tasks:local.tasks,
+    tasks:mergeTasks(local.tasks,cloud.tasks),
     achievements:m(local.achievements,cloud.achievements),
     milestones:m(local.milestones,cloud.milestones),
     goals:mergeGoals(local.goals,cloud.goals),
@@ -3423,7 +3431,7 @@ function renderSyncStatus(){
       const name=(_fbUser.displayName||_fbUser.email||'').split(' ')[0];
       if(_syncState==='syncing'){txt.textContent=`${name} · 同步中…`;txt.style.color='rgba(251,191,36,.75)';}
       else if(_syncState==='synced'){txt.textContent=`${name} · ✓ 已同步`;txt.style.color='rgba(52,211,153,.75)';}
-      else if(_syncState==='error'){txt.textContent=`${name} · ⚠️ 同步失敗`;txt.style.color='rgba(248,113,113,.75)';}
+      else if(_syncState==='error'){txt.textContent=`${name} · ⚠️ 同步失敗${_syncError?' ('+_syncError.slice(0,30)+')':''}`;txt.style.color='rgba(248,113,113,.75)';}
       else{txt.textContent=`${name} · ☁️`;txt.style.color='rgba(165,180,252,.6)';}
     }
   }
@@ -3460,7 +3468,7 @@ function _scheduleSyncToCloud(){
       _suppressSnapshotUntil=Date.now()+3000; // 防止自己寫入觸發 snapshot 回調
       await _userDoc().set(db());
       _syncState='synced';
-    }catch(e){_syncState='error';}
+    }catch(e){_syncState='error';_syncError=e.message||String(e);}
     renderSyncStatus();
   },1500);
 }
@@ -3473,7 +3481,11 @@ function _setupRealtimeSync(){
     if(Date.now()<_suppressSnapshotUntil)return; // 忽略自己剛寫入的回調
     if(!snapshot.exists){
       // 第一次登入：把本機資料推上雲端
-      _userDoc().set(db()).catch(()=>{});
+      _userDoc().set(db()).catch(e=>{
+        _syncState='error';_syncError=e.message||String(e);
+        renderSyncStatus();
+        showToast('⚠️ 首次雲端備份失敗，資料仍在本機');
+      });
       return;
     }
     const merged=_mergeData(db(),snapshot.data());
