@@ -646,8 +646,8 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天有什麼讓你不舒服？<span style="color:rgba(255,255,255,.38);font-size:.72rem;font-weight:400">（選填）</span></div>
-          <input type="text" class="txt-input" id="discomfort" placeholder="可以是任何事，說給自己聽">
+          <div class="flbl">今日心得 <span style="color:rgba(255,255,255,.38);font-size:.72rem;font-weight:400">（選填）</span></div>
+          <input type="text" class="txt-input" id="discomfort" placeholder="今天的感受、想法、或任何想記下來的事…">
         </div>
       </div>
       <hr>
@@ -1118,14 +1118,14 @@ function applyTheme(){
   document.body.classList.remove('theme-zen','theme-warm');
   document.body.classList.add('theme-'+_theme);
   const btn=document.getElementById('themeBtn');
-  if(btn){const lbl={auto:'⚙️ 自動',zen:'🌙 禪',warm:'☀️ 暖'};btn.textContent=lbl[pref];}
+  if(btn){const lbl={auto:'⚙️ 自動',zen:'🌙 深',warm:'☀️ 淺'};btn.textContent=lbl[pref];}
 }
 function cycleTheme(){
   const order=['auto','zen','warm'];
   const next=order[(order.indexOf(getThemePref())+1)%3];
   localStorage.setItem(THEME_KEY,next);
   applyTheme();
-  const names={auto:'自動（白天暖・夜晚禪）',zen:'禪 — 質感黑灰',warm:'暖 — 奶油淺色'};
+  const names={auto:'自動（白天淺・夜晚深）',zen:'深 — 質感黑灰',warm:'淺 — 奶油淺色'};
   showToast(`🎨 ${names[next]}`);
   if(typeof RC!=='undefined'&&RC)renderHome();
   if(typeof TC!=='undefined'&&TC)renderTrendChart();
@@ -2782,7 +2782,7 @@ function exportDailyCSV(){
   if(!days.length){showToast('⚠️ 尚無每日紀錄');return;}
   const WD=['日','一','二','三','四','五','六'];
   const yn=v=>v===true?'是':v===false?'否':'';
-  const headers=['日期','週次','星期','運動','睡眠','忌口垃圾食物','心情(1-5)','心情關鍵詞','感恩1','感恩2','感恩3','不舒服','今日花費(NT$)','花費內容','消費類別','工作完成','工作狀態','明日優先','補救紀錄'];
+  const headers=['日期','週次','星期','運動','睡眠','忌口垃圾食物','心情(1-5)','心情關鍵詞','感恩1','感恩2','感恩3','今日心得','今日花費(NT$)','花費內容','消費類別','工作完成','工作狀態','明日優先','補救紀錄'];
   const rows=days.map(day=>{
     const l=data.daily[day];
     const d=new Date(day+'T12:00:00');
