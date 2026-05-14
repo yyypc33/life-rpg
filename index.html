@@ -1454,7 +1454,7 @@ function calcWeek(wkey){
   const phoneOKDays=days.reduce((s,d)=>{const l=data.daily[d];return l&&l.phoneOK===true?s+mult(l):s;},0);
   const phoneRaw=days.filter(d=>{const l=data.daily[d];return l&&l.phoneOK===true;}).length;
   // Health: exercise(4) + sleep(4) + food(2) = base 10, phone moved to mental only
-  const exScore=(exDays/7)*4;
+  const exScore=Math.min(exDays,4);
   const healthGoal=M.health_goal_met===true?2:M.health_goal_met===false?-1:0;
   const health =r(exScore+(slDays/7)*4+(friedDays/7)*2+healthGoal+(bonus.health||0)+(goalB.health||0));
   // Finance: spend(10) + saving(+2) + report(+1) = base 10, extras separate
@@ -1470,7 +1470,7 @@ function calcWeek(wkey){
   // Social: tiered 0/3/6/8 base + note bonus +2 (max 10)
   const dailySocialCount=days.filter(d=>d<=today&&data.daily?.[d]?.socialToday===true).length;
   const hasSocialNote=days.some(d=>d<=today&&data.daily?.[d]?.socialToday===true&&(data.daily[d]?.socialNote||'').trim().length>0);
-  const socialBase=dailySocialCount>=3?8:dailySocialCount===2?6:dailySocialCount===1?3:0;
+  const socialBase=dailySocialCount>=2?8:dailySocialCount===1?4:0;
   const socialWeek=dailySocialCount>0?(socialBase+(hasSocialNote?2:0)):(W.social_count!==undefined?Math.min(8,W.social_count*2):(W.contact?6:0));
   const monthSocialCount=Object.keys(data.daily).filter(d=>d.startsWith(mkey)&&data.daily[d]?.socialToday===true).length;
   const socialGoal=M.social_goal_met===true?2:M.social_goal_met===false?-1:0;
@@ -2318,7 +2318,7 @@ function renderSettle(){
   const hasSocialData=curDays.some(d=>d<=today2&&data.daily[d]?.socialToday!==undefined);
   const scEl=document.getElementById('wSocialSummary');
   if(hasSocialData){
-    const scBase2=socialDays2.length>=3?8:socialDays2.length===2?6:socialDays2.length===1?3:0;
+    const scBase2=socialDays2.length>=2?8:socialDays2.length===1?4:0;
     const scNote2=socialDays2.some(d=>(data.daily[d]?.socialNote||'').trim().length>0);
     const scTotal2=scBase2+(scNote2?2:0);
     scEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週社交 <span style="font-weight:700;color:#a5b4fc">${socialDays2.length} 天</span> → 基礎 ${scBase2} 分${scNote2?' + 心得 +2':''} = <span style="font-weight:700;color:#a5b4fc">${scTotal2} / 10 分</span></div>`;
@@ -3064,7 +3064,7 @@ function showScoreRules(){
   const sepC=isWarm?'rgba(160,71,28,.15)':isZen?'rgba(255,255,255,.06)':'rgba(99,102,241,.12)';
   const DIMS_INFO=[
     {icon:'🏃',label:'健康',color:isWarm?'#16a34a':'#34d399',rows:[
-      ['運動天數','天數 / 7 × 4，最高 4 分（每天都算）'],
+      ['運動天數','4 天+ = 4 分（滿）；每少 1 天 -1 分'],
       ['充足睡眠','天數 / 7 × 4，最高 4 分'],
       ['忌口（無垃圾食物）','天數 / 7 × 2，最高 2 分'],
       ['月健康目標','達成 +2，未達成 −1（額外加分）'],
@@ -3080,7 +3080,7 @@ function showScoreRules(){
       ['月工作目標','達成 +2，未達成 −1（額外加分）'],
     ]},
     {icon:'🤝',label:'社交',color:isWarm?'#be185d':'#ec4899',rows:[
-      ['週社交天數','1天 = 3分　2天 = 6分　3天+ = 8分'],
+      ['週社交天數','1天 = 4分　2天+ = 8分（滿）'],
       ['有寫社交心得','+2（最高共 10 分）'],
       ['月社交目標','達成 +2，未達成 −1（額外加分）'],
     ]},
