@@ -1478,7 +1478,7 @@ function calcWeek(wkey){
   // Mental: mood(7) + phone(3) + refl(+1) + mrv(+1) = base 10, extras separate
   const reflScore=W.mental_note?1:0;
   const mrvScore=M.monthly_review_note?1:0;
-  const mental =r((moodAvg>0?(moodAvg/5)*7:0)+(phoneOKDays/7)*3+reflScore+mrvScore+(bonus.mental||0)+(goalB.mental||0));
+  const mental =r((moodWCount/7)*7+(phoneOKDays/7)*3+reflScore+mrvScore+(bonus.mental||0)+(goalB.mental||0));
   const total  =r((health+finance+work+social+mental)/5);
   return{health,finance,work,social,mental,total,_ex:exRaw,_sl:slRaw,_fried:friedRaw,_phone:phoneRaw,_mood:moodAvg,_W:W,_M:M,_Y:Y,_bonus:bonus,_weeklySpend:weeklySpend,_weeklyBudget:weeklyBudget,_spendDays:spendDays,_socialWeek:socialWeek,_scDays:dailySocialCount,_monthSocialCount:monthSocialCount,_workBase:workBase};
 }
@@ -3085,7 +3085,7 @@ function showScoreRules(){
       ['月社交目標','達成 +2，未達成 −1（額外加分）'],
     ]},
     {icon:'🧠',label:'心理',color:isWarm?'#7e22ce':'#a78bfa',rows:[
-      ['每日心情（1–5）','平均 / 5 × 7，最高 7 分'],
+      ['每日心情（有記錄即得分）','天數 / 7 × 7，最高 7 分（不論好壞）'],
       ['手機控制','天數 / 7 × 3，最高 3 分'],
       ['週反思筆記','有填寫 +1（額外加分）'],
       ['月回顧筆記','有填寫 +1（月底才提示，額外加分）'],
