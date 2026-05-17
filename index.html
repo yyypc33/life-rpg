@@ -597,7 +597,9 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       <div class="fblock">
         <div class="fbtitle">💰 今日花費</div>
         <div class="frow">
-          <div class="flbl">今天總共花了多少？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（NT$，沒花填 0）</span></div>
+          <div class="flbl">今天總共花了多少？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（NT$，沒花填 0）</span>
+            <div id="weekSpendHint" style="font-size:.7rem;margin-top:3px;color:rgba(255,255,255,.45)"></div>
+          </div>
           <input type="number" class="txt-input" id="spendAmount" placeholder="0" min="0" inputmode="numeric" oninput="onSpendAmountInput(this.value)" style="text-align:right;font-size:1.1rem;font-weight:700">
         </div>
         <div id="spendDetail" style="display:none">
@@ -727,6 +729,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
         <div class="gl-row"><span class="gl-sym" style="color:rgba(165,180,252,.3)">·</span><span>未來</span></div>
       </div>
       <div id="wGrid"></div>
+      <div id="missingHint" style="font-size:.74rem;padding:6px 2px 2px;min-height:18px"></div>
     </div>
   </div>
 
@@ -817,6 +820,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
     <!-- Weekly -->
     <div class="stview active" id="st-w">
+      <div id="wSettleHint" style="margin-bottom:6px"></div>
       <div class="done-badge" id="wDone" style="display:none">✅ 本週結算已完成</div>
       <div class="card">
         <div class="ctitle">每週結算 <span class="fbadge fb-w">週日</span></div>
@@ -860,6 +864,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
     <!-- Monthly -->
     <div class="stview" id="st-m">
+      <div id="mSettleHint" style="margin-bottom:6px"></div>
       <div class="done-badge" id="mDone" style="display:none">✅ 本月結算已完成</div>
       <div class="card">
         <div class="ctitle">每月結算 <span class="fbadge fb-m">月底</span></div>
@@ -869,7 +874,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           <div id="mHealthGoalRef"></div>
           <div class="frow" style="margin-top:8px">
             <div class="flbl">本月健康目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
-            <div class="yn"><button class="ynb" id="mhgy" onclick="setM('health_goal_met',true)">✅ 有</button><button class="ynb" id="mhgn" onclick="setM('health_goal_met',false)">❌ 沒有</button></div>
+            <div class="yn" id="mhgyn"><button class="ynb" id="mhgy" onclick="setM('health_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" id="mhgn" onclick="setM('health_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
           </div>
           <div class="frow">
             <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
@@ -895,7 +900,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           <div id="mWorkGoalRef"></div>
           <div class="frow" style="margin-top:8px">
             <div class="flbl">本月工作目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
-            <div class="yn"><button class="ynb" id="mwgy" onclick="setM('work_goal_met',true)">✅ 有</button><button class="ynb" id="mwgn" onclick="setM('work_goal_met',false)">❌ 沒有</button></div>
+            <div class="yn" id="mwgyn"><button class="ynb" id="mwgy" onclick="setM('work_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" id="mwgn" onclick="setM('work_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
           </div>
           <div class="frow">
             <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
@@ -909,7 +914,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           <div id="mSocialGoalRef"></div>
           <div class="frow" style="margin-top:8px">
             <div class="flbl">本月社交目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
-            <div class="yn"><button class="ynb" id="mscgy" onclick="setM('social_goal_met',true)">✅ 有</button><button class="ynb" id="mscgn" onclick="setM('social_goal_met',false)">❌ 沒有</button></div>
+            <div class="yn" id="mscgyn"><button class="ynb" id="mscgy" onclick="setM('social_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" id="mscgn" onclick="setM('social_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
           </div>
           <div class="frow">
             <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
@@ -1572,6 +1577,27 @@ function isDayComplete(log){
   return !!log.workScore&&log.socialToday!==undefined;
 }
 
+function getMissingItems(log){
+  if(!log)return['運動','睡眠','飲食','心情','感恩','花費','工作回顧','工作自評','社交打卡'];
+  const m=[];
+  if(log.exercise===undefined)m.push('運動');
+  if(log.sleep===undefined)m.push('睡眠');
+  if(log.fried===undefined)m.push('飲食');
+  if(!log.mood||(log.moodTags||[]).length===0)m.push('心情');
+  if(!(log.gratitude||[]).filter(Boolean).length)m.push('感恩');
+  const budgetOk=log.spendAmount!==undefined
+    ?(log.spendAmount===0||(Array.isArray(log.spendCategory)?log.spendCategory.length>0:!!log.spendCategory))
+    :(log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory)));
+  if(!budgetOk)m.push('花費');
+  if(!log.workDone||!log.workState||!log.workTomorrow)m.push('工作回顧');
+  const isNew=log.workScore!==undefined||log.socialToday!==undefined;
+  if(isNew){
+    if(!log.workScore)m.push('工作自評');
+    if(log.socialToday===undefined)m.push('社交打卡');
+  }
+  return m;
+}
+
 // ════════════════════════════════
 // ACHIEVEMENTS
 // ════════════════════════════════
@@ -2072,6 +2098,28 @@ function renderDaily(){
   });
   html+='</div>';
   document.getElementById('wGrid').innerHTML=html;
+
+  // Missing items hint
+  const missingEl=document.getElementById('missingHint');
+  if(missingEl){
+    const missing=getMissingItems(todayLog);
+    if(!missing.length){
+      missingEl.innerHTML='<span style="color:#34d399">✓ '+editDay+' 紀錄完整</span>';
+    }else{
+      missingEl.innerHTML='<span style="color:rgba(255,255,255,.38)">待填：</span><span style="color:#fbbf24">'+missing.join('、')+'</span>';
+    }
+  }
+
+  // Week spend hint
+  const spendHintEl=document.getElementById('weekSpendHint');
+  if(spendHintEl){
+    const curWkDays2=wDays(wk()).filter(d=>d<=today);
+    const wkSpend=curWkDays2.reduce((s,d)=>s+(data.daily[d]?.spendAmount||0),0);
+    const yData2=data.yearly[today.slice(0,4)]||{};
+    const wkBudget2=Math.round((yData2.monthly_budget||25000)/4);
+    const over2=wkSpend>wkBudget2;
+    spendHintEl.innerHTML='本週已花 <span style="font-weight:700;color:'+(over2?'#f87171':'#fbbf24')+'">NT$'+wkSpend.toLocaleString()+'</span> / 預算 NT$'+wkBudget2.toLocaleString();
+  }
 }
 
 // ════════════════════════════════
@@ -2376,6 +2424,35 @@ function renderSettle(){
   _renderGoalRef('mWorkGoalRef','m',curMk,'work');
   _renderGoalRef('mSocialGoalRef','m',curMk,'social');
   renderNotifStatus();
+
+  // Weekly settle hint
+  const wHint=document.getElementById('wSettleHint');
+  if(wHint&&!data.weekly[curWk]){
+    const wMiss=[];
+    if(!(W.learning_note||'').trim())wMiss.push('學習筆記 +1分');
+    if(!(W.mental_note||'').trim())wMiss.push('週反思 +1分');
+    wHint.innerHTML=wMiss.length?'<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:.78rem;color:#fbbf24">⚠️ 填完可加分：'+wMiss.join('、')+'</div>':'';
+  }else if(wHint){wHint.innerHTML='';}
+
+  // Monthly settle hint + highlight unselected goal buttons
+  const mHint=document.getElementById('mSettleHint');
+  const goalMiss=[];
+  if(M.health_goal_met===undefined||M.health_goal_met===null)goalMiss.push('健康目標');
+  if(M.work_goal_met===undefined||M.work_goal_met===null)goalMiss.push('工作目標');
+  if(M.social_goal_met===undefined||M.social_goal_met===null)goalMiss.push('社交目標');
+  if(M.saving===undefined||M.saving===null)goalMiss.push('儲蓄');
+  if(M.finance_report===undefined||M.finance_report===null)goalMiss.push('財務報告');
+  if(mHint){
+    mHint.innerHTML=goalMiss.length?'<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:.78rem;color:#fbbf24">⚠️ 尚未選擇：'+goalMiss.join('、')+'</div>':'';
+  }
+  // Highlight yn containers that haven't been selected yet
+  [['mhgyn',M.health_goal_met],['mwgyn',M.work_goal_met],['mscgyn',M.social_goal_met]].forEach(([id,val])=>{
+    const c=document.getElementById(id);if(!c)return;
+    const unset=val===undefined||val===null;
+    c.style.border=unset?'1.5px solid rgba(251,191,36,.45)':'';
+    c.style.borderRadius=unset?'12px':'';
+    c.style.padding=unset?'8px':'';
+  });
 }
 
 // ════════════════════════════════
