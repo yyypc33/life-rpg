@@ -1052,6 +1052,18 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
   </div>
 </div>
 
+<!-- MONTH REPORT OVERLAY -->
+<div id="reportOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;overflow-y:auto;padding:20px 16px">
+  <div style="max-width:480px;margin:0 auto;background:#1e1b4b;border:1px solid rgba(99,102,241,.3);border-radius:16px;padding:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-weight:700;color:#a5b4fc;font-size:.95rem">📋 月度總結報告</div>
+      <button onclick="closeMonthReport()" style="background:none;border:none;color:rgba(255,255,255,.45);font-size:1.3rem;cursor:pointer;line-height:1;padding:0 4px">✕</button>
+    </div>
+    <button id="reportCopyBtn" onclick="copyMonthReport()" style="width:100%;margin-bottom:12px;padding:10px;background:rgba(99,102,241,.25);border:1px solid rgba(99,102,241,.4);border-radius:10px;color:#a5b4fc;cursor:pointer;font-size:.85rem;font-weight:600">📋 複製文字</button>
+    <pre id="reportText" style="font-size:.76rem;line-height:1.75;color:rgba(255,255,255,.78);white-space:pre-wrap;font-family:inherit;background:rgba(255,255,255,.04);border-radius:10px;padding:14px 12px;max-height:65vh;overflow-y:auto;margin:0"></pre>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <div class="bnav">
   <div class="ni active" id="n-home" onclick="go('home')"><div class="ni-icon">📊</div><div class="ni-lbl">首頁</div></div>
@@ -2558,6 +2570,132 @@ function renderSettle(){
 // ════════════════════════════════
 let expandedWeek=null;
 
+function generateMonthReportText(mkey){
+  const data=db();
+  const[yr,mo]=mkey.split('-').map(Number);
+  const weeks=weeksOfMonth(mkey);
+  const monthDays=Object.keys(data.daily).filter(d=>d.startsWith(mkey));
+  const logs=monthDays.map(d=>data.daily[d]).filter(Boolean);
+  const weekScores=weeks.map(w=>({...calcWeek(w),wkey:w}));
+  const wksWithData=weekScores.filter(s=>wDays(s.wkey).some(d=>data.daily[d]));
+  const avgTotal=wksWithData.length?wksWithData.reduce((s,x)=>s+x.total,0)/wksWithData.length:0;
+  const n=logs.length;
+  const exDays=logs.filter(l=>l.exercise).length;
+  const slDays=logs.filter(l=>l.sleep).length;
+  const friedOkDays=logs.filter(l=>l.fried===false).length;
+  const phoneDays=logs.filter(l=>l.phoneOK===true).length;
+  const moodLogs=logs.filter(l=>l.mood);
+  const moodAvg=moodLogs.length?moodLogs.reduce((s,l)=>s+l.mood,0)/moodLogs.length:0;
+  const workLogs=logs.filter(l=>l.workScore);
+  const workAvg=workLogs.length?workLogs.reduce((s,l)=>s+l.workScore,0)/workLogs.length:0;
+  const socialDays=logs.filter(l=>l.socialToday===true).length;
+  const gratDays=logs.filter(l=>(l.gratitude||[]).filter(Boolean).length>=1).length;
+  const spendLogs=logs.filter(l=>l.spendAmount>0);
+  const totalSpend=spendLogs.reduce((s,l)=>s+l.spendAmount,0);
+  const yearData=data.yearly[String(yr)]||{};
+  const mBudget=yearData.monthly_budget||25000;
+  const mc=data.monthly[mkey]||{};
+  const msc=calcMonth(mkey);
+  const psc=calcMonth(prevMk(mkey));
+  const bestWk=wksWithData.length?wksWithData.reduce((a,b)=>b.total>a.total?b:a):null;
+  const worstWk=wksWithData.length>1?wksWithData.reduce((a,b)=>b.total<a.total?b:a):null;
+  const wShort=w=>'W'+parseInt(w.split('-W')[1]);
+  const tagCount={};
+  logs.forEach(l=>(l.moodTags||[]).forEach(t=>{tagCount[t]=(tagCount[t]||0)+1;}));
+  const topTags=Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([t])=>t);
+  const catAmt={};
+  spendLogs.forEach(l=>{const cats=Array.isArray(l.spendCategory)?l.spendCategory:(l.spendCategory?[l.spendCategory]:[]);cats.forEach(c=>catAmt[c]=(catAmt[c]||0)+l.spendAmount/Math.max(1,cats.length));});
+  const topCats=Object.entries(catAmt).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const MJ=['','😔','😕','😐','😊','😄'];
+  const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
+  const statusIcon=avgTotal>=8?'🏆':avgTotal>=5?'💪':'🤲';
+  const dimLabels={health:'健康',finance:'財務',work:'工作',social:'社交',mental:'心理'};
+  const dimIcons={health:'🏃',finance:'💰',work:'💼',social:'🤝',mental:'🧠'};
+  const lines=[
+    `📊 ${yr}年${mo}月 月度總結`,
+    '━━━━━━━━━━━━━━━━━',
+    `週均總分：${avgTotal.toFixed(1)} ${statusIcon}（${wksWithData.length}週 · 打卡${n}天）`,
+    '',
+    '🎯 各維度均分',
+  ];
+  if(msc){
+    ['health','finance','work','social','mental'].forEach(key=>{
+      const v=msc[key],pv=psc?psc[key]:null;
+      const diff=v!=null&&pv!=null?v-pv:null;
+      const arrow=diff===null?'':diff>=0.05?` ↑${diff.toFixed(1)}`:diff<=-0.05?` ↓${Math.abs(diff).toFixed(1)}`:' →';
+      lines.push(`${dimIcons[key]} ${dimLabels[key]}　${v.toFixed(1)}${pv!=null?`${arrow}（上月${pv.toFixed(1)}）`:''}`);
+    });
+  }
+  if(bestWk){
+    lines.push('');
+    lines.push(`🏆 最高週：${wShort(bestWk.wkey)} → ${bestWk.total.toFixed(1)} 分`);
+    if(worstWk&&worstWk.wkey!==bestWk.wkey)lines.push(`🔻 最低週：${wShort(worstWk.wkey)} → ${worstWk.total.toFixed(1)} 分`);
+  }
+  if(n>0){
+    lines.push('');
+    lines.push('💪 習慣達成率');
+    lines.push(`🏃 運動：${exDays}/${n}天（${pct(exDays,n)}）`);
+    lines.push(`😴 睡眠：${slDays}/${n}天（${pct(slDays,n)}）`);
+    lines.push(`🥗 忌口：${friedOkDays}/${n}天（${pct(friedOkDays,n)}）`);
+    lines.push(`📵 手機：${phoneDays}/${n}天（${pct(phoneDays,n)}）`);
+  }
+  if(totalSpend>0){
+    lines.push('');
+    const diff2=Math.abs(totalSpend-mBudget);
+    lines.push(`💰 月支出：NT$${totalSpend.toLocaleString()} / ${mBudget.toLocaleString()}（${pct(totalSpend,mBudget)}）`);
+    lines.push(`　　${totalSpend>mBudget?'超支':'節餘'} NT$${diff2.toLocaleString()}`);
+    if(topCats.length)lines.push('　　'+topCats.map(([c,a])=>`${c} $${Math.round(a).toLocaleString()}`).join(' · '));
+  }
+  if(moodLogs.length||socialDays>0||topTags.length){
+    lines.push('');
+    lines.push('💭 生活狀態');
+    if(moodLogs.length)lines.push(`心情均分：${moodAvg.toFixed(1)}/5 ${MJ[Math.round(moodAvg)]}`);
+    if(workLogs.length)lines.push(`工作自評：${workAvg.toFixed(1)}/5`);
+    if(socialDays>0)lines.push(`社交天數：${socialDays}天`);
+    if(gratDays>0)lines.push(`感恩填寫：${gratDays}天`);
+    if(topTags.length)lines.push(`常見心情：${topTags.join(' > ')}`);
+  }
+  lines.push('');
+  const GOAL_KEYS=[['health_goal_met','健康'],['work_goal_met','工作'],['social_goal_met','社交']];
+  lines.push('🎯 月目標  '+GOAL_KEYS.map(([k,name])=>`${name}${mc[k]===true?'✅':mc[k]===false?'❌':'—'}`).join('  '));
+  if(mc.saving!==undefined||mc.finance_report!==undefined)
+    lines.push(`　　儲蓄${mc.saving?'✅':'❌'}  財務報告${mc.finance_report?'✅':'❌'}`);
+  if(mc.monthly_review_note){
+    lines.push('');
+    lines.push('📝 月回顧');
+    lines.push(mc.monthly_review_note);
+  }
+  lines.push('');
+  lines.push(`── 由 Life RPG 產生 ${new Date().toLocaleDateString('zh-TW')} ──`);
+  return lines.join('\n');
+}
+
+function showMonthReport(mkey){
+  document.getElementById('reportText').textContent=generateMonthReportText(mkey);
+  document.getElementById('reportCopyBtn').textContent='📋 複製文字';
+  document.getElementById('reportOverlay').style.display='block';
+  document.body.style.overflow='hidden';
+}
+function closeMonthReport(){
+  document.getElementById('reportOverlay').style.display='none';
+  document.body.style.overflow='';
+}
+function copyMonthReport(){
+  const text=document.getElementById('reportText').textContent;
+  const btn=document.getElementById('reportCopyBtn');
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✅ 已複製！';
+    setTimeout(()=>{btn.textContent='📋 複製文字';},2000);
+  }).catch(()=>{
+    const el=document.getElementById('reportText');
+    const range=document.createRange();range.selectNodeContents(el);
+    const sel=window.getSelection();sel.removeAllRanges();sel.addRange(range);
+    document.execCommand('copy');sel.removeAllRanges();
+    btn.textContent='✅ 已複製！';
+    setTimeout(()=>{btn.textContent='📋 複製文字';},2000);
+  });
+}
+
 function renderMonthCompare(){
   const el=document.getElementById('monthCompare');
   if(!el)return;
@@ -2897,7 +3035,8 @@ function _renderMonthReview(el,lbl){
     '<div style="margin-bottom:8px"><div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;margin-bottom:7px">月目標</div><div style="display:flex;gap:6px">'+GOAL_KEYS.map(([k,name])=>{const v=mc[k];return'<span style="font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:12px;background:'+(v===true?'rgba(52,211,153,.15)':v===false?'rgba(248,113,113,.12)':'rgba(255,255,255,.05)')+';color:'+(v===true?'#34d399':v===false?'#f87171':'rgba(255,255,255,.3)')+'">'+name+' '+(v===true?'✅':v===false?'❌':'—')+'</span>';}).join('')+'</div></div>'+
     (wksWithData.length?'<div style="border-top:1px solid rgba(99,102,241,.12);margin-top:6px;padding-top:8px;font-size:.75rem;color:rgba(255,255,255,.45)">'+
     (bestWk?'🏆 最高：<b style="color:#a5b4fc">'+wShort(bestWk.wkey)+'</b> '+bestWk.total.toFixed(1)+'分':'')+(worstWk&&worstWk.wkey!==bestWk.wkey?'　　🔻 最低：<b style="color:rgba(255,255,255,.4)">'+wShort(worstWk.wkey)+'</b> '+worstWk.total.toFixed(1)+'分':'')+'</div>':'')+
-    (mc.monthly_review_note?'<div style="border-top:1px solid rgba(99,102,241,.12);margin-top:8px;padding-top:8px"><div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.32);letter-spacing:.5px;margin-bottom:5px">月回顧筆記</div><div style="font-size:.8rem;color:rgba(255,255,255,.6);line-height:1.65;white-space:pre-wrap">'+mc.monthly_review_note+'</div></div>':'');
+    (mc.monthly_review_note?'<div style="border-top:1px solid rgba(99,102,241,.12);margin-top:8px;padding-top:8px"><div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.32);letter-spacing:.5px;margin-bottom:5px">月回顧筆記</div><div style="font-size:.8rem;color:rgba(255,255,255,.6);line-height:1.65;white-space:pre-wrap">'+mc.monthly_review_note+'</div></div>':'')+
+    '<button onclick="showMonthReport(\''+_rvPeriod+'\')" style="width:100%;margin-top:12px;padding:10px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.22);border-radius:10px;color:rgba(165,180,252,.75);cursor:pointer;font-size:.82rem;font-weight:600">📋 產生月度報告</button>';
 }
 function _renderYearReview(el,lbl){
   lbl.textContent=_rvPeriod+'年';
