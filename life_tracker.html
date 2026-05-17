@@ -843,7 +843,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天3分／2天6分／3天+8分，有心得+2，最高10分，自動計算</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天4分，2天+8分，有心得+2，最高10分，自動計算</span></div>
           <div id="wSocialSummary" style="margin-bottom:10px"></div>
           <div class="frow">
             <div class="flbl">本週社交心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
@@ -909,7 +909,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天3分／2天6分／3天+8分，有心得+2，最高10分</span></div>
+          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天4分，2天+8分，有心得+2，最高10分</span></div>
           <div id="mSocialSummary"></div>
           <div id="mSocialGoalRef"></div>
           <div class="frow" style="margin-top:8px">
@@ -2104,21 +2104,24 @@ function renderDaily(){
   if(missingEl){
     const missing=getMissingItems(todayLog);
     if(!missing.length){
-      missingEl.innerHTML='<span style="color:#34d399">✓ '+editDay+' 紀錄完整</span>';
+      const dayLabel=editDay===today?'今日':editDay.slice(5).replace('-','/');
+      missingEl.innerHTML='<span style="color:#34d399">✓ '+dayLabel+' 紀錄完整</span>';
     }else{
       missingEl.innerHTML='<span style="color:rgba(255,255,255,.38)">待填：</span><span style="color:#fbbf24">'+missing.join('、')+'</span>';
     }
   }
 
-  // Week spend hint
+  // Week spend hint (follows editDay's week, so補填 shows that week's total)
   const spendHintEl=document.getElementById('weekSpendHint');
   if(spendHintEl){
-    const curWkDays2=wDays(wk()).filter(d=>d<=today);
-    const wkSpend=curWkDays2.reduce((s,d)=>s+(data.daily[d]?.spendAmount||0),0);
-    const yData2=data.yearly[today.slice(0,4)]||{};
+    const editWk2=wk(new Date(editDay+'T12:00:00'));
+    const hintWkDays=wDays(editWk2);
+    const wkSpend=hintWkDays.reduce((s,d)=>s+(data.daily[d]?.spendAmount||0),0);
+    const yData2=data.yearly[editDay.slice(0,4)]||{};
     const wkBudget2=Math.round((yData2.monthly_budget||25000)/4);
     const over2=wkSpend>wkBudget2;
-    spendHintEl.innerHTML='本週已花 <span style="font-weight:700;color:'+(over2?'#f87171':'#fbbf24')+'">NT$'+wkSpend.toLocaleString()+'</span> / 預算 NT$'+wkBudget2.toLocaleString();
+    const wkLabel2=editWk2===wk()?'本週':'該週';
+    spendHintEl.innerHTML=wkLabel2+'已花 <span style="font-weight:700;color:'+(over2?'#f87171':'#fbbf24')+'">NT$'+wkSpend.toLocaleString()+'</span> / 預算 NT$'+wkBudget2.toLocaleString();
   }
 }
 
@@ -2427,12 +2430,12 @@ function renderSettle(){
 
   // Weekly settle hint
   const wHint=document.getElementById('wSettleHint');
-  if(wHint&&!data.weekly[curWk]){
+  if(wHint){
     const wMiss=[];
     if(!(W.learning_note||'').trim())wMiss.push('學習筆記 +1分');
     if(!(W.mental_note||'').trim())wMiss.push('週反思 +1分');
     wHint.innerHTML=wMiss.length?'<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:.78rem;color:#fbbf24">⚠️ 填完可加分：'+wMiss.join('、')+'</div>':'';
-  }else if(wHint){wHint.innerHTML='';}
+  }
 
   // Monthly settle hint + highlight unselected goal buttons
   const mHint=document.getElementById('mSettleHint');
