@@ -949,6 +949,21 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
   <!-- ── HISTORY ── -->
   <div class="view" id="view-history">
     <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="ctitle" style="margin:0">📅 回顧</div>
+        <div class="rtoggle" id="rvToggle">
+          <div class="rtab active" onclick="setReviewMode('month')">月</div>
+          <div class="rtab" onclick="setReviewMode('year')">年</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 2px">
+        <button onclick="navReview(-1)" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:1.3rem;cursor:pointer;padding:4px 10px;line-height:1">◀</button>
+        <div id="rvLabel" style="font-size:.9rem;font-weight:700;color:rgba(255,255,255,.85)"></div>
+        <button onclick="navReview(1)" style="background:none;border:none;color:rgba(255,255,255,.4);font-size:1.3rem;cursor:pointer;padding:4px 10px;line-height:1">▶</button>
+      </div>
+      <div id="rvContent"></div>
+    </div>
+    <div class="card">
       <div class="ctitle">趨勢分析</div>
       <div class="rtoggle" id="trendToggle" style="margin-bottom:12px">
         <div class="rtab active" onclick="setTrendView('month')">月趨勢（週）</div>
@@ -2472,6 +2487,7 @@ function renderHistory(){
 // TREND CHART
 // ════════════════════════════════
 let TC=null,trendView='month';
+let _rvMode='month',_rvPeriod='';
 function setTrendView(v){
   trendView=v;
   document.querySelectorAll('#trendToggle .rtab').forEach((el,i)=>el.classList.toggle('active',['month','year','xp'][i]===v));
@@ -2555,6 +2571,139 @@ function renderTrendChart(){
       }
     }
   });
+}
+
+// ════════════════════════════════
+// REVIEW (月/年回顧)
+// ════════════════════════════════
+function setReviewMode(m){
+  _rvMode=m;
+  _rvPeriod=m==='month'?dk().slice(0,7):dk().slice(0,4);
+  document.querySelectorAll('#rvToggle .rtab').forEach((el,i)=>el.classList.toggle('active',['month','year'][i]===m));
+  renderReview();
+}
+function navReview(dir){
+  if(_rvMode==='month'){
+    const[yr,mo]=_rvPeriod.split('-').map(Number);
+    const d=new Date(yr,mo-1+dir,1);
+    _rvPeriod=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  }else{
+    _rvPeriod=String(parseInt(_rvPeriod)+dir);
+  }
+  renderReview();
+}
+function renderReview(){
+  const el=document.getElementById('rvContent');
+  const lbl=document.getElementById('rvLabel');
+  if(!el||!lbl)return;
+  if(!_rvPeriod)_rvPeriod=_rvMode==='month'?dk().slice(0,7):dk().slice(0,4);
+  _rvMode==='month'?_renderMonthReview(el,lbl):_renderYearReview(el,lbl);
+}
+function _renderMonthReview(el,lbl){
+  const[yr,mo]=_rvPeriod.split('-').map(Number);
+  lbl.textContent=`${yr}年 ${mo}月`;
+  const data=db();
+  const weeks=weeksOfMonth(_rvPeriod);
+  const monthDays=Object.keys(data.daily).filter(d=>d.startsWith(_rvPeriod));
+  const logs=monthDays.map(d=>data.daily[d]).filter(Boolean);
+  if(!logs.length&&!weeks.some(w=>data.weekly[w])){
+    el.innerHTML='<div style="color:rgba(255,255,255,.38);font-size:.84rem;padding:16px 0;text-align:center">這個月尚無資料</div>';
+    return;
+  }
+  const weekScores=weeks.map(w=>({...calcWeek(w),wkey:w}));
+  const wksWithData=weekScores.filter(s=>wDays(s.wkey).some(d=>data.daily[d]));
+  const avgTotal=wksWithData.length?wksWithData.reduce((s,x)=>s+x.total,0)/wksWithData.length:0;
+  const n=logs.length;
+  const exDays=logs.filter(l=>l.exercise).length;
+  const slDays=logs.filter(l=>l.sleep).length;
+  const friedOkDays=logs.filter(l=>l.fried===false).length;
+  const phoneDays=logs.filter(l=>l.phoneOK===true).length;
+  const moodLogs=logs.filter(l=>l.mood);
+  const moodAvg=moodLogs.length?moodLogs.reduce((s,l)=>s+l.mood,0)/moodLogs.length:0;
+  const workLogs=logs.filter(l=>l.workScore);
+  const workAvg=workLogs.length?workLogs.reduce((s,l)=>s+l.workScore,0)/workLogs.length:0;
+  const socialDays=logs.filter(l=>l.socialToday===true).length;
+  const gratDays=logs.filter(l=>(l.gratitude||[]).filter(Boolean).length>=1).length;
+  const spendLogs=logs.filter(l=>l.spendAmount>0);
+  const totalSpend=spendLogs.reduce((s,l)=>s+l.spendAmount,0);
+  const yearData=data.yearly[String(yr)]||{};
+  const mBudget=yearData.monthly_budget||25000;
+  const CAT_ICONS={飲食:'🍴',交通:'🚌',購物:'🛍️',娛樂:'🎮',社交:'🤝',其他:'📦'};
+  const catAmt={};
+  spendLogs.forEach(l=>{const cats=Array.isArray(l.spendCategory)?l.spendCategory:(l.spendCategory?[l.spendCategory]:[]);cats.forEach(c=>catAmt[c]=(catAmt[c]||0)+l.spendAmount/Math.max(1,cats.length));});
+  const topCats=Object.entries(catAmt).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const GOAL_KEYS=[['health_goal_met','健康'],['work_goal_met','工作'],['social_goal_met','社交']];
+  const mc=data.monthly[_rvPeriod]||{};
+  const statusIcon=avgTotal>=8?'🏆':avgTotal>=5?'💪':'🤲';
+  const MJ=['','😔','😕','😐','😊','😄'];
+  const pBar=(cnt,t,c)=>'<div style="flex:1;height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:'+c+';width:'+( t>0?Math.round(cnt/t*100):0)+'%"></div></div>';
+  const habRow=(label,cnt,c)=>'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><div style="font-size:.78rem;color:rgba(255,255,255,.65);min-width:58px">'+label+'</div>'+pBar(cnt,n,c)+'<div style="font-size:.72rem;color:rgba(255,255,255,.5);min-width:46px;text-align:right">'+cnt+'/'+n+'天</div></div>';
+  const bestWk=wksWithData.length?wksWithData.reduce((a,b)=>b.total>a.total?b:a):null;
+  const worstWk=wksWithData.length>1?wksWithData.reduce((a,b)=>b.total<a.total?b:a):null;
+  const wShort=w=>'W'+parseInt(w.split('-W')[1]);
+  el.innerHTML=
+    '<div style="text-align:center;padding:10px 0 6px"><div style="font-size:1.8rem;font-weight:800;color:#a5b4fc">'+avgTotal.toFixed(1)+'</div><div style="font-size:.78rem;color:rgba(255,255,255,.45)">'+statusIcon+' 週均總分（'+wksWithData.length+'週 / 打卡'+n+'天）</div></div>'+
+    '<div style="border-top:1px solid rgba(99,102,241,.12);margin:8px 0;padding-top:10px">'+
+    '<div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;margin-bottom:8px">習慣達成率</div>'+
+    habRow('🏃 運動',exDays,'#10b981')+habRow('😴 睡眠',slDays,'#6366f1')+habRow('🥗 忌口',friedOkDays,'#34d399')+habRow('📵 手機',phoneDays,'#8b5cf6')+
+    '</div>'+
+    (n>0?'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px">'+
+    '<div style="flex:1;min-width:75px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px"><div style="font-size:.63rem;color:rgba(255,255,255,.38)">心情均分</div><div style="font-size:1.1rem;font-weight:700;color:#f9a8d4">'+(moodLogs.length?moodAvg.toFixed(1)+' '+MJ[Math.round(moodAvg)]:'—')+'</div></div>'+
+    '<div style="flex:1;min-width:75px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px"><div style="font-size:.63rem;color:rgba(255,255,255,.38)">工作自評</div><div style="font-size:1.1rem;font-weight:700;color:#6366f1">'+(workLogs.length?workAvg.toFixed(1)+'/5':'—')+'</div></div>'+
+    '<div style="flex:1;min-width:75px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px"><div style="font-size:.63rem;color:rgba(255,255,255,.38)">社交天數</div><div style="font-size:1.1rem;font-weight:700;color:#ec4899">'+socialDays+'天</div></div>'+
+    '<div style="flex:1;min-width:75px;background:rgba(255,255,255,.04);border-radius:10px;padding:8px 10px"><div style="font-size:.63rem;color:rgba(255,255,255,.38)">感恩填寫</div><div style="font-size:1.1rem;font-weight:700;color:#fbbf24">'+gratDays+'天</div></div>'+
+    '</div>':'')+
+    (spendLogs.length?'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:.78rem;color:rgba(255,255,255,.65)">💰 月支出</span><span style="font-size:.84rem;font-weight:700;color:'+(totalSpend>mBudget?'#f87171':'#34d399')+'">NT$'+totalSpend.toLocaleString()+' / '+mBudget.toLocaleString()+'</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;border-radius:3px;background:'+(totalSpend>mBudget?'#f87171':'#34d399')+';width:'+Math.min(100,Math.round(totalSpend/mBudget*100))+'%"></div></div>'+topCats.map(([c,a])=>'<span style="font-size:.72rem;color:rgba(255,255,255,.5);margin-right:8px">'+(CAT_ICONS[c]||'📦')+c+' $'+Math.round(a).toLocaleString()+'</span>').join('')+'</div>':'')+
+    '<div style="margin-bottom:8px"><div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;margin-bottom:7px">月目標</div><div style="display:flex;gap:6px">'+GOAL_KEYS.map(([k,name])=>{const v=mc[k];return'<span style="font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:12px;background:'+(v===true?'rgba(52,211,153,.15)':v===false?'rgba(248,113,113,.12)':'rgba(255,255,255,.05)')+';color:'+(v===true?'#34d399':v===false?'#f87171':'rgba(255,255,255,.3)')+'">'+name+' '+(v===true?'✅':v===false?'❌':'—')+'</span>';}).join('')+'</div></div>'+
+    (wksWithData.length?'<div style="border-top:1px solid rgba(99,102,241,.12);margin-top:6px;padding-top:8px;font-size:.75rem;color:rgba(255,255,255,.45)">'+
+    (bestWk?'🏆 最高：<b style="color:#a5b4fc">'+wShort(bestWk.wkey)+'</b> '+bestWk.total.toFixed(1)+'分':'')+(worstWk&&worstWk.wkey!==bestWk.wkey?'　　🔻 最低：<b style="color:rgba(255,255,255,.4)">'+wShort(worstWk.wkey)+'</b> '+worstWk.total.toFixed(1)+'分':'')+'</div>':'');
+}
+function _renderYearReview(el,lbl){
+  lbl.textContent=_rvPeriod+'年';
+  const data=db();
+  const yr=parseInt(_rvPeriod);
+  const months=Array.from({length:12},(_,i)=>`${yr}-${String(i+1).padStart(2,'0')}`);
+  const hasData=months.some(m=>Object.keys(data.daily).some(d=>d.startsWith(m))||data.monthly[m]);
+  if(!hasData){el.innerHTML='<div style="color:rgba(255,255,255,.38);font-size:.84rem;padding:16px 0;text-align:center">這年尚無資料</div>';return;}
+  const MO=['','1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  const mScores=months.map(m=>{
+    const days=Object.keys(data.daily).filter(d=>d.startsWith(m));
+    if(!days.length)return null;
+    return{m,sc:calcMonth(m)};
+  }).filter(Boolean);
+  const allLogs=Object.entries(data.daily).filter(([d])=>d.startsWith(_rvPeriod)).map(([,l])=>l).filter(Boolean);
+  const n=allLogs.length;
+  const exRate=n?Math.round(allLogs.filter(l=>l.exercise).length/n*100):0;
+  const slRate=n?Math.round(allLogs.filter(l=>l.sleep).length/n*100):0;
+  const friedRate=n?Math.round(allLogs.filter(l=>l.fried===false).length/n*100):0;
+  const phoneRate=n?Math.round(allLogs.filter(l=>l.phoneOK===true).length/n*100):0;
+  const spendLogs=allLogs.filter(l=>l.spendAmount>0);
+  const totalSpend=spendLogs.reduce((s,l)=>s+l.spendAmount,0);
+  const yearData=data.yearly[_rvPeriod]||{};
+  const mBudget=yearData.monthly_budget||25000;
+  const yearBudget=mBudget*12;
+  const bestM=mScores.length?mScores.reduce((a,b)=>b.sc.total>a.sc.total?b:a):null;
+  const worstM=mScores.length>1?mScores.reduce((a,b)=>b.sc.total<a.sc.total?b:a):null;
+  const tbl=months.map(m=>{
+    const days=Object.keys(data.daily).filter(d=>d.startsWith(m));
+    const mo=parseInt(m.slice(5));
+    if(!days.length)return'<tr><td style="color:rgba(255,255,255,.22)">'+MO[mo]+'</td><td colspan="6" style="color:rgba(255,255,255,.15);font-size:.7rem">—</td></tr>';
+    const sc=calcMonth(m);
+    const si=sc.total>=8?'🏆':sc.total>=5?'💪':'🤲';
+    return'<tr><td style="font-weight:700;color:rgba(255,255,255,.75)">'+MO[mo]+'</td><td style="color:#10b981">'+sc.health.toFixed(1)+'</td><td style="color:#f59e0b">'+sc.finance.toFixed(1)+'</td><td style="color:#6366f1">'+sc.work.toFixed(1)+'</td><td style="color:#ec4899">'+sc.social.toFixed(1)+'</td><td style="color:#8b5cf6">'+sc.mental.toFixed(1)+'</td><td style="font-weight:700;color:#a5b4fc">'+sc.total.toFixed(1)+' '+si+'</td></tr>';
+  }).join('');
+  const rBar=(pct,c)=>'<span style="display:inline-block;width:28px;height:4px;background:rgba(255,255,255,.07);border-radius:2px;vertical-align:middle;margin:0 3px 1px"><span style="display:block;height:100%;border-radius:2px;background:'+c+';width:'+pct+'%"></span></span>';
+  el.innerHTML=
+    '<div style="overflow-x:auto;margin-bottom:12px"><table style="width:100%;border-collapse:collapse;font-size:.78rem">'+
+    '<thead><tr style="color:rgba(255,255,255,.35);font-size:.67rem"><th style="text-align:left;padding:3px 2px">月份</th><th>健康</th><th>財務</th><th>工作</th><th>社交</th><th>心理</th><th>總分</th></tr></thead>'+
+    '<tbody style="line-height:1.9">'+tbl+'</tbody></table></div>'+
+    (n>0?'<div style="background:rgba(255,255,255,.04);border-radius:10px;padding:8px 12px;margin-bottom:10px">'+
+    '<div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);margin-bottom:5px">全年習慣達成率（打卡'+n+'天）</div>'+
+    '<div style="font-size:.78rem;color:rgba(255,255,255,.65)">🏃'+rBar(exRate,'#10b981')+exRate+'%　😴'+rBar(slRate,'#6366f1')+slRate+'%　🥗'+rBar(friedRate,'#34d399')+friedRate+'%　📵'+rBar(phoneRate,'#8b5cf6')+phoneRate+'%</div>'+
+    '</div>':'')+
+    (totalSpend>0?'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:.78rem;color:rgba(255,255,255,.55)">💰 全年支出</span><span style="font-size:.82rem;font-weight:700;color:'+(totalSpend>yearBudget?'#f87171':'#34d399')+'">NT$'+totalSpend.toLocaleString()+' / '+yearBudget.toLocaleString()+'</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:'+(totalSpend>yearBudget?'#f87171':'#34d399')+';width:'+Math.min(100,Math.round(totalSpend/yearBudget*100))+'%"></div></div></div>':'')+
+    (mScores.length?'<div style="font-size:.75rem;color:rgba(255,255,255,.45)">'+
+    (bestM?'🏆 最高月：<b style="color:#a5b4fc">'+MO[parseInt(bestM.m.slice(5))]+'</b> '+bestM.sc.total.toFixed(1)+'分':'')+(worstM&&worstM.m!==bestM.m?'　🔻 最低月：<b style="color:rgba(255,255,255,.4)">'+MO[parseInt(worstM.m.slice(5))]+'</b> '+worstM.sc.total.toFixed(1)+'分':'')+'</div>':'');
 }
 
 // ════════════════════════════════
@@ -2965,7 +3114,7 @@ function go(tab){
   if(tab==='daily')renderDaily();
   if(tab==='tasks')renderTasks();
   if(tab==='settle')renderSettle();
-  if(tab==='history'){renderHistory();renderSpendStats();renderAchievements();renderTrendChart();renderSyncStatus();}
+  if(tab==='history'){renderReview();renderHistory();renderSpendStats();renderAchievements();renderTrendChart();renderSyncStatus();}
 }
 
 // ════════════════════════════════
