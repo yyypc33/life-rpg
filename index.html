@@ -1583,14 +1583,14 @@ function getMissingItems(log){
   if(log.exercise===undefined)m.push('運動');
   if(log.sleep===undefined)m.push('睡眠');
   if(log.fried===undefined)m.push('飲食');
-  if(!log.mood||(log.moodTags||[]).length===0)m.push('心情');
+  const isNew=log.workScore!==undefined||log.socialToday!==undefined;
+  if(!log.mood||(isNew&&(log.moodTags||[]).length===0))m.push('心情');
   if(!(log.gratitude||[]).filter(Boolean).length)m.push('感恩');
   const budgetOk=log.spendAmount!==undefined
     ?(log.spendAmount===0||(Array.isArray(log.spendCategory)?log.spendCategory.length>0:!!log.spendCategory))
     :(log.overBudget!==undefined&&(log.overBudget===false||(log.spendDetail&&log.spendCategory)));
   if(!budgetOk)m.push('花費');
   if(!log.workDone||!log.workState||!log.workTomorrow)m.push('工作回顧');
-  const isNew=log.workScore!==undefined||log.socialToday!==undefined;
   if(isNew){
     if(!log.workScore)m.push('工作自評');
     if(log.socialToday===undefined)m.push('社交打卡');
@@ -1968,12 +1968,12 @@ function renderHome(){
   function srcTxt(d){
     if(RV!=='week')return'';
     const b=ws._bonus,W=ws._W,M=ws._M;
-    const lnk=`<span onclick="go('tasks')" style="color:#f59e0b;cursor:pointer;text-decoration:underline dotted">未填→</span>`;
+    const lnk=`<span onclick="go('settle')" style="color:#f59e0b;cursor:pointer;text-decoration:underline dotted">未填→</span>`;
     const now=new Date();
     const lastWeekOfMonth=(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate())<7;
     const t={
       health:`日 運動${ws._ex}天 睡眠${ws._sl}天 忌口${ws._fried}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':lnk}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
-      finance:ws._spendDays>0?`本週 NT$${ws._weeklySpend.toLocaleString()} / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
+      finance:ws._spendDays>0?`本週 <span style="color:${ws._weeklySpend>ws._weeklyBudget?'#f87171':'#34d399'};font-weight:600">NT$${ws._weeklySpend.toLocaleString()}</span> / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
         `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
       work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/10 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
       social:`週 社交 ${ws._scDays??0}天（${(ws._socialWeek??0).toFixed(0)}分）| 月 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':lnk}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
