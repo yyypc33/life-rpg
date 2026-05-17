@@ -559,6 +559,13 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       </div>
       <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
 
+      <!-- 快速打卡 -->
+      <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.15);border-radius:12px;padding:12px 14px;margin-bottom:14px">
+        <div style="font-size:.68rem;color:rgba(255,255,255,.35);margin-bottom:9px;font-weight:600;letter-spacing:.4px">⚡ 快速打卡</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:8px" id="qbRow1"></div>
+        <div style="display:flex;gap:5px" id="qbMood"></div>
+      </div>
+
       <!-- 健康 -->
       <div class="fblock">
         <div class="fbtitle">🏃 健康</div>
@@ -730,6 +737,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       </div>
       <div id="wGrid"></div>
       <div id="missingHint" style="font-size:.74rem;padding:6px 2px 2px;min-height:18px"></div>
+      <div id="streakBar" style="font-size:.7rem;color:rgba(255,255,255,.4);padding:3px 2px 0;min-height:14px"></div>
     </div>
   </div>
 
@@ -1521,6 +1529,71 @@ function streak(){
   return s;
 }
 
+function getDailyStreak(key){
+  const data=db(),today=dk();
+  const check=log=>{
+    if(!log)return false;
+    if(key==='exercise')return log.exercise===true;
+    if(key==='sleep')return log.sleep===true;
+    if(key==='fried')return log.fried===false;
+    return false;
+  };
+  let count=0;
+  const d=new Date(today+'T12:00:00');
+  if(!check(data.daily[today]))d.setDate(d.getDate()-1);
+  for(let i=0;i<400;i++){
+    const dstr=d.toISOString().slice(0,10);
+    if(check(data.daily[dstr])){count++;d.setDate(d.getDate()-1);}
+    else break;
+  }
+  return count;
+}
+
+function renderQuickBar(){
+  const qb=document.getElementById('qbRow1');
+  const qm=document.getElementById('qbMood');
+  if(!qb||!qm)return;
+  const friedDisplay=DS.fried===null||DS.fried===undefined?null:!DS.fried;
+  const rows=[
+    ['🏃','運動',DS.exercise,"qbSetD('exercise')"],
+    ['😴','睡眠',DS.sleep,"qbSetD('sleep')"],
+    ['🥗','忌口',friedDisplay,'qbSetFried()'],
+    ['📱','手機',DS.phoneOK,'qbSetPhone()'],
+  ];
+  qb.innerHTML=rows.map(([ico,lbl,v,fn])=>{
+    const bg=v===null||v===undefined?'rgba(255,255,255,.06)':v?'rgba(52,211,153,.15)':'rgba(248,113,113,.1)';
+    const br=v===null||v===undefined?'rgba(255,255,255,.1)':v?'rgba(52,211,153,.35)':'rgba(248,113,113,.3)';
+    const mark=v===null||v===undefined?'·':v?'✓':'✗';
+    const mc=v===null||v===undefined?'rgba(255,255,255,.2)':v?'#34d399':'#f87171';
+    return`<button onclick="${fn}" style="background:${bg};border:1px solid ${br};border-radius:10px;padding:9px 4px;cursor:pointer;text-align:center;width:100%">
+      <div style="font-size:1.1rem">${ico}</div>
+      <div style="font-size:.62rem;color:rgba(255,255,255,.4);margin:2px 0">${lbl}</div>
+      <div style="font-size:.85rem;font-weight:700;color:${mc}">${mark}</div>
+    </button>`;
+  }).join('');
+  const MJ=['😔','😕','😐','😊','😄'];
+  qm.innerHTML=MJ.map((e,i)=>{
+    const v=i+1,act=DS.mood===v;
+    return`<button onclick="setMood(${v});renderQuickBar()" style="background:${act?'rgba(129,140,248,.2)':'rgba(255,255,255,.04)'};border:1px solid ${act?'rgba(129,140,248,.45)':'rgba(255,255,255,.08)'};border-radius:8px;padding:5px 0;cursor:pointer;font-size:1.15rem;flex:1">${e}</button>`;
+  }).join('');
+}
+
+function qbSetD(key){
+  const next=DS[key]===null||DS[key]===undefined?true:!DS[key];
+  setD(key,next);
+  renderQuickBar();
+}
+function qbSetFried(){
+  const next=DS.fried===null||DS.fried===undefined?false:!DS.fried;
+  setFried(next);
+  renderQuickBar();
+}
+function qbSetPhone(){
+  const next=DS.phoneOK===null||DS.phoneOK===undefined?true:!DS.phoneOK;
+  setPhone(next);
+  renderQuickBar();
+}
+
 function rewardColors(state){
   const W={
     start:{bg:'rgba(160,71,28,.07)',border:'rgba(160,71,28,.2)',c:'#a0471c'},
@@ -2123,6 +2196,20 @@ function renderDaily(){
     const wkLabel2=editWk2===wk()?'本週':'該週';
     spendHintEl.innerHTML=wkLabel2+'已花 <span style="font-weight:700;color:'+(over2?'#f87171':'#fbbf24')+'">NT$'+wkSpend.toLocaleString()+'</span> / 預算 NT$'+wkBudget2.toLocaleString();
   }
+
+  // Streak bar
+  const streakEl=document.getElementById('streakBar');
+  if(streakEl){
+    const parts=[
+      ['🏃','運動',getDailyStreak('exercise')],
+      ['😴','睡眠',getDailyStreak('sleep')],
+      ['🥗','忌口',getDailyStreak('fried')],
+    ].filter(([,,n])=>n>0).map(([ico,,n])=>`${ico} ${n}天`);
+    streakEl.textContent=parts.length?'🔥 連續：'+parts.join(' · '):'';
+  }
+
+  // Quick bar (render after DS state is loaded)
+  renderQuickBar();
 }
 
 // ════════════════════════════════
