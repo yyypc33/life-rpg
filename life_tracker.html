@@ -2733,7 +2733,8 @@ function _renderMonthReview(el,lbl){
     (spendLogs.length?'<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:.78rem;color:rgba(255,255,255,.65)">💰 月支出</span><span style="font-size:.84rem;font-weight:700;color:'+(totalSpend>mBudget?'#f87171':'#34d399')+'">NT$'+totalSpend.toLocaleString()+' / '+mBudget.toLocaleString()+'</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="height:100%;border-radius:3px;background:'+(totalSpend>mBudget?'#f87171':'#34d399')+';width:'+Math.min(100,Math.round(totalSpend/mBudget*100))+'%"></div></div>'+topCats.map(([c,a])=>'<span style="font-size:.72rem;color:rgba(255,255,255,.5);margin-right:8px">'+(CAT_ICONS[c]||'📦')+c+' $'+Math.round(a).toLocaleString()+'</span>').join('')+'</div>':'')+
     '<div style="margin-bottom:8px"><div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:.5px;margin-bottom:7px">月目標</div><div style="display:flex;gap:6px">'+GOAL_KEYS.map(([k,name])=>{const v=mc[k];return'<span style="font-size:.78rem;font-weight:600;padding:4px 10px;border-radius:12px;background:'+(v===true?'rgba(52,211,153,.15)':v===false?'rgba(248,113,113,.12)':'rgba(255,255,255,.05)')+';color:'+(v===true?'#34d399':v===false?'#f87171':'rgba(255,255,255,.3)')+'">'+name+' '+(v===true?'✅':v===false?'❌':'—')+'</span>';}).join('')+'</div></div>'+
     (wksWithData.length?'<div style="border-top:1px solid rgba(99,102,241,.12);margin-top:6px;padding-top:8px;font-size:.75rem;color:rgba(255,255,255,.45)">'+
-    (bestWk?'🏆 最高：<b style="color:#a5b4fc">'+wShort(bestWk.wkey)+'</b> '+bestWk.total.toFixed(1)+'分':'')+(worstWk&&worstWk.wkey!==bestWk.wkey?'　　🔻 最低：<b style="color:rgba(255,255,255,.4)">'+wShort(worstWk.wkey)+'</b> '+worstWk.total.toFixed(1)+'分':'')+'</div>':'');
+    (bestWk?'🏆 最高：<b style="color:#a5b4fc">'+wShort(bestWk.wkey)+'</b> '+bestWk.total.toFixed(1)+'分':'')+(worstWk&&worstWk.wkey!==bestWk.wkey?'　　🔻 最低：<b style="color:rgba(255,255,255,.4)">'+wShort(worstWk.wkey)+'</b> '+worstWk.total.toFixed(1)+'分':'')+'</div>':'')+
+    (mc.monthly_review_note?'<div style="border-top:1px solid rgba(99,102,241,.12);margin-top:8px;padding-top:8px"><div style="font-size:.7rem;font-weight:700;color:rgba(255,255,255,.32);letter-spacing:.5px;margin-bottom:5px">月回顧筆記</div><div style="font-size:.8rem;color:rgba(255,255,255,.6);line-height:1.65;white-space:pre-wrap">'+mc.monthly_review_note+'</div></div>':'');
 }
 function _renderYearReview(el,lbl){
   lbl.textContent=_rvPeriod+'年';
@@ -2796,7 +2797,23 @@ function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(
 function setPhone(v){DS.phoneOK=v;document.getElementById('phy').className='ynb'+(v?' yn-y':'');document.getElementById('phn').className='ynb'+(v?'':' yn-n');}
 function setMood(v){DS.mood=v;for(let i=1;i<=5;i++)document.getElementById(`m${i}`).classList.toggle('active',i===v);}
 function setW(k,v){WS[k]=v;}
-function setM(k,v){MS[k]=v;const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],health_goal_met:['mhgy','mhgn'],work_goal_met:['mwgy','mwgn'],social_goal_met:['mscgy','mscgn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
+function setM(k,v){
+  MS[k]=v;
+  const m={saving:['msy','msn'],finance_report:['mfry','mfrn'],health_goal_met:['mhgy','mhgn'],work_goal_met:['mwgy','mwgn'],social_goal_met:['mscgy','mscgn']};
+  const[y,n]=m[k];
+  document.getElementById(y).className='ynb'+(v?' yn-y':'');
+  document.getElementById(n).className='ynb'+(v?'':' yn-n');
+  // Clear amber border on yn container once a goal is selected
+  const ynIds={health_goal_met:'mhgyn',work_goal_met:'mwgyn',social_goal_met:'mscgyn'};
+  if(ynIds[k]){const c=document.getElementById(ynIds[k]);if(c){c.style.border='';c.style.borderRadius='';c.style.padding='';}}
+  // Live-update mSettleHint
+  const hintEl=document.getElementById('mSettleHint');
+  if(hintEl){
+    const labels={health_goal_met:'健康目標',work_goal_met:'工作目標',social_goal_met:'社交目標',saving:'儲蓄',finance_report:'財務報告'};
+    const miss=['health_goal_met','work_goal_met','social_goal_met','saving','finance_report'].filter(key=>MS[key]===null||MS[key]===undefined);
+    hintEl.innerHTML=miss.length?'<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:.78rem;color:#fbbf24">⚠️ 尚未選擇：'+miss.map(key=>labels[key]).join('、')+'</div>':'';
+  }
+}
 
 function renderMoodTags(){
   document.getElementById('moodTags').innerHTML=MOOD_TAGS.map(tag=>`<button class="tag-chip${selMoodTags.includes(tag)?' on':''}" onclick="toggleMoodTag('${tag}')">${tag}</button>`).join('');
