@@ -564,6 +564,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
         <div style="font-size:.68rem;color:rgba(255,255,255,.35);margin-bottom:9px;font-weight:600;letter-spacing:.4px">⚡ 快速打卡</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:8px" id="qbRow1"></div>
         <div style="display:flex;gap:5px" id="qbMood"></div>
+        <button onclick="quickSaveDaily()" style="width:100%;margin-top:9px;padding:9px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.38);border-radius:10px;color:#a5b4fc;cursor:pointer;font-size:.82rem;font-weight:700">⚡ 快速儲存</button>
       </div>
 
       <!-- 健康 -->
@@ -3191,6 +3192,36 @@ function backToToday(){editDay=dk();renderDaily();}
 // ════════════════════════════════
 // SAVE
 // ════════════════════════════════
+function quickSaveDaily(){
+  if(DS.exercise===null||DS.sleep===null||DS.fried===null){
+    showToast('⚡ 請先填完運動、睡眠、忌口三項');
+    return;
+  }
+  const data=db();
+  const today=dk();
+  const targetDay=editDay;
+  const existing=data.daily[targetDay]||{};
+  const isFirstSave=!existing.savedAt;
+  const isRetro=targetDay<today&&isFirstSave;
+  const beforeXP=isFirstSave?getTotalXP():0;
+  data.daily[targetDay]={
+    ...existing,
+    exercise:DS.exercise,
+    sleep:DS.sleep,
+    fried:DS.fried,
+    ...(DS.phoneOK!==null?{phoneOK:DS.phoneOK}:{}),
+    ...(DS.mood!==null?{mood:DS.mood}:{}),
+    xp:existing.xp||(isFirstSave&&!isRetro?10:0),
+    retroactive:isRetro?true:(existing.retroactive||false),
+    savedAt:new Date().toISOString(),
+  };
+  dbS(data);
+  if(isFirstSave&&!isRetro)checkLevelUp(beforeXP,getTotalXP());
+  checkAndUnlockAchievements();
+  renderDaily();renderHome();
+  showToast('⚡ 快速打卡已儲存'+(isRetro?' (×0.8)':'')+(isFirstSave&&!isRetro?' +10 XP':''));
+}
+
 function saveDaily(){
   const gr1=document.getElementById('gr1').value.trim();
   const gr2=document.getElementById('gr2').value.trim();
