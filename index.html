@@ -2545,7 +2545,7 @@ function renderSettle(){
 // ════════════════════════════════
 // RENDER HISTORY
 // ════════════════════════════════
-let expandedWeek=null;
+let expandedWeek=null,expandedDay=null;
 
 function generateMonthReportText(mkey){
   const data=db();
@@ -2762,7 +2762,8 @@ function renderSpendStats(){
   el.innerHTML=`${monthBar}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${catChips}</div><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:4px">最近消費明細（共 ${total} 筆）</div>${recentRows}`;
 }
 
-function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;renderHistory();}
+function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;expandedDay=null;renderHistory();}
+function toggleDayDetail(day){expandedDay=expandedDay===day?null:day;renderHistory();}
 
 function genWeeklySummary(wkey){
   const data=db();const days=wDays(wkey);
@@ -2820,9 +2821,23 @@ function renderHistory(){
       const days=wDays(w);
       const dayRows=days.map((day,i)=>{
         const log=data.daily[day];
-        if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="5" style="color:rgba(255,255,255,.2);font-size:.7rem">未打卡</td></tr>`;
+        if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="8" style="color:rgba(255,255,255,.2);font-size:.7rem">未打卡</td></tr>`;
+        const isDayExp=expandedDay===day;
         const socialCell=log.socialToday===true?`<div>🤝</div>${log.socialWith?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(165,180,252,.65);font-size:.62rem">${log.socialWith}</div>`:''}`:log.socialToday===false?`<span style="color:rgba(255,255,255,.25)">—</span>`:`<span style="color:rgba(255,255,255,.15)">?</span>`;
-        return`<tr><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.phoneOK===true?'📵':log.phoneOK===false?'📱':'—'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+        const mainRow=`<tr style="cursor:pointer;${isDayExp?'background:rgba(99,102,241,.08)':''}" onclick="event.stopPropagation();toggleDayDetail('${day}')"><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span><div style="font-size:.55rem;color:rgba(99,102,241,.6);margin-top:2px">${isDayExp?'▲':'▼'}</div></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.phoneOK===true?'📵':log.phoneOK===false?'📱':'—'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+        if(!isDayExp)return mainRow;
+        const gr=(log.gratitude||[]).filter(Boolean);
+        const tags=(log.moodTags||[]);
+        const lines=[];
+        if(tags.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">心情標籤　</span>${tags.map(t=>`<span style="background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.3);border-radius:5px;padding:2px 7px;font-size:.72rem;color:#a5b4fc;margin-right:4px">${t}</span>`).join('')}</div>`);
+        if(gr.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">感恩三件事</span>${gr.map((g,i)=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">${i+1}. ${g}</div>`).join('')}</div>`);
+        if(log.workDone)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">今日完成</span>${log.workDone.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">✅ ${l}</div>`).join('')}</div>`);
+        if(log.workTomorrow)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">明日待辦</span>${log.workTomorrow.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.5);padding:2px 0 2px 10px">→ ${l}</div>`).join('')}</div>`);
+        if(log.socialNote)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">社交心得　</span><span style="font-size:.78rem;color:rgba(165,180,252,.8)">${log.socialNote}</span></div>`);
+        if(log.spendDetail)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">花費說明　</span><span style="font-size:.78rem;color:rgba(251,191,36,.7)">${log.spendDetail}</span></div>`);
+        if(log.discomfort)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">今日困擾　</span><span style="font-size:.78rem;color:rgba(255,255,255,.55)">${log.discomfort}</span></div>`);
+        const detailRow=lines.length?`<tr><td colspan="9" style="padding:10px 8px 12px;background:rgba(99,102,241,.05);border-top:1px solid rgba(99,102,241,.15)">${lines.join('')}</td></tr>`:'';
+        return mainRow+detailRow;
       }).join('');
       detail=`<div class="wk-detail" onclick="event.stopPropagation()">
         <div class="wk-summary">${genWeeklySummary(w)}</div>
