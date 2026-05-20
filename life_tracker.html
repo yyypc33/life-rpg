@@ -15,8 +15,8 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%);background-attachment:fixed;color:#e2e8f0;min-height:100vh;padding-bottom:72px}
 
 /* Welcome overlay */
-.welcome-overlay{position:fixed;inset:0;background:linear-gradient(160deg,#080c20,#150d30);z-index:9999;display:flex;align-items:center;justify-content:center;padding:32px}
-.welcome-box{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.welcome-overlay{position:fixed;inset:0;background:linear-gradient(160deg,#080c20,#150d30);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:32px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.welcome-box{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);margin:auto}
 .welcome-icon{font-size:3rem;margin-bottom:12px}
 .welcome-title{font-size:1.4rem;font-weight:800;color:#e2e8f0;margin-bottom:6px}
 .welcome-sub{font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.5}
@@ -3539,7 +3539,7 @@ function showWelcome(){
           <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">XP 升等 + 成就解鎖</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">連續打卡累積等級，週均分達標有獎勵</div></div>
         </div>
       </div>
-      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" autofocus style="margin-bottom:10px">
+      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
       <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">💰 每月預算（NT$）</div>
       <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" style="margin-bottom:8px">
       <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
