@@ -15,7 +15,7 @@
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;background:linear-gradient(160deg,#080c20 0%,#0f1535 55%,#150d30 100%);background-attachment:fixed;color:#e2e8f0;min-height:100vh;padding-bottom:72px}
 
 /* Welcome overlay */
-.welcome-overlay{position:fixed;inset:0;background:linear-gradient(160deg,#080c20,#150d30);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:32px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.welcome-overlay{position:fixed;inset:0;background:linear-gradient(160deg,#080c20,#150d30);z-index:9999;display:flex;flex-direction:column;align-items:center;padding:24px 20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .welcome-box{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);margin:auto}
 .welcome-icon{font-size:3rem;margin-bottom:12px}
 .welcome-title{font-size:1.4rem;font-weight:800;color:#e2e8f0;margin-bottom:6px}
@@ -3548,19 +3548,37 @@ function showWelcome(){
       <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>
     </div>`;
   document.body.appendChild(el);
-  setTimeout(()=>document.getElementById('welcomeNameInput')?.focus(),100);
-  document.getElementById('welcomeNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmWelcomeName();});
+  // iOS keyboard fix: shrink overlay to visual viewport so button stays reachable
+  function _vvUpdate(){
+    const vv=window.visualViewport;if(!vv)return;
+    el.style.height=vv.height+'px';
+    el.style.top=vv.offsetTop+'px';
+  }
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',_vvUpdate);
+    window.visualViewport.addEventListener('scroll',_vvUpdate);
+    el._vvCleanup=()=>{
+      window.visualViewport.removeEventListener('resize',_vvUpdate);
+      window.visualViewport.removeEventListener('scroll',_vvUpdate);
+    };
+  }
+  // bind Enter on whole overlay so budget input Done key also submits
+  el.addEventListener('keydown',e=>{if(e.key==='Enter')confirmWelcomeName();});
 }
 
 function confirmWelcomeName(){
   const name=(document.getElementById('welcomeNameInput').value||'').trim();
   if(!name){showToast('❌ 請輸入名字');return;}
   const budget=parseInt(document.getElementById('welcomeBudgetInput').value)||25000;
-  localStorage.setItem(NAME_KEY,name);
-  const data=db();const yr=yk();
-  data.yearly[yr]={...(data.yearly[yr]||{}),monthly_budget:budget};
-  dbS(data);
-  document.getElementById('welcomeOverlay')?.remove();
+  try{
+    localStorage.setItem(NAME_KEY,name);
+    const data=db();const yr=yk();
+    data.yearly[yr]={...(data.yearly[yr]||{}),monthly_budget:budget};
+    dbS(data);
+  }catch(e){}
+  const el=document.getElementById('welcomeOverlay');
+  if(el?._vvCleanup)el._vvCleanup();
+  el?.remove();
   applyUserName();
   showToast(`👋 歡迎，${name}！月預算 NT$${budget.toLocaleString()}`);
 }
