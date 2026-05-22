@@ -4077,7 +4077,7 @@ if(_auth)_auth.onAuthStateChanged(user=>{
   }else{
     if(_snapshotUnsub){_snapshotUnsub();_snapshotUnsub=null;}
     _syncState='idle';
-    if(!getUserName())showWelcome();
+    if(!getUserName()&&!document.getElementById('welcomeOverlay'))showWelcome();
   }
   renderSyncStatus();
 });
