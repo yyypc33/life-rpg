@@ -3517,6 +3517,23 @@ function applyUserName(){
   document.title=`${name}'s Life RPG`;
 }
 
+function _welcomeFeatures(){
+  return `<div style="display:flex;flex-direction:column;gap:7px;margin-bottom:22px;text-align:left">
+    <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
+      <span style="font-size:1.2rem">📊</span>
+      <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">五維雷達圖追蹤</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">健康・財務・工作・社交・心理</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
+      <span style="font-size:1.2rem">⚡</span>
+      <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">每天 90 秒打卡</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">運動、睡眠、心情、花費⋯一鍵紀錄</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
+      <span style="font-size:1.2rem">🏆</span>
+      <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">XP 升等 + 成就解鎖</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">連續打卡累積等級，週均分達標有獎勵</div></div>
+    </div>
+  </div>`;
+}
+
 function showWelcome(){
   const el=document.createElement('div');
   el.className='welcome-overlay';el.id='welcomeOverlay';
@@ -3525,30 +3542,42 @@ function showWelcome(){
       <div class="welcome-icon">🎮</div>
       <div class="welcome-title">歡迎來到 Life RPG</div>
       <div class="welcome-sub">量化你的成長，把生活過成遊戲</div>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:22px;text-align:left">
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">📊</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">五維雷達圖追蹤</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">健康・財務・工作・社交・心理</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">⚡</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">每天 90 秒打卡</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">運動、睡眠、心情、花費⋯一鍵紀錄</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">🏆</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">XP 升等 + 成就解鎖</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">連續打卡累積等級，週均分達標有獎勵</div></div>
-        </div>
+      ${_welcomeFeatures()}
+      <button onclick="handleWelcomeGoogleLogin()" style="width:100%;padding:13px;background:linear-gradient(135deg,#4285f4,#1a73e8);color:#fff;border:none;border-radius:14px;font-size:.95rem;font-weight:800;cursor:pointer;letter-spacing:.3px;margin-bottom:12px">🔵 用 Google 帳號登入</button>
+      <div style="text-align:center">
+        <span onclick="showWelcomeSetup('')" style="cursor:pointer;font-size:.8rem;color:rgba(255,255,255,.4);text-decoration:underline;padding:4px 8px">繼續不登入</span>
       </div>
-      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
-      <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">💰 每月預算（NT$）</div>
-      <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" style="margin-bottom:8px">
-      <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
-        ${[15000,20000,25000,35000].map(v=>`<button onclick="document.getElementById('welcomeBudgetInput').value=${v}" style="flex:1;padding:7px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer">${v/1000}k</button>`).join('')}
-      </div>
-      <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>
     </div>`;
   document.body.appendChild(el);
-  setTimeout(()=>document.getElementById('welcomeNameInput')?.focus(),100);
+}
+
+async function handleWelcomeGoogleLogin(){
+  if(!_auth){showToast('⚠️ 同步功能暫時無法使用');return;}
+  const provider=new firebase.auth.GoogleAuthProvider();
+  try{await _auth.signInWithPopup(provider);}
+  catch(e){if(e.code!=='auth/popup-closed-by-user')showToast('❌ 登入失敗：'+e.message);}
+}
+
+function showWelcomeSetup(prefillName){
+  const overlay=document.getElementById('welcomeOverlay');
+  if(!overlay)return;
+  const box=overlay.querySelector('.welcome-box');
+  box.innerHTML=`
+    <div class="welcome-icon">👤</div>
+    <div class="welcome-title">設定你的帳號</div>
+    <div class="welcome-sub">之後可以隨時修改</div>
+    <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">你的名字</div>
+    <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" inputmode="text" enterkeyhint="done" value="${prefillName}" style="margin-bottom:14px">
+    <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">💰 每月預算（NT$）</div>
+    <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
+      ${[15000,20000,25000,35000].map(v=>`<button onclick="document.getElementById('welcomeBudgetInput').value=${v}" style="flex:1;padding:7px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer">${v/1000}k</button>`).join('')}
+    </div>
+    <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>`;
+  setTimeout(()=>{
+    const inp=document.getElementById('welcomeNameInput');
+    if(inp){inp.focus();if(prefillName)inp.select();}
+  },100);
   document.getElementById('welcomeNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')confirmWelcomeName();});
 }
 
@@ -4067,14 +4096,21 @@ function _setupRealtimeSync(){
 if(_auth)_auth.onAuthStateChanged(user=>{
   _fbUser=user;
   if(user){
-    if(!getUserName()&&user.displayName){
-      localStorage.setItem(NAME_KEY,user.displayName.split(' ')[0]);
-      applyUserName();
+    const overlay=document.getElementById('welcomeOverlay');
+    if(overlay){
+      // 歡迎畫面還在 → 帶入 Google 名字進到第二步設定
+      const prefill=user.displayName?user.displayName.split(' ')[0]:'';
+      showWelcomeSetup(prefill);
+    }else{
+      // 正常登入（已過歡迎畫面）
+      if(!getUserName()&&user.displayName){
+        localStorage.setItem(NAME_KEY,user.displayName.split(' ')[0]);
+        applyUserName();
+      }
     }
-    document.getElementById('welcomeOverlay')?.remove();
     _syncState='syncing';renderSyncStatus();
     _setupRealtimeSync();
-    showToast(`☁️ 雲端同步中… 歡迎 ${user.displayName||getUserName()}`);
+    showToast(`☁️ 已連結 Google 帳號，雲端同步中…`);
   }else{
     if(_snapshotUnsub){_snapshotUnsub();_snapshotUnsub=null;}
     _syncState='idle';
