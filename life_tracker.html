@@ -16,7 +16,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text',sans-serif;backg
 
 /* Welcome overlay */
 .welcome-overlay{position:fixed;inset:0;background:linear-gradient(160deg,#080c20,#150d30);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 20px}
-.welcome-box{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:36px 28px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5);max-height:calc(100vh - 48px);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.welcome-box{background:rgba(255,255,255,.07);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.15);border-radius:28px;padding:28px 24px;width:100%;max-width:380px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .welcome-icon{font-size:3rem;margin-bottom:12px}
 .welcome-title{font-size:1.4rem;font-weight:800;color:#e2e8f0;margin-bottom:6px}
 .welcome-sub{font-size:.85rem;color:rgba(255,255,255,.5);margin-bottom:24px;line-height:1.5}
@@ -3525,35 +3525,19 @@ function showWelcome(){
       <div class="welcome-icon">🎮</div>
       <div class="welcome-title">歡迎來到 Life RPG</div>
       <div class="welcome-sub">量化你的成長，把生活過成遊戲</div>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:22px;text-align:left">
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">📊</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">五維雷達圖追蹤</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">健康・財務・工作・社交・心理</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">⚡</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">每天 90 秒打卡</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">運動、睡眠、心情、花費⋯一鍵紀錄</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">🏆</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">XP 升等 + 成就解鎖</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">連續打卡累積等級，週均分達標有獎勵</div></div>
-        </div>
-      </div>
-      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
-      <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">💰 每月預算（NT$）</div>
-      <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" style="margin-bottom:8px">
-      <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
+      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:14px">
+      <button class="welcome-btn" onclick="confirmWelcomeName()" style="margin-bottom:20px">開始 →</button>
+      <div style="text-align:left;font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:6px">💰 每月預算（NT$，之後可在年設定更改）</div>
+      <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" inputmode="numeric" style="margin-bottom:8px">
+      <div style="display:flex;gap:8px;justify-content:center">
         ${[15000,20000,25000,35000].map(v=>`<button onclick="document.getElementById('welcomeBudgetInput').value=${v}" style="flex:1;padding:7px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer">${v/1000}k</button>`).join('')}
       </div>
-      <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>
     </div>`;
   document.body.appendChild(el);
-  const _wBox=el.querySelector('.welcome-box');
-  // iOS keyboard fix: shrink box max-height to visual viewport so button stays scrollable
+  // iOS keyboard fix: keep overlay within visual viewport height
   function _vvUpdate(){
     const vv=window.visualViewport;if(!vv)return;
     el.style.height=vv.height+'px';
-    if(_wBox)_wBox.style.maxHeight=(vv.height-48)+'px';
   }
   if(window.visualViewport){
     window.visualViewport.addEventListener('resize',_vvUpdate);
