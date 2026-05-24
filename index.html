@@ -562,7 +562,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 健康 -->
       <div class="fblock">
-        <div class="fbtitle" data-i18n="d_health">🏃 健康</div>
+        <div class="fbtitle"><span data-i18n="d_health">🏃 健康</span><span id="ds_health" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
         <div class="frow">
           <div class="flbl" data-i18n="d_exercise_q">今天有完成運動嗎？</div>
           <div class="yn">
@@ -596,7 +596,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 記帳 -->
       <div class="fblock">
-        <div class="fbtitle" data-i18n="d_spend">💰 今日花費</div>
+        <div class="fbtitle"><span data-i18n="d_spend">💰 今日花費</span><span id="ds_spend" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
         <div class="frow">
           <div class="flbl"><span data-i18n="d_how_much">今天總共花了多少？</span><span data-i18n="d_how_much_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（NT$，沒花填 0）</span>
             <div id="weekSpendHint" style="font-size:.7rem;margin-top:3px;color:rgba(255,255,255,.45)"></div>
@@ -625,7 +625,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 心情紀錄 -->
       <div class="fblock">
-        <div class="fbtitle" data-i18n="d_mood">🧠 心情紀錄</div>
+        <div class="fbtitle"><span data-i18n="d_mood">🧠 心情紀錄</span><span id="ds_mood" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
         <div class="frow">
           <div class="flbl" data-i18n="d_how_feel">今天心情如何？</div>
           <div class="mood-row">
@@ -657,7 +657,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 工作回顧 -->
       <div class="fblock">
-        <div class="fbtitle" data-i18n="d_work">💼 工作回顧</div>
+        <div class="fbtitle"><span data-i18n="d_work">💼 工作回顧</span><span id="ds_work" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
         <div class="frow">
           <div class="flbl" data-i18n="d_work_done">今天完成的重要事項</div>
           <div class="gr-inputs">
@@ -698,7 +698,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 今日社交 -->
       <div class="fblock">
-        <div class="fbtitle" data-i18n="d_social">🤝 今日社交</div>
+        <div class="fbtitle"><span data-i18n="d_social">🤝 今日社交</span><span id="ds_social" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
         <div class="frow">
           <div class="flbl" data-i18n="d_social_q">今天有社交互動嗎？</div>
           <div class="yn">
@@ -1846,7 +1846,7 @@ function calcWeek(wkey){
   let weeklySpend=0,spendDays=0,legacySum=0,legacyDays=0;
   days.forEach(d=>{
     const log=data.daily[d];if(!log)return;const m=mult(log);
-    if(log.spendAmount!==undefined){weeklySpend+=log.spendAmount*m;spendDays++;}
+    if(typeof log.spendAmount==='number'){weeklySpend+=log.spendAmount*m;spendDays++;}
     else if(log.overBudget!==undefined){
       if(log.overBudget){legacySum-=1.5*m;}else{legacySum+=1*m;}
       legacyDays++;
@@ -2472,6 +2472,14 @@ function renderDaily(){
   if(todayLog.socialToday!==undefined){setSocialToday(todayLog.socialToday);}
   if(todayLog.socialWith)document.getElementById('socialWith').value=todayLog.socialWith;
   if(todayLog.socialNote)document.getElementById('socialNote').value=todayLog.socialNote;
+
+  // Section status dots
+  const _dot=(id,ok)=>{const el=document.getElementById(id);if(!el)return;el.textContent=ok?'✓':'';el.style.color=ok?'#34d399':'';};
+  _dot('ds_health',todayLog.exercise!==undefined&&todayLog.sleep!==undefined&&todayLog.fried!==undefined);
+  _dot('ds_spend',typeof todayLog.spendAmount==='number');
+  _dot('ds_mood',!!todayLog.mood);
+  _dot('ds_work',!!todayLog.workScore);
+  _dot('ds_social',todayLog.socialToday!==undefined&&todayLog.socialToday!==null);
 
   // Week grid — all non-future days clickable
   const days=wDays(wk());const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
@@ -3542,7 +3550,7 @@ function saveDaily(){
     moodTags:selMoodTags,
     gratitude:[gr1,gr2,gr3],
     discomfort:document.getElementById('discomfort').value.trim(),
-    spendAmount:spendAmt,
+    ...(spendAmt!==null?{spendAmount:spendAmt}:{}),
     ...(spendAmt>0?{spendDetail:document.getElementById('dSpendWhat').value.trim(),spendCategory:[...selCat]}:{}),
     workDone:['wd1','wd2','wd3'].map(id=>document.getElementById(id).value.trim()).filter(Boolean).join('\n'),
     workState:selWorkState,
