@@ -1014,29 +1014,25 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
         <span id="shortcutsChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span>
       </div>
       <div id="shortcutsContent" style="display:none;margin-top:12px">
-        <div style="font-size:.76rem;color:rgba(255,255,255,.55);line-height:1.8;margin-bottom:12px">
-          建立 Apple Shortcut，在 iPhone / Apple Watch 一鍵直達每日打卡頁：
-        </div>
+        <div style="font-size:.76rem;color:rgba(255,255,255,.55);line-height:1.8;margin-bottom:12px" data-i18n="sc_intro">建立 Apple Shortcut，在 iPhone / Apple Watch 一鍵直達每日打卡頁：</div>
         <div style="background:rgba(99,102,241,.08);border:1px solid rgba(99,102,241,.2);border-radius:10px;padding:10px 12px;margin-bottom:12px">
-          <div style="font-size:.68rem;color:rgba(255,255,255,.35);margin-bottom:4px">每日打卡捷徑 URL</div>
+          <div style="font-size:.68rem;color:rgba(255,255,255,.35);margin-bottom:4px" data-i18n="sc_url_lbl">每日打卡捷徑 URL</div>
           <div id="shortcutsUrl" style="font-size:.78rem;color:#a5b4fc;word-break:break-all;font-weight:600">https://yyypc33.github.io/life-rpg/#daily</div>
-          <button onclick="copyShortcutsUrl()" id="shortcutsUrlBtn" style="margin-top:8px;padding:5px 14px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.35);border-radius:7px;color:#a5b4fc;cursor:pointer;font-size:.75rem">複製</button>
+          <button onclick="copyShortcutsUrl()" id="shortcutsUrlBtn" style="margin-top:8px;padding:5px 14px;background:rgba(99,102,241,.2);border:1px solid rgba(99,102,241,.35);border-radius:7px;color:#a5b4fc;cursor:pointer;font-size:.75rem" data-i18n="sc_copy">複製</button>
         </div>
         <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:2">
-          <b style="color:rgba(165,180,252,.8)">iPhone 設定步驟：</b><br>
-          1. 捷徑 App → 新增捷徑<br>
-          2. 加入動作「開啟 URL」→ 貼上上方連結<br>
-          3. 長按捷徑 → 加入主畫面
+          <b style="color:rgba(165,180,252,.8)" data-i18n="sc_iphone_title">iPhone 設定步驟：</b><br>
+          <span data-i18n="sc_iphone_1">1. 捷徑 App → 新增捷徑</span><br>
+          <span data-i18n="sc_iphone_2">2. 加入動作「開啟 URL」→ 貼上上方連結</span><br>
+          <span data-i18n="sc_iphone_3">3. 長按捷徑 → 加入主畫面</span>
         </div>
         <div style="font-size:.75rem;color:rgba(255,255,255,.6);line-height:2;margin-top:10px">
-          <b style="color:rgba(165,180,252,.8)">Apple Watch 設定步驟：</b><br>
-          1. iPhone 捷徑 App → 找到「每日打卡」<br>
-          2. 點 ••• → 開啟「在 Apple Watch 上顯示」<br>
-          3. Watch 上滑開小工具盤面，就能直接點執行
+          <b style="color:rgba(165,180,252,.8)" data-i18n="sc_watch_title">Apple Watch 設定步驟：</b><br>
+          <span data-i18n="sc_watch_1">1. iPhone 捷徑 App → 找到「每日打卡」</span><br>
+          <span data-i18n="sc_watch_2">2. 點 ••• → 開啟「在 Apple Watch 上顯示」</span><br>
+          <span data-i18n="sc_watch_3">3. Watch 上滑開小工具盤面，就能直接點執行</span>
         </div>
-        <div style="margin-top:10px;padding:8px 10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:8px;font-size:.72rem;color:rgba(251,191,36,.75)">
-          💡 若 App 已加到主畫面（PWA），捷徑會直接在 App 內開啟每日打卡頁
-        </div>
+        <div style="margin-top:10px;padding:8px 10px;background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.2);border-radius:8px;font-size:.72rem;color:rgba(251,191,36,.75)" data-i18n="sc_pwa_tip">💡 若 App 已加到主畫面（PWA），捷徑會直接在 App 內開啟每日打卡頁</div>
       </div>
     </div>
     <div class="card">
@@ -1278,6 +1274,10 @@ const STRINGS={
     h_week_hist:'週歷史紀錄',h_spend_title:'💸 消費統計',
     h_ach_title:'成就系統 🏅',h_cloud:'☁️ Google 雲端同步',
     h_shortcuts_title:'🍎 Apple Shortcuts 捷徑',h_backup:'資料備份 & 匯出',
+    sc_intro:'建立 Apple Shortcut，在 iPhone / Apple Watch 一鍵直達每日打卡頁：',sc_url_lbl:'每日打卡捷徑 URL',sc_copy:'複製',
+    sc_iphone_title:'iPhone 設定步驟：',sc_iphone_1:'1. 捷徑 App → 新增捷徑',sc_iphone_2:'2. 加入動作「開啟 URL」→ 貼上上方連結',sc_iphone_3:'3. 長按捷徑 → 加入主畫面',
+    sc_watch_title:'Apple Watch 設定步驟：',sc_watch_1:'1. iPhone 捷徑 App → 找到「每日打卡」',sc_watch_2:'2. 點 ••• → 開啟「在 Apple Watch 上顯示」',sc_watch_3:'3. Watch 上滑開小工具盤面，就能直接點執行',
+    sc_pwa_tip:'💡 若 App 已加到主畫面（PWA），捷徑會直接在 App 內開啟每日打卡頁',
     h_rev_mo:'月',h_rev_yr:'年',
     w_title:'歡迎來到 Life RPG',w_sub:'量化你的成長，把生活過成遊戲',
     w_feat1:'五維雷達圖追蹤',w_feat1_sub:'健康・財務・工作・社交・心理',
@@ -1406,6 +1406,10 @@ const STRINGS={
     h_week_hist:'Weekly History',h_spend_title:'💸 Spending Stats',
     h_ach_title:'Achievements 🏅',h_cloud:'☁️ Google Cloud Sync',
     h_shortcuts_title:'🍎 Apple Shortcuts',h_backup:'Backup & Export',
+    sc_intro:'Create an Apple Shortcut to open the daily check-in page from iPhone / Apple Watch:',sc_url_lbl:'Daily Check-in Shortcut URL',sc_copy:'Copy',
+    sc_iphone_title:'iPhone Setup:',sc_iphone_1:'1. Shortcuts App → New Shortcut',sc_iphone_2:'2. Add action "Open URL" → paste the link above',sc_iphone_3:'3. Long-press the shortcut → Add to Home Screen',
+    sc_watch_title:'Apple Watch Setup:',sc_watch_1:'1. iPhone Shortcuts App → find "Daily Check-in"',sc_watch_2:'2. Tap ••• → enable "Show on Apple Watch"',sc_watch_3:'3. Swipe up the complications on Watch face to tap and run',
+    sc_pwa_tip:'💡 If the App is installed (PWA), the shortcut opens directly inside the App',
     h_rev_mo:'Month',h_rev_yr:'Year',
     w_title:'Welcome to Life RPG',w_sub:'Track your growth, gamify your life',
     w_feat1:'5-Dimension Radar Tracking',w_feat1_sub:'Health · Finance · Work · Social · Mental',
@@ -2926,64 +2930,75 @@ function generateMonthReportText(mkey){
   const MJ=['','😔','😕','😐','😊','😄'];
   const pct=(a,b)=>b>0?Math.round(a/b*100)+'%':'—';
   const statusIcon=avgTotal>=8?'🏆':avgTotal>=5?'💪':'🤲';
-  const dimLabels={health:'健康',finance:'財務',work:'工作',social:'社交',mental:'心理'};
+  const en=_lang==='en';
+  const dimLabels=en?{health:'Health',finance:'Finance',work:'Work',social:'Social',mental:'Mental'}:{health:'健康',finance:'財務',work:'工作',social:'社交',mental:'心理'};
   const dimIcons={health:'🏃',finance:'💰',work:'💼',social:'🤝',mental:'🧠'};
-  const lines=[
+  const CAT_EN2={飲食:'Food',交通:'Transport',購物:'Shopping',娛樂:'Fun',社交:'Social',其他:'Other'};
+  const catName2=c=>en?(CAT_EN2[c]||c):c;
+  const lines=en?[
+    `📊 ${yr}/${mo} Monthly Summary`,
+    '━━━━━━━━━━━━━━━━━',
+    `Weekly avg: ${avgTotal.toFixed(1)} ${statusIcon} (${wksWithData.length} weeks · ${n} days logged)`,
+    '','🎯 Dimension Scores',
+  ]:[
     `📊 ${yr}年${mo}月 月度總結`,
     '━━━━━━━━━━━━━━━━━',
     `週均總分：${avgTotal.toFixed(1)} ${statusIcon}（${wksWithData.length}週 · 打卡${n}天）`,
-    '',
-    '🎯 各維度均分',
+    '','🎯 各維度均分',
   ];
   if(msc){
     ['health','finance','work','social','mental'].forEach(key=>{
       const v=msc[key],pv=psc?psc[key]:null;
       const diff=v!=null&&pv!=null?v-pv:null;
       const arrow=diff===null?'':diff>=0.05?` ↑${diff.toFixed(1)}`:diff<=-0.05?` ↓${Math.abs(diff).toFixed(1)}`:' →';
-      lines.push(`${dimIcons[key]} ${dimLabels[key]}　${v.toFixed(1)}${pv!=null?`${arrow}（上月${pv.toFixed(1)}）`:''}`);
+      lines.push(en
+        ?`${dimIcons[key]} ${dimLabels[key]}  ${v.toFixed(1)}${pv!=null?`${arrow} (last ${pv.toFixed(1)})`:''}`
+        :`${dimIcons[key]} ${dimLabels[key]}　${v.toFixed(1)}${pv!=null?`${arrow}（上月${pv.toFixed(1)}）`:''}`);
     });
   }
   if(bestWk){
     lines.push('');
-    lines.push(`🏆 最高週：${wShort(bestWk.wkey)} → ${bestWk.total.toFixed(1)} 分`);
-    if(worstWk&&worstWk.wkey!==bestWk.wkey)lines.push(`🔻 最低週：${wShort(worstWk.wkey)} → ${worstWk.total.toFixed(1)} 分`);
+    lines.push(en?`🏆 Best week: ${wShort(bestWk.wkey)} → ${bestWk.total.toFixed(1)} pts`:`🏆 最高週：${wShort(bestWk.wkey)} → ${bestWk.total.toFixed(1)} 分`);
+    if(worstWk&&worstWk.wkey!==bestWk.wkey)lines.push(en?`🔻 Lowest week: ${wShort(worstWk.wkey)} → ${worstWk.total.toFixed(1)} pts`:`🔻 最低週：${wShort(worstWk.wkey)} → ${worstWk.total.toFixed(1)} 分`);
   }
   if(n>0){
     lines.push('');
-    lines.push('💪 習慣達成率');
-    lines.push(`🏃 運動：${exDays}/${n}天（${pct(exDays,n)}）`);
-    lines.push(`😴 睡眠：${slDays}/${n}天（${pct(slDays,n)}）`);
-    lines.push(`🥗 忌口：${friedOkDays}/${n}天（${pct(friedOkDays,n)}）`);
-    lines.push(`📵 手機：${phoneDays}/${n}天（${pct(phoneDays,n)}）`);
+    lines.push(en?'💪 Habit Rate':'💪 習慣達成率');
+    lines.push(en?`🏃 Exercise: ${exDays}/${n}d (${pct(exDays,n)})`:`🏃 運動：${exDays}/${n}天（${pct(exDays,n)}）`);
+    lines.push(en?`😴 Sleep: ${slDays}/${n}d (${pct(slDays,n)})`:`😴 睡眠：${slDays}/${n}天（${pct(slDays,n)}）`);
+    lines.push(en?`🥗 Clean eating: ${friedOkDays}/${n}d (${pct(friedOkDays,n)})`:`🥗 忌口：${friedOkDays}/${n}天（${pct(friedOkDays,n)}）`);
+    lines.push(en?`📵 Phone: ${phoneDays}/${n}d (${pct(phoneDays,n)})`:`📵 手機：${phoneDays}/${n}天（${pct(phoneDays,n)}）`);
   }
   if(totalSpend>0){
     lines.push('');
     const diff2=Math.abs(totalSpend-mBudget);
-    lines.push(`💰 月支出：NT$${totalSpend.toLocaleString()} / ${mBudget.toLocaleString()}（${pct(totalSpend,mBudget)}）`);
-    lines.push(`　　${totalSpend>mBudget?'超支':'節餘'} NT$${diff2.toLocaleString()}`);
-    if(topCats.length)lines.push('　　'+topCats.map(([c,a])=>`${c} $${Math.round(a).toLocaleString()}`).join(' · '));
+    lines.push(en?`💰 Monthly spend: NT$${totalSpend.toLocaleString()} / ${mBudget.toLocaleString()} (${pct(totalSpend,mBudget)})`:`💰 月支出：NT$${totalSpend.toLocaleString()} / ${mBudget.toLocaleString()}（${pct(totalSpend,mBudget)}）`);
+    lines.push(en?`   ${totalSpend>mBudget?'Over budget':'Saved'} NT$${diff2.toLocaleString()}`:`　　${totalSpend>mBudget?'超支':'節餘'} NT$${diff2.toLocaleString()}`);
+    if(topCats.length)lines.push('   '+topCats.map(([c,a])=>`${catName2(c)} $${Math.round(a).toLocaleString()}`).join(' · '));
   }
   if(moodLogs.length||socialDays>0||topTags.length){
     lines.push('');
-    lines.push('💭 生活狀態');
-    if(moodLogs.length)lines.push(`心情均分：${moodAvg.toFixed(1)}/5 ${MJ[Math.round(moodAvg)]}`);
-    if(workLogs.length)lines.push(`工作自評：${workAvg.toFixed(1)}/5`);
-    if(socialDays>0)lines.push(`社交天數：${socialDays}天`);
-    if(gratDays>0)lines.push(`感恩填寫：${gratDays}天`);
-    if(topTags.length)lines.push(`常見心情：${topTags.join(' > ')}`);
+    lines.push(en?'💭 Life State':'💭 生活狀態');
+    if(moodLogs.length)lines.push(en?`Avg mood: ${moodAvg.toFixed(1)}/5 ${MJ[Math.round(moodAvg)]}`:`心情均分：${moodAvg.toFixed(1)}/5 ${MJ[Math.round(moodAvg)]}`);
+    if(workLogs.length)lines.push(en?`Work rating: ${workAvg.toFixed(1)}/5`:`工作自評：${workAvg.toFixed(1)}/5`);
+    if(socialDays>0)lines.push(en?`Social days: ${socialDays}d`:`社交天數：${socialDays}天`);
+    if(gratDays>0)lines.push(en?`Gratitude logged: ${gratDays}d`:`感恩填寫：${gratDays}天`);
+    if(topTags.length)lines.push(en?`Top moods: ${topTags.join(' > ')}`:`常見心情：${topTags.join(' > ')}`);
   }
   lines.push('');
-  const GOAL_KEYS=[['health_goal_met','健康'],['work_goal_met','工作'],['social_goal_met','社交']];
-  lines.push('🎯 月目標  '+GOAL_KEYS.map(([k,name])=>`${name}${mc[k]===true?'✅':mc[k]===false?'❌':'—'}`).join('  '));
+  const GOAL_KEYS=en
+    ?[['health_goal_met','Health'],['work_goal_met','Work'],['social_goal_met','Social']]
+    :[['health_goal_met','健康'],['work_goal_met','工作'],['social_goal_met','社交']];
+  lines.push((en?'🎯 Monthly Goals  ':'🎯 月目標  ')+GOAL_KEYS.map(([k,name])=>`${name}${mc[k]===true?'✅':mc[k]===false?'❌':'—'}`).join('  '));
   if(mc.saving!==undefined||mc.finance_report!==undefined)
-    lines.push(`　　儲蓄${mc.saving?'✅':'❌'}  財務報告${mc.finance_report?'✅':'❌'}`);
+    lines.push(en?`   Saving${mc.saving?'✅':'❌'}  Finance report${mc.finance_report?'✅':'❌'}`:`　　儲蓄${mc.saving?'✅':'❌'}  財務報告${mc.finance_report?'✅':'❌'}`);
   if(mc.monthly_review_note){
     lines.push('');
-    lines.push('📝 月回顧');
+    lines.push(en?'📝 Monthly Review':'📝 月回顧');
     lines.push(mc.monthly_review_note);
   }
   lines.push('');
-  lines.push(`── 由 Life RPG 產生 ${new Date().toLocaleDateString('zh-TW')} ──`);
+  lines.push(en?`── Generated by Life RPG ${new Date().toLocaleDateString('en-US')} ──`:`── 由 Life RPG 產生 ${new Date().toLocaleDateString('zh-TW')} ──`);
   return lines.join('\n');
 }
 
@@ -3114,7 +3129,8 @@ function toggleDayDetail(day){expandedDay=expandedDay===day?null:day;renderHisto
 function genWeeklySummary(wkey){
   const data=db();const days=wDays(wkey);
   const logs=days.map(d=>data.daily[d]).filter(Boolean);
-  if(!logs.length)return'<span style="color:rgba(255,255,255,.38);font-size:.8rem">本週無打卡紀錄</span>';
+  const en=_lang==='en';
+  if(!logs.length)return`<span style="color:rgba(255,255,255,.38);font-size:.8rem">${en?'No logs this week':'本週無打卡紀錄'}</span>`;
   const exDays=logs.filter(l=>l.exercise).length;
   const slDays=logs.filter(l=>l.sleep).length;
   const friedDays=logs.filter(l=>l.fried===true).length;
@@ -3128,22 +3144,24 @@ function genWeeklySummary(wkey){
   const workDones=logs.map(l=>l.workDone).filter(Boolean);
   const wStates=logs.map(l=>l.workState).filter(Boolean);
   const stateMap=wStates.reduce((a,s)=>{a[s]=(a[s]||0)+1;return a;},{});
-  const stateBreakdown=Object.entries(stateMap).sort((a,b)=>b[1]-a[1]).map(([s,n])=>`${s}${n}天`).join(' ');
+  const stateBreakdown=Object.entries(stateMap).sort((a,b)=>b[1]-a[1]).map(([s,n])=>en?`${s} ${n}d`:`${s}${n}天`).join(' ');
   const lastTomorrow=logs.filter(l=>l.workTomorrow).slice(-1)[0]?.workTomorrow;
   const grList=logs.flatMap(l=>l.gratitude||[]).filter(Boolean);
   const discList=logs.map(l=>l.discomfort).filter(Boolean);
   const lines=[];
-  lines.push(`<b>📅 打卡 ${logs.length}/7 天</b>${moodAvg>0?`　平均心情 ${moodAvg.toFixed(1)}/5 ${moodE}`:''}`);
-  lines.push(`🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃垃圾食物 ${friedDays}天`:''}`);
-  if(newSpendLogs.length>0){const wkTotal=newSpendLogs.reduce((s,l)=>s+l.spendAmount,0);const Y2=data.yearly[new Date(wDays(wkey)[3]).getFullYear().toString()]||{};const wkBudget=(Y2.monthly_budget||25000)/4;lines.push(`💰 本週花費 NT$${wkTotal.toLocaleString()} / ${Math.round(wkBudget).toLocaleString()}${wkTotal>wkBudget?` ⚠️超預算 NT$${(wkTotal-wkBudget).toLocaleString()}`:''}`);}
-  else if(legacyUnderCnt+legacyOverCnt>0)lines.push(`💰 未超支 ${legacyUnderCnt}天　超支 ${legacyOverCnt}天`);
-  if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　完成 ${workDones.length} 件`:''}`);
+  lines.push(`<b>📅 ${en?`Logged ${logs.length}/7 d`:`打卡 ${logs.length}/7 天`}</b>${moodAvg>0?`　${en?'Avg mood':'平均心情'} ${moodAvg.toFixed(1)}/5 ${moodE}`:''}`);
+  lines.push(en?`🏃 Exercise ${exDays}d  Sleep ${slDays}d${friedDays?`  Junk food ${friedDays}d`:''}`:
+                `🏃 運動 ${exDays}天　睡眠達標 ${slDays}天${friedDays?`　吃垃圾食物 ${friedDays}天`:''}`);
+  if(newSpendLogs.length>0){const wkTotal=newSpendLogs.reduce((s,l)=>s+l.spendAmount,0);const Y2=data.yearly[new Date(wDays(wkey)[3]).getFullYear().toString()]||{};const wkBudget=(Y2.monthly_budget||25000)/4;lines.push(en?`💰 Week spend NT$${wkTotal.toLocaleString()} / ${Math.round(wkBudget).toLocaleString()}${wkTotal>wkBudget?` ⚠️ Over NT$${(wkTotal-wkBudget).toLocaleString()}`:''}`:
+    `💰 本週花費 NT$${wkTotal.toLocaleString()} / ${Math.round(wkBudget).toLocaleString()}${wkTotal>wkBudget?` ⚠️超預算 NT$${(wkTotal-wkBudget).toLocaleString()}`:''}`);}
+  else if(legacyUnderCnt+legacyOverCnt>0)lines.push(en?`💰 Under budget ${legacyUnderCnt}d  Over ${legacyOverCnt}d`:`💰 未超支 ${legacyUnderCnt}天　超支 ${legacyOverCnt}天`);
+  if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　${en?`Done ${workDones.length}`:`完成 ${workDones.length} 件`}`:''}`);
   if(workDones.length)lines.push(`<span style="color:rgba(255,255,255,.55)">✅ ${workDones.slice(0,3).join('　')}</span>`);
-  if(lastTomorrow)lines.push(`<span style="color:rgba(255,255,255,.38)">→ 本週末待辦：${lastTomorrow}</span>`);
+  if(lastTomorrow)lines.push(`<span style="color:rgba(255,255,255,.38)">→ ${en?'Next up:':'本週末待辦：'}${lastTomorrow}</span>`);
   const socialLogs=logs.filter(l=>l.socialToday===true);
   if(socialLogs.length){
     const withList=[...new Set(socialLogs.map(l=>l.socialWith).filter(Boolean))];
-    lines.push(`🤝 社交 ${socialLogs.length}天${withList.length?`　${withList.slice(0,4).join('、')}`:''}`);}
+    lines.push(`🤝 ${en?`Social ${socialLogs.length}d`:`社交 ${socialLogs.length}天`}${withList.length?`　${withList.slice(0,4).join('、')}`:''}`);}
   const socialNotes=socialLogs.map(l=>l.socialNote).filter(Boolean);
   if(socialNotes.length)lines.push(`<span style="color:rgba(165,180,252,.55)">💬 ${socialNotes.slice(0,2).map(n=>`「${n}」`).join(' ')}</span>`);
   if(grList.length)lines.push(`<span style="color:rgba(255,255,255,.45)">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
