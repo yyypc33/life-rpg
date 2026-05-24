@@ -3524,23 +3524,8 @@ function saveDaily(){
   const gr1=document.getElementById('gr1').value.trim();
   const gr2=document.getElementById('gr2').value.trim();
   const gr3=document.getElementById('gr3').value.trim();
-  const errs=[];
-  if(DS.exercise===null)errs.push('健康：運動');
-  if(DS.sleep===null)errs.push('健康：睡眠');
-  if(DS.fried===null)errs.push('健康：垃圾食物');
-  if(DS.mood===null)errs.push('心情分數');
-  if(!selMoodTags.length)errs.push('心情關鍵詞');
-  if(!gr1&&!gr2&&!gr3)errs.push('感恩三件事（至少填一項）');
   const spendAmtStr=document.getElementById('spendAmount').value.trim();
   const spendAmt=spendAmtStr===''?null:Math.max(0,parseInt(spendAmtStr)||0);
-  if(spendAmt===null)errs.push('記帳：請填今日花費（沒花填 0）');
-  if(spendAmt>0&&selCat.length===0)errs.push('記帳：消費類別');
-  if(!['wd1','wd2','wd3'].some(id=>document.getElementById(id).value.trim()))errs.push('工作：完成事項（至少填一項）');
-  if(!selWorkState)errs.push('工作：工作狀態');
-  if(!['wt1','wt2','wt3'].some(id=>document.getElementById(id).value.trim()))errs.push('工作：明日優先（至少填一項）');
-  if(selWorkScore===null)errs.push('工作：今日自評');
-  if(selSocialToday===null)errs.push('社交：今天是否有互動');
-  if(errs.length){showToast('⚠️ 未填：'+errs[0]);return;}
 
   const data=db();
   const today=dk();
