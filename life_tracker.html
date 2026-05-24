@@ -478,6 +478,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
       <div class="hdr-lv" id="hLv" onclick="showLvModal()">Lv.1 新手</div>
       <div id="themeBtn" onclick="cycleTheme()" style="font-size:.62rem;font-weight:700;color:rgba(255,255,255,.45);cursor:pointer;padding:2px 7px;border:1px solid rgba(255,255,255,.15);border-radius:10px;letter-spacing:.3px;user-select:none">⚙️ 自動</div>
+      <div id="langBtn" onclick="setLang(_lang==='zh'?'en':'zh')" style="font-size:.62rem;font-weight:700;color:rgba(255,255,255,.45);cursor:pointer;padding:2px 7px;border:1px solid rgba(255,255,255,.15);border-radius:10px;letter-spacing:.3px;user-select:none">EN</div>
     </div>
   </div>
   <div class="xp-bar-wrap"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
@@ -486,9 +487,9 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
     <span id="syncTxt" style="font-size:.63rem;letter-spacing:.2px;color:rgba(255,255,255,.32)">☁️ 點擊登入，啟用雲端同步</span>
   </div>
   <div class="stats">
-    <div class="stat"><div class="sv" id="hScore">—</div><div class="sl">本週總分</div></div>
-    <div class="stat" onclick="showXPBreakdown()" style="cursor:pointer"><div class="sv" id="hXP">0</div><div class="sl">總 XP ℹ️</div></div>
-    <div class="stat"><div class="sv" id="hStreak">0W</div><div class="sl">連勝週數</div></div>
+    <div class="stat"><div class="sv" id="hScore">—</div><div class="sl" data-i18n="stat_week">本週總分</div></div>
+    <div class="stat" onclick="showXPBreakdown()" style="cursor:pointer"><div class="sv" id="hXP">0</div><div class="sl"><span data-i18n="stat_xp">總 XP</span> ℹ️</div></div>
+    <div class="stat"><div class="sv" id="hStreak">0W</div><div class="sl" data-i18n="stat_streak">連勝週數</div></div>
   </div>
 </div>
 
@@ -515,12 +516,12 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
   <div class="view active" id="view-home">
     <div class="card">
       <div class="ctitle" style="display:flex;justify-content:space-between;align-items:center">
-        五維成長雷達圖
-        <span onclick="showScoreRules()" class="score-rules-btn" style="font-size:.7rem;color:rgba(165,180,252,.65);cursor:pointer;font-weight:500;letter-spacing:.2px;border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:2px 9px;transition:all .2s" onmouseover="this.style.background='rgba(99,102,241,.15)'" onmouseout="this.style.background='transparent'">計分規則 ℹ️</span>
+        <span data-i18n="h_radar">五維成長雷達圖</span>
+        <span onclick="showScoreRules()" class="score-rules-btn" data-i18n="h_score_rules" style="font-size:.7rem;color:rgba(165,180,252,.65);cursor:pointer;font-weight:500;letter-spacing:.2px;border:1px solid rgba(99,102,241,.3);border-radius:20px;padding:2px 9px;transition:all .2s" onmouseover="this.style.background='rgba(99,102,241,.15)'" onmouseout="this.style.background='transparent'">計分規則 ℹ️</span>
       </div>
       <div class="rtoggle">
-        <div class="rtab active" onclick="setRV('week')">本週</div>
-        <div class="rtab" onclick="setRV('month')">本月</div>
+        <div class="rtab active" data-i18n="h_this_week" onclick="setRV('week')">本週</div>
+        <div class="rtab" data-i18n="h_this_month" onclick="setRV('month')">本月</div>
       </div>
       <div class="rwrap"><canvas id="rc"></canvas></div>
       <div class="rlegend">
@@ -529,20 +530,20 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       </div>
     </div>
     <div class="card">
-      <div class="ctitle">維度明細</div>
+      <div class="ctitle" data-i18n="h_dim_detail">維度明細</div>
       <div class="dim-list" id="dimList"></div>
     </div>
     <div class="card" id="rwCard" style="display:none">
       <div class="ctitle" style="display:flex;justify-content:space-between;align-items:center">
-        本週狀態
-        <span onclick="toggleRwLegend()" style="font-size:.7rem;color:rgba(255,255,255,.38);cursor:pointer;font-weight:500;letter-spacing:.2px">規則 ℹ️</span>
+        <span data-i18n="h_week_status">本週狀態</span>
+        <span onclick="toggleRwLegend()" data-i18n="h_rules" style="font-size:.7rem;color:rgba(255,255,255,.38);cursor:pointer;font-weight:500;letter-spacing:.2px">規則 ℹ️</span>
       </div>
       <div id="rwLegend" style="display:none;margin-bottom:10px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid rgba(255,255,255,.08)">
         <div style="display:flex;flex-direction:column;gap:6px;font-size:.75rem">
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🏆</span><span style="color:#34d399;font-weight:700">≥ 8.0</span><span style="color:rgba(255,255,255,.55)">達標週 — 自由消費，好好放鬆</span></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">💪</span><span style="color:#fbbf24;font-weight:700">5.0 – 7.9</span><span style="color:rgba(255,255,255,.55)">繼續保持 — 下週再衝</span></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🤲</span><span style="color:#f87171;font-weight:700">< 5.0</span><span style="color:rgba(255,255,255,.55)">懲罰週 — 完成一項社區貢獻</span></div>
-          <div style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);line-height:1.5">總分 = (健康 + 財務 + 工作 + 社交 + 心理) ÷ 5，各維度 0–15 分</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🏆</span><span style="color:#34d399;font-weight:700">≥ 8.0</span><span data-i18n="h_rule_good_txt" style="color:rgba(255,255,255,.55)">達標週 — 自由消費，好好放鬆</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">💪</span><span style="color:#fbbf24;font-weight:700">5.0 – 7.9</span><span data-i18n="h_rule_ok_txt" style="color:rgba(255,255,255,.55)">繼續保持 — 下週再衝</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-size:.85rem">🤲</span><span style="color:#f87171;font-weight:700">< 5.0</span><span data-i18n="h_rule_bad_txt" style="color:rgba(255,255,255,.55)">懲罰週 — 完成一項社區貢獻</span></div>
+          <div data-i18n="h_rule_formula" style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,.07);color:rgba(255,255,255,.35);line-height:1.5">總分 = (健康 + 財務 + 工作 + 社交 + 心理) ÷ 5，各維度 0–15 分</div>
         </div>
       </div>
       <div class="rbox" id="rwBox"></div>
@@ -551,43 +552,43 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
   <!-- ── DAILY ── -->
   <div class="view" id="view-daily">
-    <div class="done-badge" id="dDone" style="display:none">✅ 今日紀錄完成</div>
+    <div class="done-badge" data-i18n="d_done" id="dDone" style="display:none">✅ 今日紀錄完成</div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <div class="ctitle" style="margin-bottom:0">每日紀錄</div>
+        <div class="ctitle" data-i18n="d_title" style="margin-bottom:0">每日紀錄</div>
         <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.45)">今天</div>
       </div>
-      <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
+      <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" data-i18n="d_retro_btn" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
 
       <!-- 健康 -->
       <div class="fblock">
-        <div class="fbtitle">🏃 健康</div>
+        <div class="fbtitle" data-i18n="d_health">🏃 健康</div>
         <div class="frow">
-          <div class="flbl">今天有完成運動嗎？</div>
+          <div class="flbl" data-i18n="d_exercise_q">今天有完成運動嗎？</div>
           <div class="yn">
-            <button class="ynb" id="dey" onclick="setD('exercise',true)">✅ 有</button>
-            <button class="ynb yn-n" id="den" onclick="setD('exercise',false)">❌ 沒有</button>
+            <button class="ynb" data-i18n="d_yes" id="dey" onclick="setD('exercise',true)">✅ 有</button>
+            <button class="ynb yn-n" data-i18n="d_no" id="den" onclick="setD('exercise',false)">❌ 沒有</button>
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">昨晚睡足 7 小時了嗎？</div>
+          <div class="flbl" data-i18n="d_sleep_q">昨晚睡足 7 小時了嗎？</div>
           <div class="yn">
-            <button class="ynb" id="dsy" onclick="setD('sleep',true)">✅ 有</button>
-            <button class="ynb yn-n" id="dsn" onclick="setD('sleep',false)">❌ 沒有</button>
+            <button class="ynb" data-i18n="d_yes" id="dsy" onclick="setD('sleep',true)">✅ 有</button>
+            <button class="ynb yn-n" data-i18n="d_no" id="dsn" onclick="setD('sleep',false)">❌ 沒有</button>
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天有吃垃圾食物嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.38)">（炸物、甜食、重口味）</span></div>
+          <div class="flbl"><span data-i18n="d_junk_q">今天有吃垃圾食物嗎？</span><span data-i18n="d_junk_sub" style="font-size:.7rem;color:rgba(255,255,255,.38)">（炸物、甜食、重口味）</span></div>
           <div class="yn">
-            <button class="ynb" id="dfy" onclick="setFried(true)">🍔 有吃</button>
-            <button class="ynb" id="dfn" onclick="setFried(false)">✅ 沒有</button>
+            <button class="ynb" data-i18n="d_yes_junk" id="dfy" onclick="setFried(true)">🍔 有吃</button>
+            <button class="ynb" data-i18n="d_no" id="dfn" onclick="setFried(false)">✅ 沒有</button>
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">手機使用 ≤ 7 小時？<span style="font-size:.7rem;color:#8b5cf6;font-weight:400"> 計入心理</span></div>
+          <div class="flbl"><span data-i18n="d_phone_q">手機使用 ≤ 7 小時？</span><span data-i18n="d_phone_sub" style="font-size:.7rem;color:#8b5cf6;font-weight:400"> 計入心理</span></div>
           <div class="yn">
-            <button class="ynb" id="phy" onclick="setPhone(true)">✅ 有控制</button>
-            <button class="ynb yn-n" id="phn" onclick="setPhone(false)">📱 超過了</button>
+            <button class="ynb" data-i18n="d_yes_phone" id="phy" onclick="setPhone(true)">✅ 有控制</button>
+            <button class="ynb yn-n" data-i18n="d_no_phone" id="phn" onclick="setPhone(false)">📱 超過了</button>
           </div>
         </div>
       </div>
@@ -595,27 +596,27 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 記帳 -->
       <div class="fblock">
-        <div class="fbtitle">💰 今日花費</div>
+        <div class="fbtitle" data-i18n="d_spend">💰 今日花費</div>
         <div class="frow">
-          <div class="flbl">今天總共花了多少？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（NT$，沒花填 0）</span>
+          <div class="flbl"><span data-i18n="d_how_much">今天總共花了多少？</span><span data-i18n="d_how_much_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（NT$，沒花填 0）</span>
             <div id="weekSpendHint" style="font-size:.7rem;margin-top:3px;color:rgba(255,255,255,.45)"></div>
           </div>
           <input type="number" class="txt-input" id="spendAmount" placeholder="0" min="0" inputmode="numeric" oninput="onSpendAmountInput(this.value)" style="text-align:right;font-size:1.1rem;font-weight:700">
         </div>
         <div id="spendDetail" style="display:none">
           <div class="frow" style="margin-bottom:10px">
-            <div class="flbl" style="margin-bottom:6px">主要花在什麼？</div>
-            <input type="text" class="txt-input" id="dSpendWhat" placeholder="例：晚餐聚餐、買衣服、添購器材…">
+            <div class="flbl" data-i18n="d_spend_what" style="margin-bottom:6px">主要花在什麼？</div>
+            <input type="text" class="txt-input" id="dSpendWhat" data-i18n-ph="d_spend_what_ph" placeholder="例：晚餐聚餐、買衣服、添購器材…">
           </div>
           <div class="frow" style="margin-bottom:0">
-            <div class="flbl">消費類別</div>
+            <div class="flbl" data-i18n="d_spend_cat">消費類別</div>
             <div class="cat-row">
-              <button class="cat-btn" data-cat="飲食" onclick="setCat('飲食')">🍴 飲食</button>
-              <button class="cat-btn" data-cat="交通" onclick="setCat('交通')">🚌 交通</button>
-              <button class="cat-btn" data-cat="購物" onclick="setCat('購物')">🛍️ 購物</button>
-              <button class="cat-btn" data-cat="娛樂" onclick="setCat('娛樂')">🎮 娛樂</button>
-              <button class="cat-btn" data-cat="社交" onclick="setCat('社交')">🤝 社交</button>
-              <button class="cat-btn" data-cat="其他" onclick="setCat('其他')">📦 其他</button>
+              <button class="cat-btn" data-cat="飲食" data-i18n="d_cat_food" onclick="setCat('飲食')">🍴 飲食</button>
+              <button class="cat-btn" data-cat="交通" data-i18n="d_cat_transport" onclick="setCat('交通')">🚌 交通</button>
+              <button class="cat-btn" data-cat="購物" data-i18n="d_cat_shop" onclick="setCat('購物')">🛍️ 購物</button>
+              <button class="cat-btn" data-cat="娛樂" data-i18n="d_cat_fun" onclick="setCat('娛樂')">🎮 娛樂</button>
+              <button class="cat-btn" data-cat="社交" data-i18n="d_cat_social" onclick="setCat('社交')">🤝 社交</button>
+              <button class="cat-btn" data-cat="其他" data-i18n="d_cat_other" onclick="setCat('其他')">📦 其他</button>
             </div>
           </div>
         </div>
@@ -624,41 +625,41 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 心情紀錄 -->
       <div class="fblock">
-        <div class="fbtitle">🧠 心情紀錄</div>
+        <div class="fbtitle" data-i18n="d_mood">🧠 心情紀錄</div>
         <div class="frow">
-          <div class="flbl">今天心情如何？</div>
+          <div class="flbl" data-i18n="d_how_feel">今天心情如何？</div>
           <div class="mood-row">
-            <button class="mood-btn" id="m1" onclick="setMood(1)">😔<br>很差</button>
-            <button class="mood-btn" id="m2" onclick="setMood(2)">😕<br>差</button>
-            <button class="mood-btn" id="m3" onclick="setMood(3)">😐<br>普通</button>
-            <button class="mood-btn" id="m4" onclick="setMood(4)">😊<br>好</button>
-            <button class="mood-btn" id="m5" onclick="setMood(5)">😄<br>很好</button>
+            <button class="mood-btn" id="m1" onclick="setMood(1)">😔<br><span data-i18n="m_1">很差</span></button>
+            <button class="mood-btn" id="m2" onclick="setMood(2)">😕<br><span data-i18n="m_2">差</span></button>
+            <button class="mood-btn" id="m3" onclick="setMood(3)">😐<br><span data-i18n="m_3">普通</span></button>
+            <button class="mood-btn" id="m4" onclick="setMood(4)">😊<br><span data-i18n="m_4">好</span></button>
+            <button class="mood-btn" id="m5" onclick="setMood(5)">😄<br><span data-i18n="m_5">很好</span></button>
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天的心情關鍵詞（可多選）</div>
+          <div class="flbl" data-i18n="d_mood_tags_lbl">今天的心情關鍵詞（可多選）</div>
           <div class="tag-row" id="moodTags"></div>
         </div>
         <div class="frow">
-          <div class="flbl">今天的感恩紀錄 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">（一件就夠，多寫更好）</span></div>
+          <div class="flbl"><span data-i18n="d_gratitude_lbl">今天的感恩紀錄</span> <span data-i18n="d_gratitude_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">（一件就夠，多寫更好）</span></div>
           <div class="gr-inputs">
-            <input type="text" class="txt-input" id="gr1" placeholder="1. 今天有什麼值得感謝的事？">
-            <input type="text" class="txt-input" id="gr2" placeholder="2. （選填）">
-            <input type="text" class="txt-input" id="gr3" placeholder="3. （選填）">
+            <input type="text" class="txt-input" id="gr1" data-i18n-ph="d_gr1_ph" placeholder="1. 今天有什麼值得感謝的事？">
+            <input type="text" class="txt-input" id="gr2" data-i18n-ph="d_gr2_ph" placeholder="2. （選填）">
+            <input type="text" class="txt-input" id="gr3" data-i18n-ph="d_gr3_ph" placeholder="3. （選填）">
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今日心得 <span style="color:rgba(255,255,255,.38);font-size:.72rem;font-weight:400">（選填）</span></div>
-          <textarea class="txt-input" id="discomfort" placeholder="今天的感受、想法、或任何想記下來的事…" rows="4"></textarea>
+          <div class="flbl"><span data-i18n="d_notes_lbl">今日心得</span> <span data-i18n="d_notes_sub" style="color:rgba(255,255,255,.38);font-size:.72rem;font-weight:400">（選填）</span></div>
+          <textarea class="txt-input" id="discomfort" data-i18n-ph="d_notes_ph" placeholder="今天的感受、想法、或任何想記下來的事…" rows="4"></textarea>
         </div>
       </div>
       <hr>
 
       <!-- 工作回顧 -->
       <div class="fblock">
-        <div class="fbtitle">💼 工作回顧</div>
+        <div class="fbtitle" data-i18n="d_work">💼 工作回顧</div>
         <div class="frow">
-          <div class="flbl">今天完成的重要事項</div>
+          <div class="flbl" data-i18n="d_work_done">今天完成的重要事項</div>
           <div class="gr-inputs">
             <input type="text" class="txt-input" id="wd1" placeholder="1.">
             <input type="text" class="txt-input" id="wd2" placeholder="2.">
@@ -666,16 +667,16 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天的工作狀態</div>
+          <div class="flbl" data-i18n="d_work_state">今天的工作狀態</div>
           <div class="work-state-row">
-            <button class="wst-btn" data-ws="🔥" onclick="setWorkState('🔥')">🔥 很有能量</button>
-            <button class="wst-btn" data-ws="😐" onclick="setWorkState('😐')">😐 普通</button>
-            <button class="wst-btn" data-ws="😴" onclick="setWorkState('😴')">😴 有點混</button>
-            <button class="wst-btn" data-ws="😵" onclick="setWorkState('😵')">😵 壓力大</button>
+            <button class="wst-btn" data-ws="🔥" data-i18n="d_ws_energy" onclick="setWorkState('🔥')">🔥 很有能量</button>
+            <button class="wst-btn" data-ws="😐" data-i18n="d_ws_ok" onclick="setWorkState('😐')">😐 普通</button>
+            <button class="wst-btn" data-ws="😴" data-i18n="d_ws_lazy" onclick="setWorkState('😴')">😴 有點混</button>
+            <button class="wst-btn" data-ws="😵" data-i18n="d_ws_stress" onclick="setWorkState('😵')">😵 壓力大</button>
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">明天優先事項</div>
+          <div class="flbl" data-i18n="d_work_tmr">明天優先事項</div>
           <div class="gr-inputs">
             <input type="text" class="txt-input" id="wt1" placeholder="1.">
             <input type="text" class="txt-input" id="wt2" placeholder="2.">
@@ -683,7 +684,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           </div>
         </div>
         <div class="frow">
-          <div class="flbl">今天工作表現自評（1-5）</div>
+          <div class="flbl" data-i18n="d_work_score">今天工作表現自評（1-5）</div>
           <div class="wsc-row">
             <button class="wsc-btn" data-wsc="1" onclick="setWorkScore(1)">😔<br>1</button>
             <button class="wsc-btn" data-wsc="2" onclick="setWorkScore(2)">😕<br>2</button>
@@ -697,36 +698,36 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- 今日社交 -->
       <div class="fblock">
-        <div class="fbtitle">🤝 今日社交</div>
+        <div class="fbtitle" data-i18n="d_social">🤝 今日社交</div>
         <div class="frow">
-          <div class="flbl">今天有社交互動嗎？</div>
+          <div class="flbl" data-i18n="d_social_q">今天有社交互動嗎？</div>
           <div class="yn">
-            <button class="ynb" id="scy" onclick="setSocialToday(true)">✅ 有</button>
-            <button class="ynb yn-n" id="scn" onclick="setSocialToday(false)">❌ 沒有</button>
+            <button class="ynb" data-i18n="d_yes" id="scy" onclick="setSocialToday(true)">✅ 有</button>
+            <button class="ynb yn-n" data-i18n="d_no" id="scn" onclick="setSocialToday(false)">❌ 沒有</button>
           </div>
         </div>
         <div id="socialDetail" style="display:none">
           <div class="frow">
-            <div class="flbl">跟誰</div>
-            <input type="text" class="txt-input" id="socialWith" placeholder="朋友、同事、家人…">
+            <div class="flbl" data-i18n="d_social_who">跟誰</div>
+            <input type="text" class="txt-input" id="socialWith" data-i18n-ph="d_social_who_ph" placeholder="朋友、同事、家人…">
           </div>
           <div class="frow">
-            <div class="flbl">小心得</div>
-            <input type="text" class="txt-input" id="socialNote" placeholder="一句話記錄">
+            <div class="flbl" data-i18n="d_social_note_lbl">小心得</div>
+            <input type="text" class="txt-input" id="socialNote" data-i18n-ph="d_social_note_ph" placeholder="一句話記錄">
           </div>
         </div>
       </div>
 
-      <button class="btn-save" id="btnSaveDaily" onclick="saveDaily()">完成今日紀錄</button>
+      <button class="btn-save" data-i18n="d_save" id="btnSaveDaily" onclick="saveDaily()">完成今日紀錄</button>
     </div>
     <div class="card">
-      <div class="ctitle"><span class="ctitle-info" onclick="toggleGridLegend()">本週打卡紀錄 <i class="info-dot">i</i></span></div>
+      <div class="ctitle"><span class="ctitle-info" onclick="toggleGridLegend()"><span data-i18n="d_week_grid">本週打卡紀錄</span> <i class="info-dot">i</i></span></div>
       <div class="grid-legend" id="gridLegend">
-        <div class="gl-row"><span class="gl-sym" style="color:#34d399">✓</span><span>完整紀錄</span></div>
-        <div class="gl-row"><span class="gl-sym" style="color:#fbbf24">●</span><span>已填寫，尚未完整</span></div>
-        <div class="gl-row"><span class="gl-sym" style="color:#818cf8">○</span><span>今天，尚未紀錄</span></div>
-        <div class="gl-row"><span class="gl-sym" style="color:rgba(252,165,165,.55)">○</span><span>過去未補</span></div>
-        <div class="gl-row"><span class="gl-sym" style="color:rgba(165,180,252,.3)">·</span><span>未來</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:#34d399">✓</span><span data-i18n="d_legend_full">完整紀錄</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:#fbbf24">●</span><span data-i18n="d_legend_partial">已填寫，尚未完整</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:#818cf8">○</span><span data-i18n="d_legend_today">今天，尚未紀錄</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:rgba(252,165,165,.55)">○</span><span data-i18n="d_legend_missed">過去未補</span></div>
+        <div class="gl-row"><span class="gl-sym" style="color:rgba(165,180,252,.3)">·</span><span data-i18n="d_legend_future">未來</span></div>
       </div>
       <div id="wGrid"></div>
       <div id="missingHint" style="font-size:.74rem;padding:6px 2px 2px;min-height:18px"></div>
@@ -738,37 +739,37 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
   <div class="view" id="view-tasks">
     <!-- Goals Card -->
     <div class="card" id="goalsCard">
-      <div class="ctitle" style="display:flex;align-items:center;justify-content:space-between"><span class="ctitle-info" onclick="showConceptModal('goal')">目標設定 <i class="info-dot">i</i></span><span style="font-size:.7rem;color:rgba(255,255,255,.38)">週 · 月 · 年量化目標</span></div>
+      <div class="ctitle" style="display:flex;align-items:center;justify-content:space-between"><span class="ctitle-info" onclick="showConceptModal('goal')"><span data-i18n="t_goals">目標設定</span> <i class="info-dot">i</i></span><span data-i18n="t_goals_sub" style="font-size:.7rem;color:rgba(255,255,255,.38)">週 · 月 · 年量化目標</span></div>
       <div class="gtabs">
-        <div class="gtab" id="gp-w" onclick="setGoalPeriod('w')">本週</div>
-        <div class="gtab active" id="gp-m" onclick="setGoalPeriod('m')">本月</div>
-        <div class="gtab" id="gp-y" onclick="setGoalPeriod('y')">今年</div>
+        <div class="gtab" id="gp-w" data-i18n="t_w" onclick="setGoalPeriod('w')">本週</div>
+        <div class="gtab active" id="gp-m" data-i18n="t_m" onclick="setGoalPeriod('m')">本月</div>
+        <div class="gtab" id="gp-y" data-i18n="t_y" onclick="setGoalPeriod('y')">今年</div>
       </div>
       <div id="goalList"></div>
-      <button id="goalAddBtn" onclick="toggleGoalForm()" style="width:100%;padding:10px;background:rgba(99,102,241,.12);border:1.5px dashed rgba(99,102,241,.4);border-radius:12px;color:#818cf8;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:4px">＋ 新增目標</button>
+      <button id="goalAddBtn" data-i18n="t_add_goal" onclick="toggleGoalForm()" style="width:100%;padding:10px;background:rgba(99,102,241,.12);border:1.5px dashed rgba(99,102,241,.4);border-radius:12px;color:#818cf8;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:4px">＋ 新增目標</button>
       <div id="goalForm" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.08)">
-        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">目標類別</div>
+        <div data-i18n="t_goal_cat" style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">目標類別</div>
         <div class="dim-chips" id="goalDimChips"></div>
-        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin:8px 0 5px">快速範本（點選套用）</div>
+        <div data-i18n="t_goal_template" style="font-size:.72rem;color:rgba(255,255,255,.38);margin:8px 0 5px">快速範本（點選套用）</div>
         <div id="goalTemplateChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px"></div>
-        <input type="text" id="goalTitle" placeholder="目標描述，例如：運動 20 天" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none;box-sizing:border-box;margin-bottom:8px">
+        <input type="text" id="goalTitle" data-i18n-ph="t_goal_desc_ph" placeholder="目標描述，例如：運動 20 天" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none;box-sizing:border-box;margin-bottom:8px">
         <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input type="number" id="goalTarget" placeholder="目標數字（選填）" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none">
-          <input type="text" id="goalUnit" placeholder="單位（天/元/次…）" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none">
+          <input type="number" id="goalTarget" data-i18n-ph="t_goal_num_ph" placeholder="目標數字（選填）" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none">
+          <input type="text" id="goalUnit" data-i18n-ph="t_goal_unit_ph" placeholder="單位（天/元/次…）" style="flex:1;min-width:0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:9px 12px;color:#fff;font-size:.88rem;outline:none">
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn-save" style="flex:1;margin:0;padding:12px" onclick="addGoal()">儲存目標</button>
-          <button onclick="toggleGoalForm()" style="padding:12px 18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;color:rgba(255,255,255,.5);cursor:pointer;font-size:.88rem">取消</button>
+          <button class="btn-save" data-i18n="t_save_goal" style="flex:1;margin:0;padding:12px" onclick="addGoal()">儲存目標</button>
+          <button data-i18n="t_cancel_btn" onclick="toggleGoalForm()" style="padding:12px 18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:14px;color:rgba(255,255,255,.5);cursor:pointer;font-size:.88rem">取消</button>
         </div>
       </div>
     </div>
     <!-- Tasks Card -->
     <div class="card">
       <div class="task-header">
-        <div class="task-group-lbl"><span class="ctitle-info" onclick="showConceptModal('task')">自訂任務 <i class="info-dot">i</i></span></div>
+        <div class="task-group-lbl"><span class="ctitle-info" onclick="showConceptModal('task')"><span data-i18n="t_custom">自訂任務</span> <i class="info-dot">i</i></span></div>
         <div style="display:flex;gap:8px">
-          <button class="btn-pack" onclick="togglePackPanel()">📦 模板</button>
-          <button class="btn-add-task" onclick="toggleAddForm()">＋ 新增</button>
+          <button class="btn-pack" data-i18n="t_pack" onclick="togglePackPanel()">📦 模板</button>
+          <button class="btn-add-task" data-i18n="t_add" onclick="toggleAddForm()">＋ 新增</button>
         </div>
       </div>
 
@@ -777,22 +778,22 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
       <!-- Add form -->
       <div id="addForm" class="add-form" style="display:none">
-        <input type="text" id="taskInput" placeholder="輸入任務名稱，例如：游泳 30 分鐘" oninput="autoClassify()">
-        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">領域（自動偵測，點選可調整）</div>
+        <input type="text" id="taskInput" data-i18n-ph="t_task_input_ph" placeholder="輸入任務名稱，例如：游泳 30 分鐘" oninput="autoClassify()">
+        <div data-i18n="t_domain" style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">領域（自動偵測，點選可調整）</div>
         <div class="dim-chips" id="dimChips"></div>
         <div class="freq-row">
-          <button class="freq-btn on" id="fq-w" onclick="setFreq('weekly')">每週</button>
-          <button class="freq-btn" id="fq-m" onclick="setFreq('monthly')">每月</button>
-          <button class="freq-btn" id="fq-y" onclick="setFreq('yearly')">每年</button>
+          <button class="freq-btn on" id="fq-w" data-i18n="t_weekly" onclick="setFreq('weekly')">每週</button>
+          <button class="freq-btn" id="fq-m" data-i18n="t_monthly" onclick="setFreq('monthly')">每月</button>
+          <button class="freq-btn" id="fq-y" data-i18n="t_yearly" onclick="setFreq('yearly')">每年</button>
         </div>
-        <div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">難度（自動判斷，可手動調整）</div>
+        <div data-i18n="t_diff" style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:6px">難度（自動判斷，可手動調整）</div>
         <div class="diff-row">
-          <button class="diff-btn" id="df-e" onclick="setDiff('easy')">⭐ 簡單</button>
-          <button class="diff-btn on-medium" id="df-m" onclick="setDiff('medium')">⭐⭐ 中等</button>
-          <button class="diff-btn" id="df-h" onclick="setDiff('hard')">⭐⭐⭐ 難</button>
+          <button class="diff-btn" id="df-e" data-i18n="t_easy" onclick="setDiff('easy')">⭐ 簡單</button>
+          <button class="diff-btn on-medium" id="df-m" data-i18n="t_medium" onclick="setDiff('medium')">⭐⭐ 中等</button>
+          <button class="diff-btn" id="df-h" data-i18n="t_hard" onclick="setDiff('hard')">⭐⭐⭐ 難</button>
         </div>
-        <div class="pts-preview" id="ptsPreview">請輸入任務名稱</div>
-        <button class="btn-add-confirm" onclick="submitTask()">新增</button>
+        <div class="pts-preview" id="ptsPreview" data-i18n="t_pts_hint">請輸入任務名稱</div>
+        <button class="btn-add-confirm" data-i18n="t_confirm_add" onclick="submitTask()">新增</button>
       </div>
 
       <!-- Task list -->
@@ -805,148 +806,148 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
     <div class="card" style="padding:12px 16px;margin-bottom:8px">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
         <div>
-          <div style="font-size:.82rem;font-weight:700;color:#c7d2fe">🔔 週日結算提醒</div>
-          <div style="font-size:.68rem;color:rgba(255,255,255,.4);margin-top:2px" id="notifStatusTxt">每週日提醒你完成結算</div>
+          <div data-i18n="s_notif" style="font-size:.82rem;font-weight:700;color:#c7d2fe">🔔 週日結算提醒</div>
+          <div data-i18n="s_notif_sub" style="font-size:.68rem;color:rgba(255,255,255,.4);margin-top:2px" id="notifStatusTxt">每週日提醒你完成結算</div>
         </div>
-        <button id="notifToggleBtn" onclick="toggleNotifications()" style="flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:.75rem;font-weight:700;border:1.5px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;white-space:nowrap">開啟</button>
+        <button id="notifToggleBtn" data-i18n="s_notif_on" onclick="toggleNotifications()" style="flex-shrink:0;padding:7px 16px;border-radius:20px;font-size:.75rem;font-weight:700;border:1.5px solid rgba(99,102,241,.3);background:rgba(99,102,241,.1);color:#818cf8;cursor:pointer;white-space:nowrap">開啟</button>
       </div>
     </div>
     <div class="card" style="padding:14px 14px 0">
       <div class="stabs" style="margin-bottom:0">
-        <div class="stab active" onclick="setST('w')">每週</div>
-        <div class="stab" onclick="setST('m')">每月</div>
-        <div class="stab" onclick="setST('y')">每年</div>
+        <div class="stab active" data-i18n="s_weekly_tab" onclick="setST('w')">每週</div>
+        <div class="stab" data-i18n="s_monthly_tab" onclick="setST('m')">每月</div>
+        <div class="stab" data-i18n="s_yearly_tab" onclick="setST('y')">每年</div>
       </div>
     </div>
 
     <!-- Weekly -->
     <div class="stview active" id="st-w">
       <div id="wSettleHint" style="margin-bottom:6px"></div>
-      <div class="done-badge" id="wDone" style="display:none">✅ 本週結算已完成</div>
+      <div class="done-badge" data-i18n="s_done_weekly" id="wDone" style="display:none">✅ 本週結算已完成</div>
       <div class="card">
-        <div class="ctitle">每週結算 <span class="fbadge fb-w">週日</span></div>
+        <div class="ctitle"><span data-i18n="s_w_title">每週結算</span> <span class="fbadge fb-w" data-i18n="s_w_badge">週日</span></div>
         <div class="fblock">
-          <div class="fbtitle">💰 財務消費 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
+          <div class="fbtitle"><span data-i18n="s_finance_hd">💰 財務消費</span> <span data-i18n="s_finance_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 5分，自動從每日記帳計算</span></div>
           <div id="wFinanceSummary"></div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 7分，自動從每日自評計算</span></div>
+          <div class="fbtitle"><span data-i18n="s_work_hd">💼 工作</span> <span data-i18n="s_work_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔工作 7分，自動從每日自評計算</span></div>
           <div id="wWorkSummary" style="margin-bottom:10px"></div>
           <div class="frow">
-            <div class="flbl">本週學到什麼新東西？ <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
-            <textarea class="txt-input" id="wLearningNote" placeholder="技能、知識、工具、洞察…（填寫即加分）" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_learning">本週學到什麼新東西？</span> <span data-i18n="s_learning_bonus" style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
+            <textarea class="txt-input" id="wLearningNote" data-i18n-ph="s_learning_ph" placeholder="技能、知識、工具、洞察…（填寫即加分）" rows="4"></textarea>
           </div>
           <div class="frow">
-            <div class="flbl">本週工作心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <textarea class="txt-input" id="wWorkNote" placeholder="這週最大的收穫或挑戰…" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_work_note_lbl">本週工作心得</span> <span data-i18n="s_work_note_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <textarea class="txt-input" id="wWorkNote" data-i18n-ph="s_work_note_ph" placeholder="這週最大的收穫或挑戰…" rows="4"></textarea>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天4分，2天+8分，有心得+2，最高10分，自動計算</span></div>
+          <div class="fbtitle"><span data-i18n="s_social_hd">🤝 社交</span> <span data-i18n="s_social_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天4分，2天+8分，有心得+2，最高10分，自動計算</span></div>
           <div id="wSocialSummary" style="margin-bottom:10px"></div>
           <div class="frow">
-            <div class="flbl">本週社交心得 <span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <textarea class="txt-input" id="wSocialNote" placeholder="印象最深的互動或關係心得…" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_social_note_lbl">本週社交心得</span> <span data-i18n="s_social_note_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <textarea class="txt-input" id="wSocialNote" data-i18n-ph="s_social_note_ph" placeholder="印象最深的互動或關係心得…" rows="4"></textarea>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">反思 +1 分</span></div>
+          <div class="fbtitle"><span data-i18n="s_mental_hd">🧠 心理</span> <span data-i18n="s_mental_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">反思 +1 分</span></div>
           <div class="frow">
-            <div class="flbl">本週回顧與反思 <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
-            <textarea class="txt-input" id="wMentalNote" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_reflection">本週回顧與反思</span> <span data-i18n="s_reflection_bonus" style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
+            <textarea class="txt-input" id="wMentalNote" data-i18n-ph="s_reflection_ph" placeholder="這週情緒狀態、壓力來源或讓自己開心的事…" rows="4"></textarea>
           </div>
         </div>
-        <button class="btn-save" onclick="saveWeekly()">儲存本週結算</button>
+        <button class="btn-save" data-i18n="s_save_weekly" onclick="saveWeekly()">儲存本週結算</button>
       </div>
     </div>
 
     <!-- Monthly -->
     <div class="stview" id="st-m">
       <div id="mSettleHint" style="margin-bottom:6px"></div>
-      <div class="done-badge" id="mDone" style="display:none">✅ 本月結算已完成</div>
+      <div class="done-badge" data-i18n="s_done_monthly" id="mDone" style="display:none">✅ 本月結算已完成</div>
       <div class="card">
-        <div class="ctitle">每月結算 <span class="fbadge fb-m">月底</span></div>
+        <div class="ctitle"><span data-i18n="s_m_title">每月結算</span> <span class="fbadge fb-m" data-i18n="s_m_badge">月底</span></div>
         <div class="fblock">
-          <div class="fbtitle">🏃 健康 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日紀錄計算</span></div>
+          <div class="fbtitle"><span data-i18n="s_health_hd">🏃 健康</span> <span data-i18n="s_health_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日紀錄計算</span></div>
           <div id="mHealthSummary"></div>
           <div id="mHealthGoalRef"></div>
           <div class="frow" style="margin-top:8px">
-            <div class="flbl">本月健康目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
-            <div class="yn" id="mhgyn"><button class="ynb" id="mhgy" onclick="setM('health_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" id="mhgn" onclick="setM('health_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
+            <div class="flbl"><span data-i18n="s_health_goal">本月健康目標有達成嗎？</span><span data-i18n="s_goal_bonus" style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
+            <div class="yn" id="mhgyn"><button class="ynb" data-i18n="s_achieved" id="mhgy" onclick="setM('health_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" data-i18n="s_not_achieved" id="mhgn" onclick="setM('health_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
           </div>
           <div class="frow">
-            <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <textarea class="txt-input" id="mHealthGoalNote" placeholder="本月健康目標的回顧…" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_what_done">達成了什麼／還差什麼？</span><span data-i18n="s_what_done_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <textarea class="txt-input" id="mHealthGoalNote" data-i18n-ph="s_health_goal_note_ph" placeholder="本月健康目標的回顧…" rows="4"></textarea>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💰 財務 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 3分</span></div>
+          <div class="fbtitle"><span data-i18n="s_finance_m_hd">💰 財務</span> <span data-i18n="s_finance_m_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">佔財務 3分</span></div>
           <div class="frow">
-            <div class="flbl">本月有儲蓄或投資行動嗎？</div>
-            <div class="yn"><button class="ynb" id="msy" onclick="setM('saving',true)">✅ 有</button><button class="ynb yn-n" id="msn" onclick="setM('saving',false)">❌ 沒有</button></div>
+            <div class="flbl" data-i18n="s_saving">本月有儲蓄或投資行動嗎？</div>
+            <div class="yn"><button class="ynb" data-i18n="d_yes" id="msy" onclick="setM('saving',true)">✅ 有</button><button class="ynb yn-n" data-i18n="d_no" id="msn" onclick="setM('saving',false)">❌ 沒有</button></div>
           </div>
           <div class="frow">
-            <div class="flbl">本月有整理財務報告嗎？</div>
-            <div class="yn"><button class="ynb" id="mfry" onclick="setM('finance_report',true)">✅ 有</button><button class="ynb yn-n" id="mfrn" onclick="setM('finance_report',false)">❌ 沒有</button></div>
+            <div class="flbl" data-i18n="s_fin_report">本月有整理財務報告嗎？</div>
+            <div class="yn"><button class="ynb" data-i18n="d_yes" id="mfry" onclick="setM('finance_report',true)">✅ 有</button><button class="ynb yn-n" data-i18n="d_no" id="mfrn" onclick="setM('finance_report',false)">❌ 沒有</button></div>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">💼 工作 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日自評計算</span></div>
+          <div class="fbtitle"><span data-i18n="s_work_m_hd">💼 工作</span> <span data-i18n="s_work_m_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">自動從每日自評計算</span></div>
           <div id="mWorkSummary"></div>
           <div id="mWorkGoalRef"></div>
           <div class="frow" style="margin-top:8px">
-            <div class="flbl">本月工作目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
-            <div class="yn" id="mwgyn"><button class="ynb" id="mwgy" onclick="setM('work_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" id="mwgn" onclick="setM('work_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
+            <div class="flbl"><span data-i18n="s_work_goal">本月工作目標有達成嗎？</span><span data-i18n="s_goal_bonus" style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
+            <div class="yn" id="mwgyn"><button class="ynb" data-i18n="s_achieved" id="mwgy" onclick="setM('work_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" data-i18n="s_not_achieved" id="mwgn" onclick="setM('work_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
           </div>
           <div class="frow">
-            <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <textarea class="txt-input" id="mWorkGoalNote" placeholder="本月工作目標的回顧…" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_what_done">達成了什麼／還差什麼？</span><span data-i18n="s_what_done_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <textarea class="txt-input" id="mWorkGoalNote" data-i18n-ph="s_work_goal_note_ph" placeholder="本月工作目標的回顧…" rows="4"></textarea>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🤝 社交 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天4分，2天+8分，有心得+2，最高10分</span></div>
+          <div class="fbtitle"><span data-i18n="s_social_m_hd">🤝 社交</span> <span data-i18n="s_social_m_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">1天4分，2天+8分，有心得+2，最高10分</span></div>
           <div id="mSocialSummary"></div>
           <div id="mSocialGoalRef"></div>
           <div class="frow" style="margin-top:8px">
-            <div class="flbl">本月社交目標有達成嗎？<span style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
-            <div class="yn" id="mscgyn"><button class="ynb" id="mscgy" onclick="setM('social_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" id="mscgn" onclick="setM('social_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
+            <div class="flbl"><span data-i18n="s_social_goal">本月社交目標有達成嗎？</span><span data-i18n="s_goal_bonus" style="font-size:.7rem;color:rgba(255,255,255,.35)"> (+2 / −1 分)</span></div>
+            <div class="yn" id="mscgyn"><button class="ynb" data-i18n="s_achieved" id="mscgy" onclick="setM('social_goal_met',true)" style="padding:14px 8px;font-size:.9rem">✅ 達成了</button><button class="ynb" data-i18n="s_not_achieved" id="mscgn" onclick="setM('social_goal_met',false)" style="padding:14px 8px;font-size:.9rem">❌ 未達成</button></div>
           </div>
           <div class="frow">
-            <div class="flbl">達成了什麼／還差什麼？<span style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
-            <textarea class="txt-input" id="mSocialGoalNote" placeholder="本月社交目標的回顧…" rows="4"></textarea>
+            <div class="flbl"><span data-i18n="s_what_done">達成了什麼／還差什麼？</span><span data-i18n="s_what_done_sub" style="font-size:.7rem;color:rgba(255,255,255,.35)">（選填）</span></div>
+            <textarea class="txt-input" id="mSocialGoalNote" data-i18n-ph="s_social_goal_note_ph" placeholder="本月社交目標的回顧…" rows="4"></textarea>
           </div>
         </div>
         <hr>
         <div class="fblock">
-          <div class="fbtitle">🧠 心理 <span style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">月回顧 +1 分</span></div>
+          <div class="fbtitle"><span data-i18n="s_mental_m_hd">🧠 心理</span> <span data-i18n="s_mental_m_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">月回顧 +1 分</span></div>
           <div class="frow">
-            <div class="flbl">本月回顧 <span style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
-            <textarea class="txt-input" id="mMonthlyReviewNote" placeholder="這個月的收穫、遺憾或下個月計畫…" rows="5"></textarea>
+            <div class="flbl"><span data-i18n="s_month_review">本月回顧</span> <span data-i18n="s_review_bonus" style="font-size:.7rem;color:#34d399">填寫 +1 分</span></div>
+            <textarea class="txt-input" id="mMonthlyReviewNote" data-i18n-ph="s_month_review_ph" placeholder="這個月的收穫、遺憾或下個月計畫…" rows="5"></textarea>
           </div>
         </div>
-        <button class="btn-save" onclick="saveMonthly()">儲存本月結算</button>
+        <button class="btn-save" data-i18n="s_save_monthly" onclick="saveMonthly()">儲存本月結算</button>
       </div>
     </div>
 
     <!-- Yearly -->
     <div class="stview" id="st-y">
       <div class="card">
-        <div class="ctitle">每年設定</div>
-        <div class="frow"><div class="flbl"><span>💰 每月消費預算</span><span class="fval" id="ybv">NT$25,000</span></div><input type="range" min="5000" max="60000" step="1000" value="25000" id="ybi" oninput="document.getElementById('ybv').textContent='NT$'+parseInt(this.value).toLocaleString()"><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-top:4px">週預算自動換算（÷4），影響財務日分計算</div></div>
-        <button class="btn-save" onclick="saveYearly()">儲存預算</button>
+        <div class="ctitle" data-i18n="s_y_title">每年設定</div>
+        <div class="frow"><div class="flbl"><span data-i18n="s_budget">💰 每月消費預算</span><span class="fval" id="ybv">NT$25,000</span></div><input type="range" min="5000" max="60000" step="1000" value="25000" id="ybi" oninput="document.getElementById('ybv').textContent='NT$'+parseInt(this.value).toLocaleString()"><div data-i18n="s_budget_sub" style="font-size:.72rem;color:rgba(255,255,255,.38);margin-top:4px">週預算自動換算（÷4），影響財務日分計算</div></div>
+        <button class="btn-save" data-i18n="s_save_budget" onclick="saveYearly()">儲存預算</button>
       </div>
       <div class="card" style="margin-top:12px">
-        <div class="ctitle" onclick="toggleDimNames()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">自訂維度名稱<span id="dimNamesChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span></div>
+        <div class="ctitle" onclick="toggleDimNames()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none"><span data-i18n="s_dim_names">自訂維度名稱</span><span id="dimNamesChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span></div>
         <div id="dimNamesContent" style="display:none;margin-top:8px">
-          <div style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px">留空則使用預設名稱</div>
+          <div data-i18n="s_dim_default" style="font-size:.75rem;color:rgba(255,255,255,.4);margin-bottom:12px">留空則使用預設名稱</div>
           <div id="dimNameInputs"></div>
-          <button class="btn-save" onclick="saveDimNames()">儲存名稱</button>
+          <button class="btn-save" data-i18n="s_save_dims" onclick="saveDimNames()">儲存名稱</button>
         </div>
       </div>
     </div>
@@ -956,10 +957,10 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
   <div class="view" id="view-history">
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="ctitle" style="margin:0">📅 回顧</div>
+        <div class="ctitle" data-i18n="h_review_title" style="margin:0">📅 回顧</div>
         <div class="rtoggle" id="rvToggle">
-          <div class="rtab active" onclick="setReviewMode('month')">月</div>
-          <div class="rtab" onclick="setReviewMode('year')">年</div>
+          <div class="rtab active" data-i18n="h_rev_mo" onclick="setReviewMode('month')">月</div>
+          <div class="rtab" data-i18n="h_rev_yr" onclick="setReviewMode('year')">年</div>
         </div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 2px">
@@ -970,33 +971,33 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       <div id="rvContent"></div>
     </div>
     <div class="card">
-      <div class="ctitle">趨勢分析</div>
+      <div class="ctitle" data-i18n="h_trend_title">趨勢分析</div>
       <div class="rtoggle" id="trendToggle" style="margin-bottom:12px">
-        <div class="rtab active" onclick="setTrendView('month')">月趨勢（週）</div>
-        <div class="rtab" onclick="setTrendView('year')">年趨勢（月）</div>
-        <div class="rtab" onclick="setTrendView('xp')">XP 進度</div>
+        <div class="rtab active" data-i18n="h_trend_mo" onclick="setTrendView('month')">月趨勢（週）</div>
+        <div class="rtab" data-i18n="h_trend_yr" onclick="setTrendView('year')">年趨勢（月）</div>
+        <div class="rtab" data-i18n="h_trend_xp" onclick="setTrendView('xp')">XP 進度</div>
       </div>
       <div id="trendWrap" style="position:relative;height:220px"><canvas id="trendChart"></canvas></div>
     </div>
     <div class="card">
-      <div class="ctitle">📊 本月 vs 上月</div>
+      <div class="ctitle" data-i18n="h_compare">📊 本月 vs 上月</div>
       <div id="monthCompare"></div>
     </div>
     <div class="card">
-      <div class="ctitle">💭 心情標籤統計</div>
+      <div class="ctitle" data-i18n="h_mood_tags_title">💭 心情標籤統計</div>
       <div id="moodTagStats"></div>
     </div>
     <div class="card">
-      <div class="ctitle">週歷史紀錄</div>
+      <div class="ctitle" data-i18n="h_week_hist">週歷史紀錄</div>
       <div id="hist"></div>
     </div>
     <div class="card">
-      <div class="ctitle">💸 消費統計</div>
+      <div class="ctitle" data-i18n="h_spend_title">💸 消費統計</div>
       <div id="spendStats"></div>
     </div>
     <div class="card">
       <div class="ctitle" onclick="toggleAch()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
-        成就系統 🏅
+        <span data-i18n="h_ach_title">成就系統 🏅</span>
         <span id="achChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span>
       </div>
       <div id="achContent" style="display:none;margin-top:4px">
@@ -1004,12 +1005,12 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       </div>
     </div>
     <div class="card">
-      <div class="ctitle">☁️ Google 雲端同步</div>
+      <div class="ctitle" data-i18n="h_cloud">☁️ Google 雲端同步</div>
       <div id="fbSyncCard" style="min-height:48px"></div>
     </div>
     <div class="card">
       <div class="ctitle" onclick="toggleShortcuts()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
-        🍎 Apple Shortcuts 捷徑
+        <span data-i18n="h_shortcuts_title">🍎 Apple Shortcuts 捷徑</span>
         <span id="shortcutsChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span>
       </div>
       <div id="shortcutsContent" style="display:none;margin-top:12px">
@@ -1040,7 +1041,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
     </div>
     <div class="card">
       <div class="ctitle" onclick="toggleBackup()" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none">
-        資料備份 & 匯出
+        <span data-i18n="h_backup">資料備份 & 匯出</span>
         <span id="backupChevron" style="font-size:.75rem;color:rgba(255,255,255,.35)">▶</span>
       </div>
       <div id="backupContent" style="display:none;margin-top:12px">
@@ -1090,11 +1091,11 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
 
 <!-- BOTTOM NAV -->
 <div class="bnav">
-  <div class="ni active" id="n-home" onclick="go('home')"><div class="ni-icon">📊</div><div class="ni-lbl">首頁</div></div>
-  <div class="ni" id="n-daily" onclick="go('daily')"><div class="ni-icon">☀️</div><div class="ni-lbl">每日</div><div class="dot-badge" id="dBadge" style="display:none"></div></div>
-  <div class="ni" id="n-tasks" onclick="go('tasks')"><div class="ni-icon">✅</div><div class="ni-lbl">任務</div></div>
-  <div class="ni" id="n-settle" onclick="go('settle')"><div class="ni-icon">📋</div><div class="ni-lbl">結算</div><div class="dot-badge" id="sBadge" style="display:none"></div></div>
-  <div class="ni" id="n-history" onclick="go('history')"><div class="ni-icon">📈</div><div class="ni-lbl">歷史</div></div>
+  <div class="ni active" id="n-home" onclick="go('home')"><div class="ni-icon">📊</div><div class="ni-lbl" data-i18n="nav_home">首頁</div></div>
+  <div class="ni" id="n-daily" onclick="go('daily')"><div class="ni-icon">☀️</div><div class="ni-lbl" data-i18n="nav_daily">每日</div><div class="dot-badge" id="dBadge" style="display:none"></div></div>
+  <div class="ni" id="n-tasks" onclick="go('tasks')"><div class="ni-icon">✅</div><div class="ni-lbl" data-i18n="nav_tasks">任務</div></div>
+  <div class="ni" id="n-settle" onclick="go('settle')"><div class="ni-icon">📋</div><div class="ni-lbl" data-i18n="nav_settle">結算</div><div class="dot-badge" id="sBadge" style="display:none"></div></div>
+  <div class="ni" id="n-history" onclick="go('history')"><div class="ni-icon">📈</div><div class="ni-lbl" data-i18n="nav_history">歷史</div></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -1146,7 +1147,8 @@ const TASK_PACKS=[
 const DIM_NAMES_KEY='life_rpg_dim_names';
 function loadDimNames(){
   const saved=JSON.parse(localStorage.getItem(DIM_NAMES_KEY)||'{}');
-  DIMS.forEach(d=>{d.label=saved[d.key]||DIM_DEFAULTS[d.key];});
+  const defs=getDimDefaults();
+  DIMS.forEach(d=>{d.label=saved[d.key]||defs[d.key];});
 }
 
 // Keyword classifier
@@ -1158,7 +1160,7 @@ const KW={
   mental: '冥想 日記 反思 心情 感恩 閱讀 靜心 放鬆 壓力 情緒 自我 成長 療癒 正念 休息 旅行 創作 藝術 音樂 寫作 哲學 散步 呼吸 思考'.split(' '),
 };
 
-const MOOD_TAGS=['開心','平靜','焦慮','疲憊','充實','無聊','感恩','沮喪'];
+const MOOD_TAGS=['開心','平靜','焦慮','疲憊','充實','無聊','感恩','沮喪']; // zh keys for data storage
 
 // [門檻, 等級標籤, 階段稱號, 升級獎勵（保留欄位，暫空）]
 // 基準：235天（5/10→12/31）× 80% 達成率 ≈ 4,000 XP → 傳說
@@ -1175,6 +1177,333 @@ const XP_LEVELS=[
   [4000, 'Lv.10','傳說',   ''],
 ];
 const XP_NEXT=[80,200,400,700,1100,1600,2300,3100,4000,Infinity];
+
+// ════════════════════════════════
+// LANGUAGE / i18n
+// ════════════════════════════════
+const LANG_KEY='life_rpg_lang';
+let _lang=(()=>{try{return localStorage.getItem(LANG_KEY)||'zh';}catch(e){return'zh';}})();
+const STRINGS={
+  zh:{
+    nav_home:'首頁',nav_daily:'每日',nav_tasks:'任務',nav_settle:'結算',nav_history:'歷史',
+    stat_week:'本週總分',stat_xp:'總 XP',stat_streak:'連勝週數',
+    sync_login:'☁️ 點擊登入，啟用雲端同步',
+    theme_auto:'⚙️ 自動',theme_zen:'🌙 深',theme_warm:'☀️ 淺',
+    h_radar:'五維成長雷達圖',h_score_rules:'計分規則 ℹ️',
+    h_this_week:'本週',h_this_month:'本月',h_prev_week:'上週',h_prev_month:'上月',
+    h_dim_detail:'維度明細',h_week_status:'本週狀態',h_rules:'規則 ℹ️',
+    h_rule_good_txt:'達標週 — 自由消費，好好放鬆',
+    h_rule_ok_txt:'繼續保持 — 下週再衝',
+    h_rule_bad_txt:'懲罰週 — 完成一項社區貢獻',
+    h_rule_formula:'總分 = (健康 + 財務 + 工作 + 社交 + 心理) ÷ 5，各維度 0–15 分',
+    d_title:'每日紀錄',d_today:'今天',
+    d_done:'✅ 今日紀錄完成',
+    d_retro_btn:'返回今日 →',d_retro_save:'儲存補救紀錄',d_edit_save:'更新紀錄',
+    d_health:'🏃 健康',
+    d_exercise_q:'今天有完成運動嗎？',
+    d_sleep_q:'昨晚睡足 7 小時了嗎？',
+    d_junk_q:'今天有吃垃圾食物嗎？',d_junk_sub:'（炸物、甜食、重口味）',
+    d_phone_q:'手機使用 ≤ 7 小時？',d_phone_sub:'計入心理',
+    d_yes:'✅ 有',d_no:'❌ 沒有',
+    d_yes_phone:'✅ 有控制',d_no_phone:'📱 超過了',d_yes_junk:'🍔 有吃',
+    d_spend:'💰 今日花費',
+    d_how_much:'今天總共花了多少？',d_how_much_sub:'（NT$，沒花填 0）',
+    d_spend_what:'主要花在什麼？',d_spend_what_ph:'例：晚餐聚餐、買衣服、添購器材…',d_spend_cat:'消費類別',
+    d_cat_food:'🍴 飲食',d_cat_transport:'🚌 交通',d_cat_shop:'🛍️ 購物',
+    d_cat_fun:'🎮 娛樂',d_cat_social:'🤝 社交',d_cat_other:'📦 其他',
+    d_mood:'🧠 心情紀錄',d_how_feel:'今天心情如何？',
+    d_mood_tags_lbl:'今天的心情關鍵詞（可多選）',
+    d_gratitude_lbl:'今天的感恩紀錄',d_gratitude_sub:'（一件就夠，多寫更好）',
+    d_gr1_ph:'1. 今天有什麼值得感謝的事？',d_gr2_ph:'2. （選填）',d_gr3_ph:'3. （選填）',
+    d_notes_lbl:'今日心得',d_notes_sub:'（選填）',d_notes_ph:'今天的感受、想法、或任何想記下來的事…',
+    d_work:'💼 工作回顧',d_work_done:'今天完成的重要事項',
+    d_work_state:'今天的工作狀態',d_work_tmr:'明天優先事項',
+    d_work_score:'今天工作表現自評（1-5）',
+    d_ws_energy:'🔥 很有能量',d_ws_ok:'😐 普通',d_ws_lazy:'😴 有點混',d_ws_stress:'😵 壓力大',
+    d_social:'🤝 今日社交',d_social_q:'今天有社交互動嗎？',
+    d_social_who:'跟誰',d_social_who_ph:'朋友、同事、家人…',d_social_note_lbl:'小心得',d_social_note_ph:'一句話記錄',
+    d_save:'完成今日紀錄',
+    d_week_grid:'本週打卡紀錄',
+    d_legend_full:'完整紀錄',d_legend_partial:'已填寫，尚未完整',
+    d_legend_today:'今天，尚未紀錄',d_legend_missed:'過去未補',d_legend_future:'未來',
+    m_1:'很差',m_2:'差',m_3:'普通',m_4:'好',m_5:'很好',
+    mt_0:'開心',mt_1:'平靜',mt_2:'焦慮',mt_3:'疲憊',mt_4:'充實',mt_5:'無聊',mt_6:'感恩',mt_7:'沮喪',
+    t_goals:'目標設定',t_goals_sub:'週 · 月 · 年量化目標',
+    t_w:'本週',t_m:'本月',t_y:'今年',
+    t_add_goal:'＋ 新增目標',t_goal_cat:'目標類別',t_goal_template:'快速範本（點選套用）',
+    t_goal_desc_ph:'目標描述，例如：運動 20 天',t_goal_num_ph:'目標數字（選填）',t_goal_unit_ph:'單位（天/元/次…）',
+    t_save_goal:'儲存目標',t_cancel_btn:'取消',
+    t_custom:'自訂任務',t_pack:'📦 模板',t_add:'＋ 新增',
+    t_task_input_ph:'輸入任務名稱，例如：游泳 30 分鐘',
+    t_domain:'領域（自動偵測，點選可調整）',
+    t_weekly:'每週',t_monthly:'每月',t_yearly:'每年',
+    t_diff:'難度（自動判斷，可手動調整）',
+    t_easy:'⭐ 簡單',t_medium:'⭐⭐ 中等',t_hard:'⭐⭐⭐ 難',
+    t_pts_hint:'請輸入任務名稱',t_confirm_add:'新增',
+    s_notif:'🔔 週日結算提醒',s_notif_sub:'每週日提醒你完成結算',s_notif_on:'開啟',s_notif_off:'關閉',s_notif_active:'已開啟 · 每週日提醒結算',s_notif_denied:'已被封鎖，請至瀏覽器設定開啟',s_notif_blocked:'無法開啟',s_notif_no_support:'此裝置不支援通知',
+    s_weekly_tab:'每週',s_monthly_tab:'每月',s_yearly_tab:'每年',
+    s_w_title:'每週結算',s_w_badge:'週日',
+    s_finance_hd:'💰 財務消費',s_finance_sub:'佔財務 5分，自動從每日記帳計算',
+    s_work_hd:'💼 工作',s_work_sub:'佔工作 7分，自動從每日自評計算',
+    s_learning:'本週學到什麼新東西？',s_learning_bonus:'填寫 +1 分',s_learning_ph:'技能、知識、工具、洞察…（填寫即加分）',
+    s_work_note_lbl:'本週工作心得',s_work_note_sub:'（選填）',s_work_note_ph:'這週最大的收穫或挑戰…',
+    s_social_hd:'🤝 社交',s_social_sub:'1天4分，2天+8分，有心得+2，最高10分，自動計算',
+    s_social_note_lbl:'本週社交心得',s_social_note_sub:'（選填）',s_social_note_ph:'印象最深的互動或關係心得…',
+    s_mental_hd:'🧠 心理',s_mental_sub:'反思 +1 分',
+    s_reflection:'本週回顧與反思',s_reflection_bonus:'填寫 +1 分',s_reflection_ph:'這週情緒狀態、壓力來源或讓自己開心的事…',
+    s_save_weekly:'儲存本週結算',
+    s_m_title:'每月結算',s_m_badge:'月底',
+    s_health_hd:'🏃 健康',s_health_sub:'自動從每日紀錄計算',
+    s_health_goal:'本月健康目標有達成嗎？',s_goal_bonus:' (+2 / −1 分)',
+    s_achieved:'✅ 達成了',s_not_achieved:'❌ 未達成',
+    s_what_done:'達成了什麼／還差什麼？',s_what_done_sub:'（選填）',
+    s_health_goal_note_ph:'本月健康目標的回顧…',s_work_goal_note_ph:'本月工作目標的回顧…',s_social_goal_note_ph:'本月社交目標的回顧…',s_month_review_ph:'這個月的收穫、遺憾或下個月計畫…',
+    s_finance_m_hd:'💰 財務',s_finance_m_sub:'佔財務 3分',
+    s_saving:'本月有儲蓄或投資行動嗎？',s_fin_report:'本月有整理財務報告嗎？',
+    s_work_m_hd:'💼 工作',s_work_m_sub:'自動從每日自評計算',
+    s_work_goal:'本月工作目標有達成嗎？',
+    s_social_m_hd:'🤝 社交',s_social_m_sub:'1天4分，2天+8分，有心得+2，最高10分',
+    s_social_goal:'本月社交目標有達成嗎？',
+    s_mental_m_hd:'🧠 心理',s_mental_m_sub:'月回顧 +1 分',
+    s_month_review:'本月回顧',s_review_bonus:'填寫 +1 分',
+    s_save_monthly:'儲存本月結算',
+    s_y_title:'每年設定',
+    s_budget:'💰 每月消費預算',s_budget_sub:'週預算自動換算（÷4），影響財務日分計算',
+    s_save_budget:'儲存預算',
+    s_dim_names:'自訂維度名稱',s_dim_default:'留空則使用預設名稱',s_save_dims:'儲存名稱',
+    s_done_weekly:'✅ 本週結算已完成',s_done_monthly:'✅ 本月結算已完成',
+    h_review_title:'📅 回顧',h_trend_title:'趨勢分析',
+    h_trend_mo:'月趨勢（週）',h_trend_yr:'年趨勢（月）',h_trend_xp:'XP 進度',
+    h_compare:'📊 本月 vs 上月',h_mood_tags_title:'💭 心情標籤統計',
+    h_week_hist:'週歷史紀錄',h_spend_title:'💸 消費統計',
+    h_ach_title:'成就系統 🏅',h_cloud:'☁️ Google 雲端同步',
+    h_shortcuts_title:'🍎 Apple Shortcuts 捷徑',h_backup:'資料備份 & 匯出',
+    h_rev_mo:'月',h_rev_yr:'年',
+    w_title:'歡迎來到 Life RPG',w_sub:'量化你的成長，把生活過成遊戲',
+    w_feat1:'五維雷達圖追蹤',w_feat1_sub:'健康・財務・工作・社交・心理',
+    w_feat2:'每天 90 秒打卡',w_feat2_sub:'運動、睡眠、心情、花費⋯一鍵紀錄',
+    w_feat3:'XP 升等 + 成就解鎖',w_feat3_sub:'連續打卡累積等級，週均分達標有獎勵',
+    w_name_ph:'你的名字',w_budget_lbl:'💰 每月預算（NT$）',w_start:'開始 →',
+    dim_health:'健康',dim_finance:'財務',dim_work:'工作',dim_social:'社交',dim_mental:'心理',
+    lv_names:['新手','見習生','實踐者','探索者','成長者','熟練者','自律者','掌控者','挑戰者','傳說'],
+    xp_to_next:'距下一級',xp_max:'已達最高等級',xp_unit:'XP',
+    week_score:'週總分',month_score:'月總分',
+    no_data:'尚無數據',no_data_sub:'開始每日打卡 + 每週結算後會出現',
+    week_lbl:'週',month_lbl:'月',
+    his_no_rec:'還沒有任何紀錄',his_no_check:'未打卡',
+    his_expand:'▼ 展開',his_collapse:'▲ 收合',
+    his_date:'日期',his_ex:'運動',his_sl:'睡眠',his_mood:'心情',his_spend:'記帳',
+    his_state:'狀態',his_social:'社交',his_work_log:'工作成就 / 明日',
+    his_mood_tags:'心情標籤',his_gratitude:'感恩三件事',his_work_done:'今日完成',
+    his_tmr:'明日待辦',his_social_note:'社交心得',his_spend_detail:'花費說明',his_discomfort:'今日困擾',
+    spend_no_data:'尚無消費紀錄 💪',spend_month:'本月花費',spend_recent:'最近消費明細',
+    spend_cnt:'筆',
+    mo_vs_last:'本月 vs 上月',
+    settle_hint_learning:'學習筆記 +1分',settle_hint_reflection:'週反思 +1分',settle_hint_prefix:'⚠️ 填完可加分：',
+    week_spend_auto:'本週花費',week_spend_budget:'預算',week_spend_days:'天記帳',
+    week_spend_no:'本週尚無每日記帳資料，請在「每日」tab 記錄花費',
+    week_work_auto:'本週',week_work_days:'天自評：平均',week_work_no:'本週尚無工作自評，請在「每日」tab 填寫',
+    week_social_auto:'本週社交',week_social_base:'基礎',week_social_note_bonus:' + 心得 +2',week_social_no:'本週尚無社交打卡，請在「每日」tab 填寫',
+    month_health_auto:'本月',month_health_days:'天記錄：運動',month_health_sl:'天 · 充足睡眠',month_health_food:'天 · 忌口',month_health_no:'本月尚無每日健康紀錄',
+    month_work_auto:'本月',month_work_days:'天工作自評：平均',month_work_no:'本月尚無工作自評紀錄',
+    month_social_auto:'本月社交',month_social_note:'（每週分別計算，有心得+2，週最高10分）',month_social_no:'本月尚無社交打卡紀錄',
+    reward_good_t:'🏆 達標週',reward_good_d:'你完成了本週目標！放鬆享受吧～',
+    reward_ok_t:'💪 繼續保持',reward_ok_d:'本週表現不錯，下週繼續努力！',
+    reward_bad_t:'🤲 懲罰週',reward_bad_d:'本週總分低於 5 分，需完成一項社區貢獻。',
+    reward_cur_t:'⏳ 本週進行中',reward_cur_d:'繼續記錄，週日結算後看成果',
+  },
+  en:{
+    nav_home:'Home',nav_daily:'Daily',nav_tasks:'Tasks',nav_settle:'Settle',nav_history:'History',
+    stat_week:'Week Score',stat_xp:'Total XP',stat_streak:'Win Streak',
+    sync_login:'☁️ Sign in to enable cloud sync',
+    theme_auto:'⚙️ Auto',theme_zen:'🌙 Dark',theme_warm:'☀️ Light',
+    h_radar:'Growth Radar',h_score_rules:'Score Rules ℹ️',
+    h_this_week:'This Week',h_this_month:'This Month',h_prev_week:'Last Week',h_prev_month:'Last Month',
+    h_dim_detail:'Dimension Details',h_week_status:'Weekly Status',h_rules:'Rules ℹ️',
+    h_rule_good_txt:'Target week — free spending, relax!',
+    h_rule_ok_txt:'Keep it up — push harder next week',
+    h_rule_bad_txt:'Penalty week — complete a community contribution',
+    h_rule_formula:'Score = (Health + Finance + Work + Social + Mental) ÷ 5, each 0–15 pts',
+    d_title:'Daily Log',d_today:'Today',
+    d_done:'✅ Today\'s log complete',
+    d_retro_btn:'Back to Today →',d_retro_save:'Save Retroactive',d_edit_save:'Update Log',
+    d_health:'🏃 Health',
+    d_exercise_q:'Did you exercise today?',
+    d_sleep_q:'Did you sleep 7+ hours last night?',
+    d_junk_q:'Did you eat junk food today?',d_junk_sub:'(fried food, sweets, heavy meals)',
+    d_phone_q:'Phone use ≤ 7 hrs?',d_phone_sub:'counts for Mental',
+    d_yes:'✅ Yes',d_no:'❌ No',
+    d_yes_phone:'✅ Controlled',d_no_phone:'📱 Over limit',d_yes_junk:'🍔 Yes, ate',
+    d_spend:'💰 Today\'s Spending',
+    d_how_much:'Total spent today?',d_how_much_sub:'(NT$, enter 0 if none)',
+    d_spend_what:'What did you spend on?',d_spend_what_ph:'e.g. lunch, clothes, gear…',d_spend_cat:'Category',
+    d_cat_food:'🍴 Food',d_cat_transport:'🚌 Transport',d_cat_shop:'🛍️ Shopping',
+    d_cat_fun:'🎮 Entertainment',d_cat_social:'🤝 Social',d_cat_other:'📦 Other',
+    d_mood:'🧠 Mood Log',d_how_feel:'How are you feeling today?',
+    d_mood_tags_lbl:'Mood keywords (multi-select)',
+    d_gratitude_lbl:'Gratitude',d_gratitude_sub:'(one is enough, more is better)',
+    d_gr1_ph:'1. What are you grateful for today?',d_gr2_ph:'2. (optional)',d_gr3_ph:'3. (optional)',
+    d_notes_lbl:'Today\'s thoughts',d_notes_sub:'(optional)',d_notes_ph:'Today\'s feelings, ideas, or anything worth noting…',
+    d_work:'💼 Work Review',d_work_done:'Key tasks done today',
+    d_work_state:'Work state today',d_work_tmr:'Tomorrow\'s priorities',
+    d_work_score:'Work self-rating (1-5)',
+    d_ws_energy:'🔥 Full energy',d_ws_ok:'😐 Normal',d_ws_lazy:'😴 Slacking',d_ws_stress:'😵 Stressed',
+    d_social:'🤝 Today\'s Social',d_social_q:'Any social interactions today?',
+    d_social_who:'With whom',d_social_who_ph:'Friend, colleague, family…',d_social_note_lbl:'Quick note',d_social_note_ph:'One sentence',
+    d_save:'Save Daily Log',
+    d_week_grid:'This Week\'s Check-ins',
+    d_legend_full:'Complete',d_legend_partial:'Partial',
+    d_legend_today:'Today, not logged',d_legend_missed:'Missed',d_legend_future:'Future',
+    m_1:'Terrible',m_2:'Bad',m_3:'OK',m_4:'Good',m_5:'Great',
+    mt_0:'Happy',mt_1:'Calm',mt_2:'Anxious',mt_3:'Tired',mt_4:'Fulfilled',mt_5:'Bored',mt_6:'Grateful',mt_7:'Sad',
+    t_goals:'Goals',t_goals_sub:'Weekly · Monthly · Yearly',
+    t_w:'This Week',t_m:'This Month',t_y:'This Year',
+    t_add_goal:'＋ Add Goal',t_goal_cat:'Category',t_goal_template:'Quick templates (click to apply)',
+    t_goal_desc_ph:'Goal description, e.g. Exercise 20 days',t_goal_num_ph:'Target number (optional)',t_goal_unit_ph:'Unit (days/$/times…)',
+    t_save_goal:'Save Goal',t_cancel_btn:'Cancel',
+    t_custom:'Custom Tasks',t_pack:'📦 Packs',t_add:'＋ Add',
+    t_task_input_ph:'Enter task name, e.g. Swim 30 min',
+    t_domain:'Domain (auto-detected, click to change)',
+    t_weekly:'Weekly',t_monthly:'Monthly',t_yearly:'Yearly',
+    t_diff:'Difficulty (auto-detected, adjustable)',
+    t_easy:'⭐ Easy',t_medium:'⭐⭐ Medium',t_hard:'⭐⭐⭐ Hard',
+    t_pts_hint:'Enter task name first',t_confirm_add:'Add',
+    s_notif:'🔔 Sunday Reminder',s_notif_sub:'Weekly reminder every Sunday',s_notif_on:'Enable',s_notif_off:'Disable',s_notif_active:'Enabled · Sunday weekly reminders',s_notif_denied:'Blocked — please allow in browser settings',s_notif_blocked:'Cannot enable',s_notif_no_support:'Notifications not supported on this device',
+    s_weekly_tab:'Weekly',s_monthly_tab:'Monthly',s_yearly_tab:'Yearly',
+    s_w_title:'Weekly Settle',s_w_badge:'Sunday',
+    s_finance_hd:'💰 Finance',s_finance_sub:'5 pts, auto from daily spending',
+    s_work_hd:'💼 Work',s_work_sub:'7 pts, auto from daily self-rating',
+    s_learning:'What did you learn this week?',s_learning_bonus:'+1 pt if filled',s_learning_ph:'Skills, knowledge, tools, insights… (fill to earn point)',
+    s_work_note_lbl:'Work notes this week',s_work_note_sub:'(optional)',s_work_note_ph:'Biggest win or challenge this week…',
+    s_social_hd:'🤝 Social',s_social_sub:'1d=4pts, 2d+=8pts, note+2, max 10, auto',
+    s_social_note_lbl:'Social notes this week',s_social_note_sub:'(optional)',s_social_note_ph:'Most memorable interaction this week…',
+    s_mental_hd:'🧠 Mental',s_mental_sub:'Reflection +1 pt',
+    s_reflection:'Weekly reflection',s_reflection_bonus:'+1 pt if filled',s_reflection_ph:'Mood, stress sources, or things that made you happy this week…',
+    s_save_weekly:'Save Weekly',
+    s_m_title:'Monthly Settle',s_m_badge:'Month-end',
+    s_health_hd:'🏃 Health',s_health_sub:'Auto from daily log',
+    s_health_goal:'Did you meet your health goal?',s_goal_bonus:' (+2 / −1 pts)',
+    s_achieved:'✅ Achieved',s_not_achieved:'❌ Not achieved',
+    s_what_done:'What did/didn\'t you achieve?',s_what_done_sub:'(optional)',
+    s_health_goal_note_ph:'Review your health goal this month…',s_work_goal_note_ph:'Review your work goal this month…',s_social_goal_note_ph:'Review your social goal this month…',s_month_review_ph:'This month\'s wins, regrets, or next month\'s plan…',
+    s_finance_m_hd:'💰 Finance',s_finance_m_sub:'3 pts',
+    s_saving:'Any savings or investments this month?',s_fin_report:'Did you review your finances this month?',
+    s_work_m_hd:'💼 Work',s_work_m_sub:'Auto from daily self-rating',
+    s_work_goal:'Did you meet your work goal?',
+    s_social_m_hd:'🤝 Social',s_social_m_sub:'1d=4pts, 2d+=8pts, note+2, max 10',
+    s_social_goal:'Did you meet your social goal?',
+    s_mental_m_hd:'🧠 Mental',s_mental_m_sub:'Monthly review +1 pt',
+    s_month_review:'Monthly review',s_review_bonus:'+1 pt if filled',
+    s_save_monthly:'Save Monthly',
+    s_y_title:'Yearly Settings',
+    s_budget:'💰 Monthly Budget',s_budget_sub:'Weekly budget = ÷4, affects finance score',
+    s_save_budget:'Save Budget',
+    s_dim_names:'Custom Dimension Names',s_dim_default:'Leave blank for defaults',s_save_dims:'Save Names',
+    s_done_weekly:'✅ Weekly settle complete',s_done_monthly:'✅ Monthly settle complete',
+    h_review_title:'📅 Review',h_trend_title:'Trend Analysis',
+    h_trend_mo:'Monthly (by week)',h_trend_yr:'Yearly (by month)',h_trend_xp:'XP Progress',
+    h_compare:'📊 This Month vs Last',h_mood_tags_title:'💭 Mood Tag Stats',
+    h_week_hist:'Weekly History',h_spend_title:'💸 Spending Stats',
+    h_ach_title:'Achievements 🏅',h_cloud:'☁️ Google Cloud Sync',
+    h_shortcuts_title:'🍎 Apple Shortcuts',h_backup:'Backup & Export',
+    h_rev_mo:'Month',h_rev_yr:'Year',
+    w_title:'Welcome to Life RPG',w_sub:'Track your growth, gamify your life',
+    w_feat1:'5-Dimension Radar Tracking',w_feat1_sub:'Health · Finance · Work · Social · Mental',
+    w_feat2:'90-sec daily check-in',w_feat2_sub:'Exercise, sleep, mood, spending — one tap',
+    w_feat3:'XP Leveling + Achievements',w_feat3_sub:'Streak check-ins build levels, hit weekly targets',
+    w_name_ph:'Your name',w_budget_lbl:'💰 Monthly Budget (NT$)',w_start:'Get Started →',
+    dim_health:'Health',dim_finance:'Finance',dim_work:'Work',dim_social:'Social',dim_mental:'Mental',
+    lv_names:['Beginner','Apprentice','Practitioner','Explorer','Grower','Skilled','Disciplined','In Control','Challenger','Legend'],
+    xp_to_next:'To next level',xp_max:'Max level reached',xp_unit:'XP',
+    week_score:'Week Score',month_score:'Month Score',
+    no_data:'No data yet',no_data_sub:'Start daily logging + weekly settle to see results',
+    week_lbl:'Week',month_lbl:'Month',
+    his_no_rec:'No records yet',his_no_check:'No log',
+    his_expand:'▼ Expand',his_collapse:'▲ Collapse',
+    his_date:'Date',his_ex:'Exercise',his_sl:'Sleep',his_mood:'Mood',his_spend:'Spend',
+    his_state:'State',his_social:'Social',his_work_log:'Work done / Tomorrow',
+    his_mood_tags:'Mood tags',his_gratitude:'Gratitude',his_work_done:'Done today',
+    his_tmr:'Tomorrow',his_social_note:'Social note',his_spend_detail:'Spend detail',his_discomfort:'Notes',
+    spend_no_data:'No spending records yet 💪',spend_month:'This month',spend_recent:'Recent spending',
+    spend_cnt:'records',
+    mo_vs_last:'This Month vs Last',
+    settle_hint_learning:'Learning note +1pt',settle_hint_reflection:'Reflection +1pt',settle_hint_prefix:'⚠️ Fill to earn points: ',
+    week_spend_auto:'This week',week_spend_budget:'Budget',week_spend_days:'days logged',
+    week_spend_no:'No spending logged this week — use Daily tab to record',
+    week_work_auto:'This week',week_work_days:'day(s) rated, avg',week_work_no:'No work ratings this week — use Daily tab to fill in',
+    week_social_auto:'This week social',week_social_base:'Base',week_social_note_bonus:' + note +2',week_social_no:'No social logged this week — use Daily tab to fill in',
+    month_health_auto:'This month',month_health_days:'day(s) logged: Exercise',month_health_sl:'d · Sleep',month_health_food:'d · Clean eating',month_health_no:'No daily health records this month',
+    month_work_auto:'This month',month_work_days:'day(s) rated, avg',month_work_no:'No work ratings this month',
+    month_social_auto:'This month social',month_social_note:'(calculated per week, note+2, weekly max 10)',month_social_no:'No social logged this month',
+    reward_good_t:'🏆 Target Week',reward_good_d:'You hit your weekly goal! Enjoy and relax~',
+    reward_ok_t:'💪 Keep Going',reward_ok_d:'Good week, push harder next week!',
+    reward_bad_t:'🤲 Penalty Week',reward_bad_d:'Score below 5 — complete one community contribution.',
+    reward_cur_t:'⏳ Week in Progress',reward_cur_d:'Keep logging, results after Sunday settle',
+  }
+};
+function _T(k){return(STRINGS[_lang]||STRINGS.zh)[k]||STRINGS.zh[k]||k;}
+function getMoodTags(){return[_T('mt_0'),_T('mt_1'),_T('mt_2'),_T('mt_3'),_T('mt_4'),_T('mt_5'),_T('mt_6'),_T('mt_7')];}
+function getDimDefaults(){return{health:_T('dim_health'),finance:_T('dim_finance'),work:_T('dim_work'),social:_T('dim_social'),mental:_T('dim_mental')};}
+function _buildWelcomeBoxHTML(name,budget){
+  const langBtnStyle=(l)=>`padding:5px 16px;border-radius:20px;font-size:.82rem;font-weight:700;border:1.5px solid rgba(255,255,255,.2);background:${_lang===l?'rgba(99,102,241,.3)':'rgba(255,255,255,.07)'};color:${_lang===l?'#a5b4fc':'rgba(255,255,255,.5)'};cursor:pointer`;
+  return`<div class="welcome-icon">🎮</div>
+    <div class="welcome-title">${_T('w_title')}</div>
+    <div class="welcome-sub">${_T('w_sub')}</div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-bottom:18px">
+      <button onclick="setLang('zh')" style="${langBtnStyle('zh')}">中文</button>
+      <button onclick="setLang('en')" style="${langBtnStyle('en')}">English</button>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:22px;text-align:left">
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
+        <span style="font-size:1.2rem">📊</span>
+        <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">${_T('w_feat1')}</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">${_T('w_feat1_sub')}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
+        <span style="font-size:1.2rem">⚡</span>
+        <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">${_T('w_feat2')}</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">${_T('w_feat2_sub')}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
+        <span style="font-size:1.2rem">🏆</span>
+        <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">${_T('w_feat3')}</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">${_T('w_feat3_sub')}</div></div>
+      </div>
+    </div>
+    <input class="welcome-input" id="welcomeNameInput" value="${name}" placeholder="${_T('w_name_ph')}" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
+    <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">${_T('w_budget_lbl')}</div>
+    <input class="welcome-input" id="welcomeBudgetInput" type="number" value="${budget}" min="1000" max="200000" step="1000" inputmode="numeric" style="margin-bottom:8px">
+    <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
+      ${[15000,20000,25000,35000].map(v=>`<button onclick="document.getElementById('welcomeBudgetInput').value=${v}" style="flex:1;padding:7px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer">${v/1000}k</button>`).join('')}
+    </div>
+    <button class="welcome-btn" onclick="confirmWelcomeName()">${_T('w_start')}</button>`;
+}
+function setLang(l){
+  _lang=l;
+  try{localStorage.setItem(LANG_KEY,l);}catch(e){}
+  document.documentElement.lang=l==='en'?'en':'zh-TW';
+  const wo=document.getElementById('welcomeOverlay');
+  if(wo){
+    const savedName=document.getElementById('welcomeNameInput')?.value||'';
+    const savedBudget=document.getElementById('welcomeBudgetInput')?.value||'25000';
+    const box=wo.querySelector('.welcome-box');
+    if(box)box.innerHTML=_buildWelcomeBoxHTML(savedName,savedBudget);
+  }
+  applyLang();
+}
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{el.textContent=_T(el.dataset.i18n);});
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>{el.placeholder=_T(el.dataset.i18nPh);});
+  const tb=document.getElementById('themeBtn');
+  if(tb){const lbl={auto:_T('theme_auto'),zen:_T('theme_zen'),warm:_T('theme_warm')};tb.textContent=lbl[getThemePref()]||lbl.auto;}
+  const lb=document.getElementById('langBtn');
+  if(lb)lb.textContent=_lang==='en'?'中文':'EN';
+  const st=document.getElementById('syncTxt');
+  if(st&&!_fbUser)st.textContent=_T('sync_login');
+  if(document.getElementById('dimList'))try{renderHome();}catch(e){}
+  if(document.getElementById('taskList'))try{renderTasks();}catch(e){}
+  if(document.getElementById('wFinanceSummary'))try{renderSettle();}catch(e){}
+  if(document.getElementById('hist'))try{renderReview();renderMonthCompare();renderMoodTagStats();renderHistory();renderSpendStats();renderAchievements();renderSyncStatus();}catch(e){}
+  if(document.getElementById('moodTags'))try{renderMoodTags();}catch(e){}
+  try{renderNotifStatus();}catch(e){}
+}
 
 // ════════════════════════════════
 // DATA
@@ -1247,7 +1576,7 @@ function prevWk(w){const[yr,n]=w.split('-W');return parseInt(n)===1?`${parseInt(
 function prevMk(m){const[yr,mo]=m.split('-').map(Number);return mo===1?`${yr-1}-12`:`${yr}-${String(mo-1).padStart(2,'0')}`}
 function getMk(wkey){const days=wDays(wkey);const t=new Date(days[3]);return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`}
 function getYk(wkey){return new Date(wDays(wkey)[3]).getFullYear().toString()}
-function wkLabel(w){const[y,n]=w.split('-W');const days=wDays(w);const f=days[0].slice(5).replace('-','/');const l=days[6].slice(5).replace('-','/');return `${y}年 第${parseInt(n)}週（${f}–${l}）`;}
+function wkLabel(w){const[y,n]=w.split('-W');const days=wDays(w);const f=days[0].slice(5).replace('-','/');const l=days[6].slice(5).replace('-','/');return _lang==='en'?`${y} Week ${parseInt(n)} (${f}–${l})`:`${y}年 第${parseInt(n)}週（${f}–${l}）`;}
 
 // ════════════════════════════════
 // TASK SYSTEM
@@ -1277,6 +1606,7 @@ const DIFF_CFG={
   medium:{label:'中等',icon:'⭐⭐',color:'#818cf8',bg:'rgba(129,140,248,.12)'},
   hard: {label:'難',  icon:'⭐⭐⭐',color:'#f87171',bg:'rgba(248,113,113,.12)'},
 };
+function getDiffLabel(diff){const m={easy:'t_easy',medium:'t_medium',hard:'t_hard'};const k=m[diff];if(!k)return diff;const s=_T(k);return s.replace(/^⭐+\s*/,'');}
 
 function classifyDiff(title){
   const HARD=['英文','語言','馬拉松','深度','投資','組合','報告','專案','研究','技能','考試','挑戰','高強度','課程進度','1小時'];
@@ -1342,7 +1672,8 @@ function cumulativeXPAt(wkey){
 function getXpInfo(xp){
   let lvIdx=0;
   for(let i=0;i<XP_LEVELS.length;i++){if(xp>=XP_LEVELS[i][0])lvIdx=i;}
-  const [threshold,lv,title,reward]=XP_LEVELS[lvIdx];
+  const [threshold,lv,zhTitle,reward]=XP_LEVELS[lvIdx];
+  const title=(STRINGS[_lang]?.lv_names?.[lvIdx])||zhTitle;
   const next=XP_NEXT[lvIdx];
   const pct=next===Infinity?100:Math.round((xp-threshold)/(next-threshold)*100);
   const xpToNext=next===Infinity?0:next-xp;
@@ -1431,7 +1762,8 @@ ${r('週 / 月結算',weeklyXP+monthlyXP)}
 function showLvModal(){
   const totalXP=getTotalXP();
   const cur=getXpInfo(totalXP);
-  document.getElementById('lvList').innerHTML=XP_LEVELS.map(([threshold,lv,title],i)=>{
+  document.getElementById('lvList').innerHTML=XP_LEVELS.map(([threshold,lv,zhTitle],i)=>{
+    const title=(STRINGS[_lang]?.lv_names?.[i])||zhTitle;
     const isCur=i===cur.lvIdx;
     const isDone=totalXP>=threshold;
     const next=XP_NEXT[i];
@@ -1620,15 +1952,16 @@ function rewardColors(state){
 }
 
 function reward(t, isCurrent, daysRecorded){
+  const en=_lang==='en';
   if(isCurrent){
-    if(daysRecorded===0)return{icon:'🚀',title:'本週剛開始',desc:'記錄第一天，打好本週基礎。',...rewardColors('start')};
-    if(t>=8)return{icon:'🏆',title:`已達標 · ${t.toFixed(1)} 分`,desc:'撐住！週末去好好放鬆一下，你值得。',...rewardColors('great')};
-    if(t>=5)return{icon:'📊',title:`進行中 · ${t.toFixed(1)} 分`,desc:`距達標（8.0）還差 ${(8-t).toFixed(1)} 分，週還沒結束！`,...rewardColors('ok')};
-    return{icon:'⚡',title:`加把勁 · ${t.toFixed(1)} 分`,desc:`本週還有機會，先把分數拉到 5.0 穩住局面。`,...rewardColors('low')};
+    if(daysRecorded===0)return{icon:'🚀',title:en?'Week just started':'本週剛開始',desc:en?'Log day 1, build a solid foundation.':'記錄第一天，打好本週基礎。',...rewardColors('start')};
+    if(t>=8)return{icon:'🏆',title:en?`On target · ${t.toFixed(1)} pts`:`已達標 · ${t.toFixed(1)} 分`,desc:en?'Keep it up! Enjoy the weekend, you deserve it.':'撐住！週末去好好放鬆一下，你值得。',...rewardColors('great')};
+    if(t>=5)return{icon:'📊',title:en?`In progress · ${t.toFixed(1)} pts`:`進行中 · ${t.toFixed(1)} 分`,desc:en?`${(8-t).toFixed(1)} pts to target (8.0), week isn't over!`:`距達標（8.0）還差 ${(8-t).toFixed(1)} 分，週還沒結束！`,...rewardColors('ok')};
+    return{icon:'⚡',title:en?`Push harder · ${t.toFixed(1)} pts`:`加把勁 · ${t.toFixed(1)} 分`,desc:en?'Still a chance — aim for 5.0 first to stabilize.':'本週還有機會，先把分數拉到 5.0 穩住局面。',...rewardColors('low')};
   }
-  if(t>=8)return{icon:'🏆',title:'恭喜達標！',desc:'來場放鬆之旅吧，這週你做得很好。',...rewardColors('great')};
-  if(t>=5)return{icon:'💪',title:'繼續保持',desc:'距離獎勵還差一點，下週再衝。',...rewardColors('ok')};
-  return{icon:'🤲',title:'懲罰週 — 完成社區貢獻',desc:'這週沒有好好照顧自己，用行動照顧他人：志工、幫鄰居、捐款。',...rewardColors('bad')};
+  if(t>=8)return{icon:'🏆',title:en?'Target reached!':'恭喜達標！',desc:en?'Take a relaxing break — you had a great week.':'來場放鬆之旅吧，這週你做得很好。',...rewardColors('great')};
+  if(t>=5)return{icon:'💪',title:en?'Keep going':'繼續保持',desc:en?'Almost there — push harder next week.':'距離獎勵還差一點，下週再衝。',...rewardColors('ok')};
+  return{icon:'🤲',title:en?'Penalty week — community contribution':'懲罰週 — 完成社區貢獻',desc:en?'Didn\'t take good care this week — give back: volunteer, help a neighbor, donate.':'這週沒有好好照顧自己，用行動照顧他人：志工、幫鄰居、捐款。',...rewardColors('bad')};
 }
 
 // ════════════════════════════════
@@ -1995,7 +2328,7 @@ function showToast(msg,dur=2800){
 // RENDER HOME
 // ════════════════════════════════
 let RC=null,RV='week';
-function setRV(v){RV=v;document.querySelectorAll('.rtab').forEach((el,i)=>el.classList.toggle('active',['week','month'][i]===v));document.getElementById('curLbl').textContent=v==='week'?'本週':'本月';document.getElementById('prvLbl').textContent=v==='week'?'上週':'上月';renderHome();}
+function setRV(v){RV=v;document.querySelectorAll('.rtab').forEach((el,i)=>el.classList.toggle('active',['week','month'][i]===v));document.getElementById('curLbl').textContent=v==='week'?_T('h_this_week'):_T('h_this_month');document.getElementById('prvLbl').textContent=v==='week'?_T('h_prev_week'):_T('h_prev_month');renderHome();}
 
 function renderHome(){
   const curWk=wk(),curMk=mk();
@@ -2013,8 +2346,8 @@ function renderHome(){
   document.getElementById('hLv').textContent=`${xpInfo.lv} ${xpInfo.title}`;
   document.getElementById('xpBar').style.width=xpInfo.pct+'%';
   document.getElementById('xpDetail').textContent=xpInfo.xpToNext>0
-    ?`距下一級 ${xpInfo.xpToNext} XP`
-    :'已達最高等級';
+    ?`${_T('xp_to_next')} ${xpInfo.xpToNext} ${_T('xp_unit')}`
+    :_T('xp_max');
 
   // Badges
   const data=db();
@@ -2029,29 +2362,30 @@ function renderHome(){
   const ptColors=_theme==='warm'?warmPts:DIMS.map(d=>d.color);
   const cmpColor=_theme==='warm'?'rgba(160,71,28,.5)':_theme==='zen'?'rgba(200,203,214,.4)':'rgba(34,211,238,.45)';
   const cmpBg=_theme==='warm'?'rgba(160,71,28,.07)':_theme==='zen'?'rgba(200,203,214,.04)':'rgba(34,211,238,.07)';
-  const ds=[{label:RV==='week'?'本週':'本月',data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:tc.radarBg,borderColor:tc.radarBorder,pointBackgroundColor:ptColors,pointBorderColor:tc.radarPointBorder,pointRadius:5,borderWidth:2.5}];
-  if(prv&&prv.total>0)ds.push({label:RV==='week'?'上週':'上月',data:DIMS.map(d=>prv[d.key]),backgroundColor:cmpBg,borderColor:cmpColor,pointBackgroundColor:cmpColor,pointRadius:3,borderWidth:1.5});
+  const ds=[{label:RV==='week'?_T('h_this_week'):_T('h_this_month'),data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:tc.radarBg,borderColor:tc.radarBorder,pointBackgroundColor:ptColors,pointBorderColor:tc.radarPointBorder,pointRadius:5,borderWidth:2.5}];
+  if(prv&&prv.total>0)ds.push({label:RV==='week'?_T('h_prev_week'):_T('h_prev_month'),data:DIMS.map(d=>prv[d.key]),backgroundColor:cmpBg,borderColor:cmpColor,pointBackgroundColor:cmpColor,pointRadius:3,borderWidth:1.5});
   RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:15,ticks:{stepSize:3,font:{size:10},color:tc.radarTick,backdropColor:'transparent'},grid:{color:tc.radarGrid},angleLines:{color:tc.radarAngle},pointLabels:{font:{size:13,weight:'700'},color:tc.radarLabel}}},plugins:{legend:{display:false}}}});
 
   // Dim list
   const el=document.getElementById('dimList');
-  if(!cur||cur.total===0){el.innerHTML=`<div class="empty"><div class="ei">📊</div><p>尚無數據<br>開始每日打卡 + 每週結算後會出現</p></div>`;document.getElementById('rwCard').style.display='none';return;}
+  if(!cur||cur.total===0){el.innerHTML=`<div class="empty"><div class="ei">📊</div><p>${_T('no_data')}<br>${_T('no_data_sub')}</p></div>`;document.getElementById('rwCard').style.display='none';return;}
 
   function srcTxt(d){
     if(RV!=='week')return'';
     const b=ws._bonus,W=ws._W,M=ws._M;
-    const lnk=`<span onclick="go('settle')" style="color:#f59e0b;cursor:pointer;text-decoration:underline dotted">未填→</span>`;
+    const lnk=`<span onclick="go('settle')" style="color:#f59e0b;cursor:pointer;text-decoration:underline dotted">${_lang==='en'?'fill→':'未填→'}</span>`;
     const now=new Date();
     const lastWeekOfMonth=(new Date(now.getFullYear(),now.getMonth()+1,0).getDate()-now.getDate())<7;
-    const t={
-      health:`日 運動${ws._ex}天 睡眠${ws._sl}天 忌口${ws._fried}天 | 月 目標${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':lnk}${b.health?` | 任務 +${b.health.toFixed(1)}`:''}`,
-      finance:ws._spendDays>0?`本週 <span style="color:${ws._weeklySpend>ws._weeklyBudget?'#f87171':'#34d399'};font-weight:600">NT$${ws._weeklySpend.toLocaleString()}</span> / ${Math.round(ws._weeklyBudget).toLocaleString()} | 月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`:
-        `月 儲蓄${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${b.finance?` | 任務 +${b.finance.toFixed(1)}`:''}`,
-      work:`週 自評 ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/10 學習${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | 月 目標${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${b.work?` | 任務 +${b.work.toFixed(1)}`:''}`,
-      social:`週 社交 ${ws._scDays??0}天（${(ws._socialWeek??0).toFixed(0)}分）| 月 目標${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':lnk}${b.social?` | 任務 +${b.social.toFixed(1)}`:''}`,
-      mental:`日 心情${ws._mood>0?ws._mood.toFixed(1):'無'}/5 手機${ws._phone??0}天達標 | 週反思${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):lnk)}${(lastWeekOfMonth||M.monthly_review_note)?` | 月回顧${M.monthly_review_note?'✓':lnk}`:''}${b.mental?` | 任務 +${b.mental.toFixed(1)}`:''}`,
+    const task_bonus=(n)=>n?` | ${_lang==='en'?'Task':'任務'} +${n.toFixed(1)}`:'';
+    const srcMap={
+      health:`${_lang==='en'?'Ex':'運動'}${ws._ex}d ${_lang==='en'?'Sl':'睡眠'}${ws._sl}d ${_lang==='en'?'Diet':'忌口'}${ws._fried}d | ${_lang==='en'?'Mo Goal':'月目標'}${M.health_goal_met===true?'✓':M.health_goal_met===false?'✗':lnk}${task_bonus(b.health)}`,
+      finance:ws._spendDays>0?`${_lang==='en'?'Wk':'本週'} <span style="color:${ws._weeklySpend>ws._weeklyBudget?'#f87171':'#34d399'};font-weight:600">NT$${ws._weeklySpend.toLocaleString()}</span> / ${Math.round(ws._weeklyBudget).toLocaleString()} | ${_lang==='en'?'Save':'儲蓄'}${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${task_bonus(b.finance)}`:
+        `${_lang==='en'?'Mo Save':'月儲蓄'}${M.saving!==undefined?(M.saving?'✓':'✗'):lnk}${task_bonus(b.finance)}`,
+      work:`${_lang==='en'?'Rating':'自評'} ${ws._workBase!==undefined?ws._workBase.toFixed(1):'—'}/10 ${_lang==='en'?'Learn':'學習'}${W.learning_note?'✓':(W.learning!==undefined?(W.learning?'✓':'—'):lnk)} | ${_lang==='en'?'Mo Goal':'月目標'}${M.work_goal_met===true?'✓':M.work_goal_met===false?'✗':lnk}${task_bonus(b.work)}`,
+      social:`${_lang==='en'?'Social':'社交'} ${ws._scDays??0}d（${(ws._socialWeek??0).toFixed(0)}${_lang==='en'?'pt':'分'}）| ${_lang==='en'?'Mo Goal':'月目標'}${M.social_goal_met===true?'✓':M.social_goal_met===false?'✗':lnk}${task_bonus(b.social)}`,
+      mental:`${_lang==='en'?'Mood':'心情'}${ws._mood>0?ws._mood.toFixed(1):_lang==='en'?'—':'無'}/5 ${_lang==='en'?'Phone':'手機'}${ws._phone??0}d | ${_lang==='en'?'Reflect':'週反思'}${W.mental_note?'✓':(W.reflection!==undefined?(W.reflection?'✓':'✗'):lnk)}${(lastWeekOfMonth||M.monthly_review_note)?` | ${_lang==='en'?'Mo Rev':'月回顧'}${M.monthly_review_note?'✓':lnk}`:''}${task_bonus(b.mental)}`,
     };
-    return t[d.key]||'';
+    return srcMap[d.key]||'';
   }
 
   el.innerHTML=DIMS.map(d=>{
@@ -2059,7 +2393,7 @@ function renderHome(){
     const diff=prv?(s-prv[d.key]).toFixed(1):null;
     const dc=diff!==null?(parseFloat(diff)>=0?'#10b981':'#ef4444'):'';
     return`<div class="dim-row"><div class="dim-ico">${d.icon}</div><div class="dim-body"><div class="dim-name" style="color:${d.color}">${d.label}</div>${RV==='week'?`<div class="dim-src">${srcTxt(d)}</div>`:''}<div class="dim-bar"><div class="dim-fill" style="width:${pct}%;background:${d.color}"></div></div></div><div class="dim-right"><div class="dim-score" style="color:${d.color}">${s.toFixed(1)}</div>${diff!==null?`<div class="dim-diff" style="color:${dc}">${parseFloat(diff)>=0?'▲':'▼'}${Math.abs(diff)}</div>`:''}</div></div>`;
-  }).join('')+`<div class="total-row"><span class="total-lbl">${RV==='week'?'週':'月'}總分</span><span class="total-val">${cur.total.toFixed(1)} / 10</span></div>`;
+  }).join('')+`<div class="total-row"><span class="total-lbl">${RV==='week'?_T('week_score'):_T('month_score')}</span><span class="total-val">${cur.total.toFixed(1)} / 10</span></div>`;
 
   if(RV==='week'){
     const isCurrent=curWk===wk();
@@ -2088,8 +2422,8 @@ function renderDaily(){
 
   // Retro banner + labels
   document.getElementById('retroBanner').style.display=isRetro?'block':'none';
-  document.getElementById('editDayInfo').textContent=isDatePast?targetDay:'今天';
-  document.getElementById('btnSaveDaily').textContent=isRetro?'儲存補救紀錄':isEditPast?'更新紀錄':'完成今日紀錄';
+  document.getElementById('editDayInfo').textContent=isDatePast?targetDay:_T('d_today');
+  document.getElementById('btnSaveDaily').textContent=isRetro?_T('d_retro_save'):isEditPast?_T('d_edit_save'):_T('d_save');
 
   // Done badge
   const isComplete=isDayComplete(todayLog);
@@ -2228,7 +2562,7 @@ function togglePackPanel(){
 function renderPackPanel(){
   const data=db();
   const existingTitles=new Set((data.tasks||[]).map(t=>t.title));
-  const freqLbl={weekly:'週',monthly:'月',yearly:'年'};
+  const freqLbl=_lang==='en'?{weekly:'W',monthly:'M',yearly:'Y'}:{weekly:'週',monthly:'月',yearly:'年'};
   document.getElementById('packPanel').innerHTML=TASK_PACKS.map(pack=>{
     const taskRows=pack.tasks.map(t=>{
       const exists=existingTitles.has(t.title);
@@ -2328,11 +2662,13 @@ function setDiff(d){
 
 function renderPtsPreview(){
   const el=document.getElementById('ptsPreview');
-  if(!selDims.length){el.innerHTML='<span style="color:rgba(255,255,255,.38)">請選擇至少一個領域</span>';return;}
+  if(!selDims.length){el.innerHTML=`<span style="color:rgba(255,255,255,.38)">${_lang==='en'?'Select at least one domain':'請選擇至少一個領域'}</span>`;return;}
   const pts=taskPtsPerDim(selDims),xp=taskXPVal(taskFreq,taskDiff);
   const icons=selDims.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join(' ');
   const dc=DIFF_CFG[taskDiff];
-  el.innerHTML=`完成可得：<b style="color:#4f46e5">${icons} 各 +${pts}分</b> · <b style="color:#f59e0b">+${xp} XP</b> · <span style="color:${dc.color};font-weight:700">${dc.icon} ${dc.label}</span>`;
+  const completeLbl=_lang==='en'?'On complete:':'完成可得：';
+  const ptsUnit=_lang==='en'?` +${pts}pt each`:`各 +${pts}分`;
+  el.innerHTML=`${completeLbl}<b style="color:#4f46e5">${icons}${ptsUnit}</b> · <b style="color:#f59e0b">+${xp} XP</b> · <span style="color:${dc.color};font-weight:700">${dc.icon} ${getDiffLabel(taskDiff)}</span>`;
 }
 
 function submitTask(){
@@ -2382,7 +2718,7 @@ function cycleDiff(id){
   t.xpEarned=(t.completedPeriods||[]).length*taskXPVal(t.frequency,newDiff);
   dbS(data);renderTasks();renderHome();
   const dc=DIFF_CFG[newDiff];
-  showToast(`${dc.icon} 難度改為 ${dc.label}，XP 已更新`);
+  showToast(`${dc.icon} ${_lang==='en'?'Difficulty set to '+getDiffLabel(newDiff)+', XP updated':'難度改為 '+getDiffLabel(newDiff)+'，XP 已更新'}`);
 }
 
 function deleteTask(id){
@@ -2395,7 +2731,11 @@ function deleteTask(id){
 function renderTasks(){
   const data=db();const tasks=data.tasks||[];
   const curPeriods={weekly:wk(),monthly:mk(),yearly:yk()};
-  const freqCfg=[
+  const freqCfg=_lang==='en'?[
+    {f:'weekly', label:'Weekly Tasks',badge:'fb-w',icon:'📅'},
+    {f:'monthly',label:'Monthly Tasks',badge:'fb-m',icon:'🗓️'},
+    {f:'yearly', label:'Yearly Tasks',badge:'fb-y',icon:'🎯'},
+  ]:[
     {f:'weekly', label:'週任務',badge:'fb-w',icon:'📅'},
     {f:'monthly',label:'月任務',badge:'fb-m',icon:'🗓️'},
     {f:'yearly', label:'年任務',badge:'fb-y',icon:'🎯'},
@@ -2419,14 +2759,14 @@ function renderTasks(){
         <button class="task-check${isDone?' done':''}" onclick="completeTask('${t.id}')">${isDone?'✓':''}</button>
         <div class="task-body">
           <div class="task-title">${t.title}</div>
-          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="點擊切換難度">${dc.icon} ${dc.label}</button><span class="task-pts">各+${pts}分</span><span class="task-xp">+${xp}XP</span></div>
+          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button><span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span><span class="task-xp">+${xp}XP</span></div>
         </div>
         <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
       </div>`;
     });
     html+='</div>';
   });
-  if(!tasks.length)html=`<div class="empty"><div class="ei">✅</div><p>還沒有自訂任務<br>點擊「＋ 新增任務」開始</p></div>`;
+  if(!tasks.length)html=`<div class="empty"><div class="ei">✅</div><p>${_lang==='en'?'No tasks yet<br>Tap ＋ Add to begin':'還沒有自訂任務<br>點擊「＋ 新增任務」開始'}</p></div>`;
   document.getElementById('taskList').innerHTML=html;
   renderGoals();
 }
@@ -2454,15 +2794,15 @@ function renderSettle(){
   const spendDays2=curDays.filter(d=>data.daily[d]?.spendAmount!==undefined);
   const totalSpend=spendDays2.reduce((s,d)=>s+(data.daily[d].spendAmount||0),0);
   const finEl=document.getElementById('wFinanceSummary');
-  if(spendDays2.length>0){const over=totalSpend>weeklyBudget2;finEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週花費 <span style="font-weight:700;color:${over?'#f87171':'#34d399'}">NT$${totalSpend.toLocaleString()}</span> / 預算 NT$${Math.round(weeklyBudget2).toLocaleString()}（${spendDays2.length}/7天記帳）</div>`;}
-  else{finEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無每日記帳資料，請在「每日」tab 記錄花費</div>';}
+  if(spendDays2.length>0){const over=totalSpend>weeklyBudget2;finEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">${_T('week_spend_auto')} <span style="font-weight:700;color:${over?'#f87171':'#34d399'}">NT$${totalSpend.toLocaleString()}</span> / ${_T('week_spend_budget')} NT$${Math.round(weeklyBudget2).toLocaleString()}（${spendDays2.length}/7 ${_T('week_spend_days')}）</div>`;}
+  else{finEl.innerHTML=`<div style="font-size:.8rem;color:rgba(255,255,255,.38)">${_T('week_spend_no')}</div>`;}
   // Auto-summary: work
   const WEMOJI=['','😔','😕','😐','😊','🔥'];
   const workDays2=curDays.filter(d=>d<=today2&&data.daily[d]?.workScore);
   const avgWork=workDays2.length>0?workDays2.reduce((s,d)=>s+data.daily[d].workScore,0)/workDays2.length:null;
   const wkEl=document.getElementById('wWorkSummary');
-  if(avgWork!==null){wkEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週 ${workDays2.length} 天自評：平均 ${WEMOJI[Math.round(avgWork)]} ${avgWork.toFixed(1)} / 5（折算工作 ${(avgWork/5*10).toFixed(1)} / 10 分）</div>`;}
-  else{wkEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無工作自評，請在「每日」tab 填寫</div>';}
+  if(avgWork!==null){wkEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">${_T('week_work_auto')} ${workDays2.length} ${_T('week_work_days')} ${WEMOJI[Math.round(avgWork)]} ${avgWork.toFixed(1)} / 5${_lang==='en'?` (work ${(avgWork/5*10).toFixed(1)}/10)`:`（折算工作 ${(avgWork/5*10).toFixed(1)} / 10 分）`}</div>`;}
+  else{wkEl.innerHTML=`<div style="font-size:.8rem;color:rgba(255,255,255,.38)">${_T('week_work_no')}</div>`;}
   // Auto-summary: social
   const socialDays2=curDays.filter(d=>d<=today2&&data.daily[d]?.socialToday===true);
   const hasSocialData=curDays.some(d=>d<=today2&&data.daily[d]?.socialToday!==undefined);
@@ -2471,8 +2811,8 @@ function renderSettle(){
     const scBase2=socialDays2.length>=2?8:socialDays2.length===1?4:0;
     const scNote2=socialDays2.some(d=>(data.daily[d]?.socialNote||'').trim().length>0);
     const scTotal2=scBase2+(scNote2?2:0);
-    scEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本週社交 <span style="font-weight:700;color:#a5b4fc">${socialDays2.length} 天</span> → 基礎 ${scBase2} 分${scNote2?' + 心得 +2':''} = <span style="font-weight:700;color:#a5b4fc">${scTotal2} / 10 分</span></div>`;
-  }else{scEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本週尚無社交打卡，請在「每日」tab 填寫</div>';}
+    scEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">${_T('week_social_auto')} <span style="font-weight:700;color:#a5b4fc">${socialDays2.length}${_lang==='en'?' day(s)':' 天'}</span> → ${_T('week_social_base')} ${scBase2}${_lang==='en'?' pts':' 分'}${scNote2?_T('week_social_note_bonus'):''} = <span style="font-weight:700;color:#a5b4fc">${scTotal2} / 10${_lang==='en'?' pts':' 分'}</span></div>`;
+  }else{scEl.innerHTML=`<div style="font-size:.8rem;color:rgba(255,255,255,.38)">${_T('week_social_no')}</div>`;}
   // Load saved notes
   document.getElementById('wWorkNote').value=W.work_note||'';
   document.getElementById('wSocialNote').value=W.social_note||'';
@@ -2494,17 +2834,17 @@ function renderSettle(){
   const mSlDays=curMoDays.filter(d=>data.daily[d]?.sleep===true).length;
   const mFrDays=curMoDays.filter(d=>data.daily[d]?.fried===false).length;
   const mhEl=document.getElementById('mHealthSummary');
-  if(curMoDays.length>0){mhEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月 ${curMoDays.length} 天記錄：運動 ${mExDays} 天 · 充足睡眠 ${mSlDays} 天 · 忌口 ${mFrDays} 天</div>`;}
-  else{mhEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無每日健康紀錄</div>';}
+  if(curMoDays.length>0){mhEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">${_T('month_health_auto')} ${curMoDays.length} ${_T('month_health_days')} ${mExDays}${_lang==='en'?'d':' 天'}${_T('month_health_sl')} ${mSlDays}${_lang==='en'?'d':' 天'}${_T('month_health_food')} ${mFrDays}${_lang==='en'?'d':' 天'}</div>`;}
+  else{mhEl.innerHTML=`<div style="font-size:.8rem;color:rgba(255,255,255,.38)">${_T('month_health_no')}</div>`;}
   const mWorkDays2=curMoDays.filter(d=>data.daily[d]?.workScore);
   const mAvgWork2=mWorkDays2.length>0?mWorkDays2.reduce((s,d)=>s+data.daily[d].workScore,0)/mWorkDays2.length:null;
   const mwEl=document.getElementById('mWorkSummary');
-  if(mAvgWork2!==null){mwEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月 ${mWorkDays2.length} 天工作自評：平均 ${mAvgWork2.toFixed(1)} / 5</div>`;}
-  else{mwEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無工作自評紀錄</div>';}
+  if(mAvgWork2!==null){mwEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">${_T('month_work_auto')} ${mWorkDays2.length} ${_T('month_work_days')} ${mAvgWork2.toFixed(1)} / 5</div>`;}
+  else{mwEl.innerHTML=`<div style="font-size:.8rem;color:rgba(255,255,255,.38)">${_T('month_work_no')}</div>`;}
   const mSocialDays2=curMoDays.filter(d=>data.daily[d]?.socialToday===true).length;
   const msEl=document.getElementById('mSocialSummary');
-  if(curMoDays.some(d=>data.daily[d]?.socialToday!==undefined)){msEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">本月社交 <span style="font-weight:700;color:#a5b4fc">${mSocialDays2} 天</span>（每週分別計算，有心得+2，週最高10分）</div>`;}
-  else{msEl.innerHTML='<div style="font-size:.8rem;color:rgba(255,255,255,.38)">本月尚無社交打卡紀錄</div>';}
+  if(curMoDays.some(d=>data.daily[d]?.socialToday!==undefined)){msEl.innerHTML=`<div style="font-size:.82rem;color:rgba(255,255,255,.65)">${_T('month_social_auto')} <span style="font-weight:700;color:#a5b4fc">${mSocialDays2}${_lang==='en'?' day(s)':' 天'}</span>${_T('month_social_note')}</div>`;}
+  else{msEl.innerHTML=`<div style="font-size:.8rem;color:rgba(255,255,255,.38)">${_T('month_social_no')}</div>`;}
   if(Y.monthly_budget!==undefined){document.getElementById('ybi').value=Y.monthly_budget;document.getElementById('ybv').textContent='NT$'+Y.monthly_budget.toLocaleString();}
   // Show set goals in monthly section
   _renderGoalRef('mHealthGoalRef','m',curMk,'health');
@@ -2516,9 +2856,9 @@ function renderSettle(){
   const wHint=document.getElementById('wSettleHint');
   if(wHint){
     const wMiss=[];
-    if(!(W.learning_note||'').trim())wMiss.push('學習筆記 +1分');
-    if(!(W.mental_note||'').trim())wMiss.push('週反思 +1分');
-    wHint.innerHTML=wMiss.length?'<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:.78rem;color:#fbbf24">⚠️ 填完可加分：'+wMiss.join('、')+'</div>':'';
+    if(!(W.learning_note||'').trim())wMiss.push(_T('settle_hint_learning'));
+    if(!(W.mental_note||'').trim())wMiss.push(_T('settle_hint_reflection'));
+    wHint.innerHTML=wMiss.length?'<div style="background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);border-radius:10px;padding:9px 12px;font-size:.78rem;color:#fbbf24">'+_T('settle_hint_prefix')+wMiss.join(_lang==='en'?', ':'、')+'</div>':'';
   }
 
   // Monthly settle hint + highlight unselected goal buttons
@@ -2717,18 +3057,23 @@ function renderMoodTagStats(){
     if(tags.length){taggedDays++;tags.forEach(t=>{tagCount[t]=(tagCount[t]||0)+1;});}
   });
   const sorted=Object.entries(tagCount).sort((a,b)=>b[1]-a[1]).slice(0,5);
-  const curLabel=curM.slice(0,4)+'年'+parseInt(curM.slice(5))+'月';
-  if(!sorted.length){el.innerHTML=`<div style="color:rgba(255,255,255,.38);font-size:.8rem;padding:8px 0">${curLabel} 尚無心情標籤紀錄</div>`;return;}
+  const y=curM.slice(0,4);const m=parseInt(curM.slice(5));
+  const curLabel=_lang==='en'?`${y}/${m<10?'0'+m:m}`:`${y}年${m}月`;
+  const noTagMsg=_lang==='en'?`No mood tags logged in ${curLabel}`:`${curLabel} 尚無心情標籤紀錄`;
+  if(!sorted.length){el.innerHTML=`<div style="color:rgba(255,255,255,.38);font-size:.8rem;padding:8px 0">${noTagMsg}</div>`;return;}
   const maxCount=sorted[0][1];
   const TAG_COLORS={開心:'#34d399',平靜:'#818cf8',感恩:'#f59e0b',充實:'#a78bfa',焦慮:'#f87171',疲憊:'#94a3b8',無聊:'#64748b',沮喪:'#f87171'};
-  el.innerHTML=`<div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-bottom:10px">${curLabel}・${taggedDays} 天有標籤</div>`+
+  const tagDisplay=zhKey=>{const idx=MOOD_TAGS.indexOf(zhKey);return idx>=0?getMoodTags()[idx]:zhKey;};
+  const daysLbl=_lang==='en'?' days':' 天';
+  const taggedLbl=_lang==='en'?`${taggedDays} days with tags`:`${taggedDays} 天有標籤`;
+  el.innerHTML=`<div style="font-size:.7rem;color:rgba(255,255,255,.35);margin-bottom:10px">${curLabel}・${taggedLbl}</div>`+
     sorted.map(([tag,count])=>{
       const c=TAG_COLORS[tag]||'#818cf8';
       const pct=Math.round(count/maxCount*100);
       return`<div style="margin-bottom:9px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span style="font-size:.82rem;font-weight:600;color:${c}">${tag}</span>
-          <span style="font-size:.72rem;color:rgba(255,255,255,.4)">${count} 天</span>
+          <span style="font-size:.82rem;font-weight:600;color:${c}">${tagDisplay(tag)}</span>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.4)">${count}${daysLbl}</span>
         </div>
         <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
           <div style="height:100%;border-radius:3px;background:${c};opacity:.75;width:${pct}%"></div>
@@ -2742,24 +3087,25 @@ function renderSpendStats(){
   const data=db();
   const CAT_ICONS={飲食:'🍴',交通:'🚌',購物:'🛍️',娛樂:'🎮',社交:'🤝',其他:'📦'};
   const CATS=['飲食','交通','購物','娛樂','社交','其他'];
+  const CAT_EN={飲食:'Food',交通:'Transport',購物:'Shopping',娛樂:'Fun',社交:'Social',其他:'Other'};
+  const catName=c=>_lang==='en'?(CAT_EN[c]||c):c;
   const allDays=Object.keys(data.daily).sort().reverse();
-  // Include new spendAmount>0 logs and legacy overBudget=true logs
   const getCats=l=>Array.isArray(l.spendCategory)?l.spendCategory:(l.spendCategory?[l.spendCategory]:[]);
   const spendLogs=allDays.map(d=>({date:d,...data.daily[d]})).filter(l=>
     (l.spendAmount!==undefined&&l.spendAmount>0&&getCats(l).length>0)||(l.overBudget===true&&l.spendCategory&&l.spendAmount===undefined));
-  if(!spendLogs.length){el.innerHTML='<div style="color:rgba(255,255,255,.38);font-size:.8rem;padding:8px 0">尚無消費紀錄 💪</div>';return;}
+  if(!spendLogs.length){el.innerHTML=`<div style="color:rgba(255,255,255,.38);font-size:.8rem;padding:8px 0">${_T('spend_no_data')}</div>`;return;}
   const catMap={};const catAmt={};
   spendLogs.forEach(l=>{getCats(l).forEach(c=>{catMap[c]=(catMap[c]||0)+1;catAmt[c]=(catAmt[c]||0)+(l.spendAmount||0)/getCats(l).length;});});
   const total=spendLogs.length;const hasAmounts=spendLogs.some(l=>l.spendAmount!==undefined);
   const catChips=CATS.filter(c=>catMap[c]).map(c=>{
     const cnt=catMap[c];const pct=Math.round(cnt/total*100);const amt=catAmt[c];
-    return`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.25);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600">${CAT_ICONS[c]||'📦'} <span style="color:rgba(255,255,255,.7)">${c}</span>${hasAmounts&&amt?`<span style="color:#fbbf24">$${Math.round(amt).toLocaleString()}</span>`:`<span style="color:#fbbf24">${cnt}次</span>`}<span style="color:rgba(255,255,255,.3);font-size:.7rem">${pct}%</span></div>`;
+    return`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.25);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600">${CAT_ICONS[c]||'📦'} <span style="color:rgba(255,255,255,.7)">${catName(c)}</span>${hasAmounts&&amt?`<span style="color:#fbbf24">$${Math.round(amt).toLocaleString()}</span>`:`<span style="color:#fbbf24">${cnt}${_lang==='en'?' times':'次'}</span>`}<span style="color:rgba(255,255,255,.3);font-size:.7rem">${pct}%</span></div>`;
   }).join('');
-  const recentRows=spendLogs.slice(0,12).map(l=>{const cats=getCats(l);const catLabel=cats.map(c=>`${CAT_ICONS[c]||'📦'}${c}`).join(' ');return`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:52px;flex-shrink:0">${catLabel}</div>${l.spendAmount!==undefined?`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;min-width:56px">$${l.spendAmount.toLocaleString()}</div>`:''}<div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.spendDetail||'—'}</div></div>`;}).join('');
+  const recentRows=spendLogs.slice(0,12).map(l=>{const cats=getCats(l);const catLabel=cats.map(c=>`${CAT_ICONS[c]||'📦'}${catName(c)}`).join(' ');return`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:52px;flex-shrink:0">${catLabel}</div>${l.spendAmount!==undefined?`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;min-width:56px">$${l.spendAmount.toLocaleString()}</div>`:''}<div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.spendDetail||'—'}</div></div>`;}).join('');
   const Y2=data.yearly[dk().slice(0,4)]||{};const mBudget=Y2.monthly_budget||25000;
   const thisMonth=dk().slice(0,7);const monthTotal=spendLogs.filter(l=>l.date.startsWith(thisMonth)&&l.spendAmount!==undefined).reduce((s,l)=>s+l.spendAmount,0);
-  const monthBar=monthTotal>0?`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:4px"><span>本月花費</span><span style="color:${monthTotal>mBudget?'#f87171':'#34d399'};font-weight:700">NT$${monthTotal.toLocaleString()} / ${mBudget.toLocaleString()}</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${monthTotal>mBudget?'#f87171':'#34d399'};width:${Math.min(100,monthTotal/mBudget*100).toFixed(1)}%"></div></div></div>`:'';
-  el.innerHTML=`${monthBar}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${catChips}</div><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:4px">最近消費明細（共 ${total} 筆）</div>${recentRows}`;
+  const monthBar=monthTotal>0?`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:4px"><span>${_T('spend_month')}</span><span style="color:${monthTotal>mBudget?'#f87171':'#34d399'};font-weight:700">NT$${monthTotal.toLocaleString()} / ${mBudget.toLocaleString()}</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${monthTotal>mBudget?'#f87171':'#34d399'};width:${Math.min(100,monthTotal/mBudget*100).toFixed(1)}%"></div></div></div>`:'';
+  el.innerHTML=`${monthBar}<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">${catChips}</div><div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-bottom:4px">${_T('spend_recent')}（${_lang==='en'?total+' '+_T('spend_cnt'):'共 '+total+' '+_T('spend_cnt')}）</div>${recentRows}`;
 }
 
 function toggleWeekDetail(w){expandedWeek=expandedWeek===w?null:w;expandedDay=null;renderHistory();}
@@ -2809,9 +3155,9 @@ function renderHistory(){
   const data=db();
   const allWks=[...new Set([...Object.keys(data.weekly),...Object.keys(data.daily).map(d=>wk(new Date(d)))])].sort().reverse();
   const el=document.getElementById('hist');
-  if(!allWks.length){el.innerHTML=`<div class="empty"><div class="ei">📅</div><p>還沒有任何紀錄</p></div>`;return;}
+  if(!allWks.length){el.innerHTML=`<div class="empty"><div class="ei">📅</div><p>${_T('his_no_rec')}</p></div>`;return;}
   const MJ=['','😔','😕','😐','😊','😄'];
-  const DLBLS=['一','二','三','四','五','六','日'];
+  const DLBLS=_lang==='en'?['Mon','Tue','Wed','Thu','Fri','Sat','Sun']:['一','二','三','四','五','六','日'];
   el.innerHTML=allWks.map(w=>{
     const s=calcWeek(w);const st=s.total>=8?'🏆':s.total>=5?'💪':'🤲';
     const isExp=expandedWeek===w;
@@ -2821,7 +3167,7 @@ function renderHistory(){
       const days=wDays(w);
       const dayRows=days.map((day,i)=>{
         const log=data.daily[day];
-        if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="8" style="color:rgba(255,255,255,.2);font-size:.7rem">未打卡</td></tr>`;
+        if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="8" style="color:rgba(255,255,255,.2);font-size:.7rem">${_T('his_no_check')}</td></tr>`;
         const isDayExp=expandedDay===day;
         const socialCell=log.socialToday===true?`<div>🤝</div>${log.socialWith?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(165,180,252,.65);font-size:.62rem">${log.socialWith}</div>`:''}`:log.socialToday===false?`<span style="color:rgba(255,255,255,.25)">—</span>`:`<span style="color:rgba(255,255,255,.15)">?</span>`;
         const mainRow=`<tr style="cursor:pointer;${isDayExp?'background:rgba(99,102,241,.08)':''}" onclick="event.stopPropagation();toggleDayDetail('${day}')"><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span><div style="font-size:.55rem;color:rgba(99,102,241,.6);margin-top:2px">${isDayExp?'▲':'▼'}</div></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.phoneOK===true?'📵':log.phoneOK===false?'📱':'—'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
@@ -2829,13 +3175,13 @@ function renderHistory(){
         const gr=(log.gratitude||[]).filter(Boolean);
         const tags=(log.moodTags||[]);
         const lines=[];
-        if(tags.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">心情標籤　</span>${tags.map(t=>`<span style="background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.3);border-radius:5px;padding:2px 7px;font-size:.72rem;color:#a5b4fc;margin-right:4px">${t}</span>`).join('')}</div>`);
-        if(gr.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">感恩三件事</span>${gr.map((g,i)=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">${i+1}. ${g}</div>`).join('')}</div>`);
-        if(log.workDone)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">今日完成</span>${log.workDone.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">✅ ${l}</div>`).join('')}</div>`);
-        if(log.workTomorrow)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">明日待辦</span>${log.workTomorrow.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.5);padding:2px 0 2px 10px">→ ${l}</div>`).join('')}</div>`);
-        if(log.socialNote)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">社交心得　</span><span style="font-size:.78rem;color:rgba(165,180,252,.8)">${log.socialNote}</span></div>`);
-        if(log.spendDetail)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">花費說明　</span><span style="font-size:.78rem;color:rgba(251,191,36,.7)">${log.spendDetail}</span></div>`);
-        if(log.discomfort)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">今日困擾　</span><span style="font-size:.78rem;color:rgba(255,255,255,.55)">${log.discomfort}</span></div>`);
+        if(tags.length){const tagLabels=tags.map(zh=>{const idx=MOOD_TAGS.indexOf(zh);return idx>=0?getMoodTags()[idx]:zh;});lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_mood_tags')}　</span>${tagLabels.map(tag=>`<span style="background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.3);border-radius:5px;padding:2px 7px;font-size:.72rem;color:#a5b4fc;margin-right:4px">${tag}</span>`).join('')}</div>`);}
+        if(gr.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_gratitude')}</span>${gr.map((g,ii)=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">${ii+1}. ${g}</div>`).join('')}</div>`);
+        if(log.workDone)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_work_done')}</span>${log.workDone.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">✅ ${l}</div>`).join('')}</div>`);
+        if(log.workTomorrow)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_tmr')}</span>${log.workTomorrow.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.5);padding:2px 0 2px 10px">→ ${l}</div>`).join('')}</div>`);
+        if(log.socialNote)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_social_note')}　</span><span style="font-size:.78rem;color:rgba(165,180,252,.8)">${log.socialNote}</span></div>`);
+        if(log.spendDetail)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_spend_detail')}　</span><span style="font-size:.78rem;color:rgba(251,191,36,.7)">${log.spendDetail}</span></div>`);
+        if(log.discomfort)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_discomfort')}　</span><span style="font-size:.78rem;color:rgba(255,255,255,.55)">${log.discomfort}</span></div>`);
         const detailRow=lines.length?`<tr><td colspan="9" style="padding:10px 8px 12px;background:rgba(99,102,241,.05);border-top:1px solid rgba(99,102,241,.15)">${lines.join('')}</td></tr>`:'';
         return mainRow+detailRow;
       }).join('');
@@ -3110,10 +3456,14 @@ function setM(k,v){
 }
 
 function renderMoodTags(){
-  document.getElementById('moodTags').innerHTML=MOOD_TAGS.map(tag=>`<button class="tag-chip${selMoodTags.includes(tag)?' on':''}" onclick="toggleMoodTag('${tag}')">${tag}</button>`).join('');
+  const tags=getMoodTags();
+  document.getElementById('moodTags').innerHTML=tags.map((lbl,i)=>{
+    const zhKey=MOOD_TAGS[i];
+    return`<button class="tag-chip${selMoodTags.includes(zhKey)?' on':''}" onclick="toggleMoodTag('${zhKey}')">${lbl}</button>`;
+  }).join('');
 }
-function toggleMoodTag(tag){
-  selMoodTags=selMoodTags.includes(tag)?selMoodTags.filter(t=>t!==tag):[...selMoodTags,tag];
+function toggleMoodTag(zhKey){
+  selMoodTags=selMoodTags.includes(zhKey)?selMoodTags.filter(x=>x!==zhKey):[...selMoodTags,zhKey];
   renderMoodTags();
 }
 function onSpendAmountInput(val){
@@ -3253,8 +3603,8 @@ function renderDimNameInputs(){
   const el=document.getElementById('dimNameInputs');if(!el)return;
   el.innerHTML=DIMS.map(d=>`
     <div class="frow" style="margin-bottom:8px">
-      <div class="flbl" style="margin-bottom:4px">${d.icon} ${DIM_DEFAULTS[d.key]}</div>
-      <input type="text" id="dn_${d.key}" maxlength="8" placeholder="${DIM_DEFAULTS[d.key]}"
+      <div class="flbl" style="margin-bottom:4px">${d.icon} ${getDimDefaults()[d.key]}</div>
+      <input type="text" id="dn_${d.key}" maxlength="8" placeholder="${getDimDefaults()[d.key]}"
         value="${saved[d.key]||''}"
         style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;color:#fff;font-size:.88rem;outline:none">
     </div>`).join('');
@@ -3520,33 +3870,10 @@ function applyUserName(){
 function showWelcome(){
   const el=document.createElement('div');
   el.className='welcome-overlay';el.id='welcomeOverlay';
-  el.innerHTML=`
-    <div class="welcome-box">
-      <div class="welcome-icon">🎮</div>
-      <div class="welcome-title">歡迎來到 Life RPG</div>
-      <div class="welcome-sub">量化你的成長，把生活過成遊戲</div>
-      <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:22px;text-align:left">
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">📊</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">五維雷達圖追蹤</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">健康・財務・工作・社交・心理</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">⚡</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">每天 90 秒打卡</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">運動、睡眠、心情、花費⋯一鍵紀錄</div></div>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border-radius:11px;padding:9px 13px">
-          <span style="font-size:1.2rem">🏆</span>
-          <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">XP 升等 + 成就解鎖</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">連續打卡累積等級，週均分達標有獎勵</div></div>
-        </div>
-      </div>
-      <input class="welcome-input" id="welcomeNameInput" placeholder="你的名字" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
-      <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">💰 每月預算（NT$）</div>
-      <input class="welcome-input" id="welcomeBudgetInput" type="number" value="25000" min="1000" max="200000" step="1000" inputmode="numeric" style="margin-bottom:8px">
-      <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
-        ${[15000,20000,25000,35000].map(v=>`<button onclick="document.getElementById('welcomeBudgetInput').value=${v}" style="flex:1;padding:7px 0;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;color:rgba(255,255,255,.6);font-size:.72rem;cursor:pointer">${v/1000}k</button>`).join('')}
-      </div>
-      <button class="welcome-btn" onclick="confirmWelcomeName()">開始 →</button>
-    </div>`;
+  const box=document.createElement('div');
+  box.className='welcome-box';
+  box.innerHTML=_buildWelcomeBoxHTML('','25000');
+  el.appendChild(box);
   document.body.appendChild(el);
   // iOS keyboard fix: keep overlay within visual viewport height
   function _vvUpdate(){
@@ -4131,17 +4458,17 @@ function renderNotifStatus(){
   const btn=document.getElementById('notifToggleBtn');
   const txt=document.getElementById('notifStatusTxt');
   if(!btn||!txt)return;
-  if(!('Notification' in window)){txt.textContent='此裝置不支援通知';btn.style.display='none';return;}
+  if(!('Notification' in window)){txt.textContent=_T('s_notif_no_support');btn.style.display='none';return;}
   if(pref.enabled&&Notification.permission==='granted'){
-    txt.textContent='已開啟 · 每週日提醒結算';
-    btn.textContent='關閉';btn.style.borderColor='rgba(52,211,153,.4)';btn.style.color='#34d399';btn.style.background='rgba(52,211,153,.08)';
+    txt.textContent=_T('s_notif_active');
+    btn.textContent=_T('s_notif_off');btn.style.borderColor='rgba(52,211,153,.4)';btn.style.color='#34d399';btn.style.background='rgba(52,211,153,.08)';
     btn.disabled=false;btn.style.opacity='1';
   }else if(Notification.permission==='denied'){
-    txt.textContent='已被封鎖，請至瀏覽器設定開啟';
-    btn.textContent='無法開啟';btn.disabled=true;btn.style.opacity='.4';
+    txt.textContent=_T('s_notif_denied');
+    btn.textContent=_T('s_notif_blocked');btn.disabled=true;btn.style.opacity='.4';
   }else{
-    txt.textContent='每週日提醒你完成結算';
-    btn.textContent='開啟';btn.style.borderColor='rgba(99,102,241,.3)';btn.style.color='#818cf8';btn.style.background='rgba(99,102,241,.1)';
+    txt.textContent=_T('s_notif_sub');
+    btn.textContent=_T('s_notif_on');btn.style.borderColor='rgba(99,102,241,.3)';btn.style.color='#818cf8';btn.style.background='rgba(99,102,241,.1)';
     btn.disabled=false;btn.style.opacity='1';
   }
 }
@@ -4171,6 +4498,7 @@ applyUserName();
 if(!getUserName())showWelcome();
 const _initTab=TABS.includes(window.location.hash.slice(1))?window.location.hash.slice(1):'home';
 go(_initTab);
+applyLang();
 checkAndSendWeeklyReminder();
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
