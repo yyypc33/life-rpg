@@ -177,6 +177,12 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .task-section{margin-bottom:16px}
 .task-section-title{font-size:.72rem;font-weight:700;letter-spacing:.8px;color:#6366f1;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .task-count{background:rgba(99,102,241,.15);color:#818cf8;padding:2px 8px;border-radius:10px;font-size:.68rem;font-weight:700}
+.task-progress-wrap{margin:6px 0 10px;display:flex;align-items:center;gap:8px}
+.task-progress-track{flex:1;height:6px;background:rgba(99,102,241,.12);border-radius:99px;overflow:hidden}
+.task-progress-fill{height:100%;border-radius:99px;transition:width .4s ease;background:linear-gradient(90deg,#6366f1,#818cf8)}
+.task-progress-fill.done-all{background:linear-gradient(90deg,#10b981,#34d399);box-shadow:0 0 8px rgba(52,211,153,.35)}
+.task-progress-pct{font-size:.68rem;font-weight:700;color:#818cf8;min-width:28px;text-align:right;flex-shrink:0}
+.task-progress-pct.done-all{color:#34d399}
 .task-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(99,102,241,.1)}
 .task-item:last-child{border-bottom:none}
 .task-item.done .task-title{text-decoration:line-through;color:#4f46e5}
@@ -320,6 +326,9 @@ body.theme-zen .pts-preview{color:#8b8fa4}
 body.theme-zen .btn-save,body.theme-zen .btn-add-confirm,body.theme-zen .btn-add-task{background:linear-gradient(135deg,#2e3040,#1c1e28);box-shadow:0 4px 16px rgba(0,0,0,.5)}
 body.theme-zen .task-group-lbl,body.theme-zen .task-section-title{color:#5a5d72}
 body.theme-zen .task-count{background:rgba(90,93,114,.12);color:#8b8fa4}
+body.theme-zen .task-progress-track{background:rgba(90,93,114,.14)}
+body.theme-zen .task-progress-fill{background:linear-gradient(90deg,#5a5d72,#8b8fa4)}
+body.theme-zen .task-progress-pct{color:#8b8fa4}
 body.theme-zen .task-item{border-bottom-color:rgba(90,93,114,.1)}
 body.theme-zen .task-check{border-color:rgba(90,93,114,.28);background:rgba(6,6,10,.6)}
 body.theme-zen .task-pts{color:#5a5d72}
@@ -421,6 +430,9 @@ body.theme-warm .pts-preview{color:#b85c28}
 body.theme-warm .btn-save,body.theme-warm .btn-add-confirm,body.theme-warm .btn-add-task{background:linear-gradient(135deg,#c97240,#9e4018);box-shadow:0 4px 16px rgba(160,71,28,.28)}
 body.theme-warm .task-group-lbl,body.theme-warm .task-section-title{color:#a0471c}
 body.theme-warm .task-count{background:rgba(160,71,28,.1);color:#a0471c}
+body.theme-warm .task-progress-track{background:rgba(160,71,28,.1)}
+body.theme-warm .task-progress-fill{background:linear-gradient(90deg,#c97240,#e8956a)}
+body.theme-warm .task-progress-pct{color:#a0471c}
 body.theme-warm .task-title{color:#2c1a0a}
 body.theme-warm .task-item{border-bottom-color:rgba(160,71,28,.1)}
 body.theme-warm .task-check{border-color:rgba(160,71,28,.25);background:rgba(255,248,237,.8)}
@@ -2758,7 +2770,9 @@ function renderTasks(){
     if(!group.length)return;
     const pkey=curPeriods[f];
     const done=group.filter(t=>(t.completedPeriods||[]).includes(pkey)).length;
-    html+=`<div class="task-section"><div class="task-section-title">${icon} ${label} <span class="task-count">${done}/${group.length}</span></div>`;
+    const pct=group.length?Math.round(done/group.length*100):0;
+    const allDone=done===group.length&&group.length>0;
+    html+=`<div class="task-section"><div class="task-section-title">${icon} ${label} <span class="task-count">${done}/${group.length}</span></div><div class="task-progress-wrap"><div class="task-progress-track"><div class="task-progress-fill${allDone?' done-all':''}" style="width:${pct}%"></div></div><span class="task-progress-pct${allDone?' done-all':''}">${pct}%</span></div>`;
     // Uncompleted first
     [...group.filter(t=>!(t.completedPeriods||[]).includes(pkey)),
      ...group.filter(t=>(t.completedPeriods||[]).includes(pkey))].forEach(t=>{
