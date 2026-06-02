@@ -2720,10 +2720,11 @@ function submitTask(){
 function completeTask(id,pkey){
   const data=db();const t=(data.tasks||[]).find(x=>x.id===id);if(!t)return;
   if(!pkey)pkey=getPeriodKey(t.frequency);
+  const isCurrent=pkey===getPeriodKey(t.frequency);
   if((t.completedPeriods||[]).includes(pkey)){
     // Uncomplete
     t.completedPeriods=t.completedPeriods.filter(p=>p!==pkey);
-    t.xpEarned=Math.max(0,(t.xpEarned||0)-taskXPVal(t.frequency,t.difficulty||'medium'));
+    if(isCurrent)t.xpEarned=Math.max(0,(t.xpEarned||0)-taskXPVal(t.frequency,t.difficulty||'medium'));
     dbS(data);renderTasks();renderHome();
     showToast(`↩️ 已取消完成：${t.title}`);
   } else {
@@ -2731,11 +2732,11 @@ function completeTask(id,pkey){
     if(!t.completedPeriods)t.completedPeriods=[];
     t.completedPeriods.push(pkey);
     const xpGain=taskXPVal(t.frequency,t.difficulty||'medium');
-    t.xpEarned=(t.xpEarned||0)+xpGain;
+    if(isCurrent)t.xpEarned=(t.xpEarned||0)+xpGain;
     dbS(data);renderTasks();renderHome();
     const pts=taskPtsPerDim(t.dimensions);
     const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join('');
-    showToast(`🎉 ${t.title}！${dimIcons} 各 +${pts}分 · +${xpGain} XP`);
+    showToast(isCurrent?`🎉 ${t.title}！${dimIcons} 各 +${pts}分 · +${xpGain} XP`:`✅ ${t.title}（${_lang==='en'?'retro, no XP':'補完，不計 XP'}）${dimIcons} 各 +${pts}分`);
   }
 }
 
