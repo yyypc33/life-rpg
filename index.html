@@ -183,6 +183,13 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .task-progress-fill.full{background:linear-gradient(90deg,#059669,#34d399);box-shadow:0 0 6px rgba(52,211,153,.35)}
 .task-progress-pct{font-size:.65rem;font-weight:700;color:#818cf8;min-width:28px;text-align:right}
 .task-progress-pct.full{color:#34d399}
+.task-section-retro .task-section-title{color:#f59e0b}
+.task-section-retro .task-count{background:rgba(245,158,11,.15);color:#f59e0b}
+.task-section-retro .task-progress-bar{background:rgba(245,158,11,.12)}
+.task-section-retro .task-progress-fill{background:linear-gradient(90deg,#d97706,#fbbf24)}
+.task-section-retro .task-progress-pct{color:#f59e0b}
+.task-section-retro .task-check{border-color:rgba(245,158,11,.35)}
+.task-section-retro .task-title{color:#fde68a}
 .task-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid rgba(99,102,241,.1)}
 .task-item:last-child{border-bottom:none}
 .task-item.done .task-title{text-decoration:line-through;color:#4f46e5}
@@ -2710,9 +2717,9 @@ function submitTask(){
   renderTasks();showToast(`✅ 任務已新增：${title}`);
 }
 
-function completeTask(id){
+function completeTask(id,pkey){
   const data=db();const t=(data.tasks||[]).find(x=>x.id===id);if(!t)return;
-  const pkey=getPeriodKey(t.frequency);
+  if(!pkey)pkey=getPeriodKey(t.frequency);
   if((t.completedPeriods||[]).includes(pkey)){
     // Uncomplete
     t.completedPeriods=t.completedPeriods.filter(p=>p!==pkey);
@@ -2792,6 +2799,32 @@ function renderTasks(){
     });
     html+='</div>';
   });
+  // Prev week uncompleted weekly tasks
+  const pwkey=prevWk(wk());
+  const weeklyAll=tasks.filter(t=>t.frequency==='weekly');
+  const prevIncomplete=weeklyAll.filter(t=>!(t.completedPeriods||[]).includes(pwkey));
+  if(prevIncomplete.length){
+    const prevDone=weeklyAll.filter(t=>(t.completedPeriods||[]).includes(pwkey)).length;
+    const prevPct=weeklyAll.length?Math.round(prevDone/weeklyAll.length*100):0;
+    const prevFull=prevPct===100;
+    const retroLabel=_lang==='en'?'Last Week — Unfinished':'上週未完成';
+    html+=`<div class="task-section task-section-retro"><div class="task-section-title">⏮ ${retroLabel} <span class="task-count">${prevDone}/${weeklyAll.length}</span></div><div class="task-progress-wrap"><div class="task-progress-bar"><div class="task-progress-fill${prevFull?' full':''}" style="width:${prevPct}%"></div></div><span class="task-progress-pct${prevFull?' full':''}">${prevPct}%</span></div>`;
+    prevIncomplete.forEach(t=>{
+      const diff=t.difficulty||'medium';
+      const dc=DIFF_CFG[diff];
+      const pts=taskPtsPerDim(t.dimensions),xp=taskXPVal(t.frequency,diff);
+      const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);if(!dim)return'';return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
+      html+=`<div class="task-item">
+        <button class="task-check" onclick="completeTask('${t.id}','${pwkey}')"></button>
+        <div class="task-body">
+          <div class="task-title">${t.title}</div>
+          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button><span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span><span class="task-xp">+${xp}XP</span></div>
+        </div>
+        <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
+      </div>`;
+    });
+    html+='</div>';
+  }
   if(!tasks.length)html=`<div class="empty"><div class="ei">✅</div><p>${_lang==='en'?'No tasks yet<br>Tap ＋ Add to begin':'還沒有自訂任務<br>點擊「＋ 新增任務」開始'}</p></div>`;
   document.getElementById('taskList').innerHTML=html;
   renderGoals();
