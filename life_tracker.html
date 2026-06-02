@@ -2803,7 +2803,8 @@ function renderTasks(){
   // Prev week uncompleted weekly tasks
   const pwkey=prevWk(wk());
   const weeklyAll=tasks.filter(t=>t.frequency==='weekly');
-  const prevIncomplete=weeklyAll.filter(t=>!(t.completedPeriods||[]).includes(pwkey));
+  const pwEnd=wDays(pwkey)[6];
+  const prevIncomplete=weeklyAll.filter(t=>!(t.completedPeriods||[]).includes(pwkey)&&(t.created||'')<=pwEnd);
   if(prevIncomplete.length){
     const prevDone=weeklyAll.filter(t=>(t.completedPeriods||[]).includes(pwkey)).length;
     const prevPct=weeklyAll.length?Math.round(prevDone/weeklyAll.length*100):0;
