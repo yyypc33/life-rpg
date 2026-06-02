@@ -2513,7 +2513,7 @@ function renderDaily(){
   days.forEach((day,i)=>{
     const log=data.daily[day]||null;
     const isTd=day===today,isPast=day<today,isFuture=day>today;
-    const isEditing=day===targetDay&&isRetro;
+    const isEditing=day===targetDay&&isDatePast;
     const full=isDayComplete(log);
     // State
     let stClass;
@@ -2813,11 +2813,12 @@ function renderTasks(){
   const pwEnd=wDays(pwkey)[6];
   const prevIncomplete=weeklyAll.filter(t=>!(t.completedPeriods||[]).includes(pwkey)&&(t.created||'')<=pwEnd);
   if(prevIncomplete.length){
-    const prevDone=weeklyAll.filter(t=>(t.completedPeriods||[]).includes(pwkey)).length;
-    const prevPct=weeklyAll.length?Math.round(prevDone/weeklyAll.length*100):0;
+    const weeklyExisted=weeklyAll.filter(t=>(t.created||'')<=pwEnd);
+    const prevDone=weeklyExisted.filter(t=>(t.completedPeriods||[]).includes(pwkey)).length;
+    const prevPct=weeklyExisted.length?Math.round(prevDone/weeklyExisted.length*100):0;
     const prevFull=prevPct===100;
     const retroLabel=_lang==='en'?'Last Week — Unfinished':'上週未完成';
-    html+=`<div class="task-section task-section-retro"><div class="task-section-title">⏮ ${retroLabel} <span class="task-count">${prevDone}/${weeklyAll.length}</span></div><div class="task-progress-wrap"><div class="task-progress-bar"><div class="task-progress-fill${prevFull?' full':''}" style="width:${prevPct}%"></div></div><span class="task-progress-pct${prevFull?' full':''}">${prevPct}%</span></div>`;
+    html+=`<div class="task-section task-section-retro"><div class="task-section-title">⏮ ${retroLabel} <span class="task-count">${prevDone}/${weeklyExisted.length}</span></div><div class="task-progress-wrap"><div class="task-progress-bar"><div class="task-progress-fill${prevFull?' full':''}" style="width:${prevPct}%"></div></div><span class="task-progress-pct${prevFull?' full':''}">${prevPct}%</span></div>`;
     prevIncomplete.forEach(t=>{
       const diff=t.difficulty||'medium';
       const dc=DIFF_CFG[diff];
@@ -2827,7 +2828,7 @@ function renderTasks(){
         <button class="task-check" onclick="completeTask('${t.id}','${pwkey}')"></button>
         <div class="task-body">
           <div class="task-title">${t.title}</div>
-          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button><span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span><span class="task-xp">+${xp}XP</span></div>
+          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button><span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span><span class="task-xp" style="opacity:.4">${_lang==='en'?'no XP':'不計XP'}</span></div>
         </div>
         <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
       </div>`;
