@@ -740,7 +740,7 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
       <button class="btn-save" data-i18n="d_save" id="btnSaveDaily" onclick="saveDaily()">完成今日紀錄</button>
     </div>
     <div class="card">
-      <div class="ctitle"><span class="ctitle-info" onclick="toggleGridLegend()"><span data-i18n="d_week_grid">本週打卡紀錄</span> <i class="info-dot">i</i></span></div>
+      <div class="ctitle" style="display:flex;align-items:center;justify-content:space-between"><span class="ctitle-info" onclick="toggleGridLegend()"><span id="gridWkTitle">本週打卡紀錄</span> <i class="info-dot">i</i></span><div style="display:flex;gap:4px"><button id="btnGridPrev" onclick="shiftGridWk(-1)" style="background:none;border:1px solid rgba(99,102,241,.35);color:#818cf8;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1">‹</button><button id="btnGridNext" onclick="shiftGridWk(1)" style="background:none;border:1px solid rgba(99,102,241,.35);color:#818cf8;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:1rem;line-height:1">›</button></div></div>
       <div class="grid-legend" id="gridLegend">
         <div class="gl-row"><span class="gl-sym" style="color:#34d399">✓</span><span data-i18n="d_legend_full">完整紀錄</span></div>
         <div class="gl-row"><span class="gl-sym" style="color:#fbbf24">●</span><span data-i18n="d_legend_partial">已填寫，尚未完整</span></div>
@@ -1596,6 +1596,7 @@ function weeksOfMonth(mkey){
   return[...set];
 }
 function prevWk(w){const[yr,n]=w.split('-W');return parseInt(n)===1?`${parseInt(yr)-1}-W52`:`${yr}-W${String(parseInt(n)-1).padStart(2,'0')}`}
+function nextWk(w){const[yr,n]=w.split('-W');return parseInt(n)===52?`${parseInt(yr)+1}-W01`:`${yr}-W${String(parseInt(n)+1).padStart(2,'0')}`}
 function prevMk(m){const[yr,mo]=m.split('-').map(Number);return mo===1?`${yr-1}-12`:`${yr}-${String(mo-1).padStart(2,'0')}`}
 function getMk(wkey){const days=wDays(wkey);const t=new Date(days[3]);return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`}
 function getYk(wkey){return new Date(wDays(wkey)[3]).getFullYear().toString()}
@@ -2500,8 +2501,14 @@ function renderDaily(){
   _dot('ds_work',!!todayLog.workScore);
   _dot('ds_social',todayLog.socialToday!==undefined&&todayLog.socialToday!==null);
 
-  // Week grid — all non-future days clickable
-  const days=wDays(wk());const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
+  // Week grid — gridWk controls which week is shown
+  if(!gridWk||gridWk>wk())gridWk=wk();
+  const isCurrentWk=gridWk===wk();
+  const titleEl=document.getElementById('gridWkTitle');
+  if(titleEl)titleEl.textContent=isCurrentWk?(_lang==='en'?'This Week\'s Check-ins':'本週打卡紀錄'):wkLabel(gridWk);
+  const nextBtn=document.getElementById('btnGridNext');
+  if(nextBtn){nextBtn.style.opacity=isCurrentWk?'0.3':'1';nextBtn.disabled=isCurrentWk;}
+  const days=wDays(gridWk);const DLBLS=['一','二','三','四','五','六','日'];const MJ=['','😔','😕','😐','😊','😄'];
   let html='<div class="day-grid">';
   days.forEach((day,i)=>{
     const log=data.daily[day]||null;
@@ -3505,7 +3512,7 @@ function _renderYearReview(el,lbl){
 const DS={exercise:null,sleep:null,mood:null,fried:null};
 const WS={};
 const MS={saving:null,finance_report:null,health_goal_met:null,work_goal_met:null,social_goal_met:null};
-let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=[],selSocialToday=null,editDay=dk();
+let selMoodTags=[],selWorkState=null,selWorkScore=null,selCat=[],selSocialToday=null,editDay=dk(),gridWk='';
 
 function setD(k,v){DS[k]=v;const m={exercise:['dey','den'],sleep:['dsy','dsn']};const[y,n]=m[k];document.getElementById(y).className='ynb'+(v?' yn-y':'');document.getElementById(n).className='ynb'+(v?'':' yn-n');}
 function setFried(v){DS.fried=v;document.getElementById('dfy').className='ynb'+(v?' yn-n':'');document.getElementById('dfn').className='ynb'+(v?'':' yn-y');}
@@ -3572,7 +3579,14 @@ function setSocialToday(v){
   if(!v){document.getElementById('socialWith').value='';document.getElementById('socialNote').value='';}
 }
 function editPastDay(day){editDay=day;renderDaily();}
-function backToToday(){editDay=dk();renderDaily();}
+function backToToday(){editDay=dk();gridWk=wk();renderDaily();}
+function shiftGridWk(dir){
+  if(!gridWk||gridWk>wk())gridWk=wk();
+  const nw=dir<0?prevWk(gridWk):nextWk(gridWk);
+  if(nw>wk())return;
+  gridWk=nw;
+  renderDaily();
+}
 
 // ════════════════════════════════
 // SAVE
@@ -3906,7 +3920,7 @@ async function gistPull(){
 // ════════════════════════════════
 const TABS=['home','daily','tasks','settle','history'];
 function go(tab){
-  if(tab!=='daily')editDay=dk();
+  if(tab!=='daily'){editDay=dk();gridWk=wk();}
   TABS.forEach(t=>{document.getElementById(`view-${t}`).classList.toggle('active',t===tab);document.getElementById(`n-${t}`).classList.toggle('active',t===tab);});
   if(tab==='home')renderHome();
   if(tab==='daily')renderDaily();
