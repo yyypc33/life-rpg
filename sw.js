@@ -1,4 +1,4 @@
-const CACHE = 'life-rpg-v10';
+const CACHE = 'life-rpg-v11';
 const PRECACHE = [
   './',
   './index.html',
