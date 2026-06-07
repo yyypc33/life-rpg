@@ -1595,8 +1595,9 @@ function weeksOfMonth(mkey){
   for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1))set.add(wk(d));
   return[...set];
 }
-function prevWk(w){const[yr,n]=w.split('-W');return parseInt(n)===1?`${parseInt(yr)-1}-W52`:`${yr}-W${String(parseInt(n)-1).padStart(2,'0')}`}
-function nextWk(w){const[yr,n]=w.split('-W');return parseInt(n)===52?`${parseInt(yr)+1}-W01`:`${yr}-W${String(parseInt(n)+1).padStart(2,'0')}`}
+function isoWeeksInYear(y){return parseInt(wk(new Date(y,11,28)).split('-W')[1])}
+function prevWk(w){const[yr,n]=w.split('-W');const y=parseInt(yr),wn=parseInt(n);return wn===1?`${y-1}-W${String(isoWeeksInYear(y-1)).padStart(2,'0')}`:`${yr}-W${String(wn-1).padStart(2,'0')}`}
+function nextWk(w){const[yr,n]=w.split('-W');const y=parseInt(yr),wn=parseInt(n);return wn===isoWeeksInYear(y)?`${y+1}-W01`:`${yr}-W${String(wn+1).padStart(2,'0')}`}
 function prevMk(m){const[yr,mo]=m.split('-').map(Number);return mo===1?`${yr-1}-12`:`${yr}-${String(mo-1).padStart(2,'0')}`}
 function getMk(wkey){const days=wDays(wkey);const t=new Date(days[3]);return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}`}
 function getYk(wkey){return new Date(wDays(wkey)[3]).getFullYear().toString()}
@@ -2811,9 +2812,9 @@ function renderTasks(){
   const pwkey=prevWk(wk());
   const weeklyAll=tasks.filter(t=>t.frequency==='weekly');
   const pwEnd=wDays(pwkey)[6];
-  const prevIncomplete=weeklyAll.filter(t=>!(t.completedPeriods||[]).includes(pwkey)&&(t.created||'')<=pwEnd);
+  const prevIncomplete=weeklyAll.filter(t=>!(t.completedPeriods||[]).includes(pwkey)&&t.created&&t.created<=pwEnd);
   if(prevIncomplete.length){
-    const weeklyExisted=weeklyAll.filter(t=>(t.created||'')<=pwEnd);
+    const weeklyExisted=weeklyAll.filter(t=>t.created&&t.created<=pwEnd);
     const prevDone=weeklyExisted.filter(t=>(t.completedPeriods||[]).includes(pwkey)).length;
     const prevPct=weeklyExisted.length?Math.round(prevDone/weeklyExisted.length*100):0;
     const prevFull=prevPct===100;
@@ -3921,7 +3922,7 @@ async function gistPull(){
 // ════════════════════════════════
 const TABS=['home','daily','tasks','settle','history'];
 function go(tab){
-  if(tab!=='daily'){editDay=dk();gridWk=wk();}
+  if(tab!=='daily'){editDay=dk();}
   TABS.forEach(t=>{document.getElementById(`view-${t}`).classList.toggle('active',t===tab);document.getElementById(`n-${t}`).classList.toggle('active',t===tab);});
   if(tab==='home')renderHome();
   if(tab==='daily')renderDaily();
