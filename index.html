@@ -203,6 +203,21 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .task-xp{font-size:.68rem;color:#fbbf24;font-weight:700;text-shadow:0 0 8px rgba(251,191,36,.4)}
 .task-del{padding:4px 8px;background:none;border:none;color:rgba(99,102,241,.3);cursor:pointer;font-size:.9rem;flex-shrink:0}
 .task-del:hover{color:#f87171}
+.task-pct-badge{width:24px;height:24px;border-radius:50%;border:2px solid rgba(99,102,241,.3);background:rgba(10,14,44,.6);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.5rem;font-weight:700;color:#818cf8;line-height:1}
+.task-pct-badge.full{background:#34d399;border-color:#34d399;color:#064e3b;box-shadow:0 0 10px rgba(52,211,153,.3)}
+.task-ticks{display:flex;align-items:center;gap:4px;margin:5px 0 2px;flex-wrap:wrap}
+.task-tick{background:none;border:1.5px solid rgba(99,102,241,.35);color:transparent;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:.65rem;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;padding:0}
+.task-tick.done{background:#4f46e5;border-color:#4f46e5;color:#fff}
+.task-tick-counter{display:flex;align-items:center;gap:6px;margin:5px 0 2px}
+.task-tick-btn{background:none;border:1px solid rgba(99,102,241,.35);color:#818cf8;border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:1rem;line-height:1;display:flex;align-items:center;justify-content:center;padding:0}
+.task-tick-btn:disabled{opacity:.3;cursor:default}
+.task-tick-label{font-size:.72rem;color:#c7d2fe;font-weight:700;min-width:40px;text-align:center}
+.task-mini-bar-wrap{display:flex;align-items:center;gap:5px;flex:1}
+.task-mini-bar{flex:1;height:3px;background:rgba(99,102,241,.15);border-radius:2px;overflow:hidden}
+.task-mini-fill{height:100%;background:linear-gradient(90deg,#4f46e5,#818cf8);border-radius:2px;transition:width .3s}
+.task-mini-fill.full{background:linear-gradient(90deg,#059669,#34d399)}
+.task-tick-pct{font-size:.62rem;font-weight:700;color:#818cf8;min-width:26px;text-align:right}
+.task-tick-pct.full{color:#34d399}
 
 /* Pack panel */
 .btn-pack{padding:6px 12px;background:rgba(99,102,241,.15);color:#a5b4fc;border:1.5px solid rgba(99,102,241,.3);border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer}
@@ -812,6 +827,11 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           <button class="diff-btn" id="df-h" data-i18n="t_hard" onclick="setDiff('hard')">⭐⭐⭐ 難</button>
         </div>
         <div class="pts-preview" id="ptsPreview" data-i18n="t_pts_hint">請輸入任務名稱</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span style="font-size:.72rem;color:rgba(255,255,255,.38)">目標次數（選填）</span>
+          <input type="number" id="taskTarget" min="2" max="31" placeholder="例：4" style="width:60px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:8px;color:#e0e7ff;font-size:.85rem;padding:4px 8px;text-align:center">
+          <span style="font-size:.7rem;color:rgba(255,255,255,.3)">次（不填＝單次完成）</span>
+        </div>
         <button class="btn-add-confirm" data-i18n="t_confirm_add" onclick="submitTask()">新增</button>
       </div>
 
@@ -2716,9 +2736,12 @@ function submitTask(){
   if(!selDims.length){showToast('⚠️ 請選擇至少一個領域');return;}
   const data=db();
   if(!data.tasks)data.tasks=[];
-  data.tasks.push({id:uid(),title,dimensions:selDims,frequency:taskFreq,difficulty:taskDiff,completedPeriods:[],xpEarned:0,created:dk()});
+  const targetVal=parseInt(document.getElementById('taskTarget').value);
+  const task={id:uid(),title,dimensions:selDims,frequency:taskFreq,difficulty:taskDiff,completedPeriods:[],xpEarned:0,created:dk()};
+  if(targetVal>=2)task.target=targetVal;
+  data.tasks.push(task);
   dbS(data);
-  document.getElementById('taskInput').value='';selDims=[];taskFreq='weekly';taskDiff='medium';
+  document.getElementById('taskInput').value='';document.getElementById('taskTarget').value='';selDims=[];taskFreq='weekly';taskDiff='medium';
   toggleAddForm();
   document.querySelectorAll('.freq-btn').forEach((b,i)=>b.classList.toggle('on',i===0));
   setDiff('medium');
@@ -2746,6 +2769,59 @@ function completeTask(id,pkey){
     const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join('');
     showToast(isCurrent?`🎉 ${t.title}！${dimIcons} 各 +${pts}分 · +${xpGain} XP`:`✅ ${t.title}（${_lang==='en'?'retro, no XP':'補完，不計 XP'}）${dimIcons} 各 +${pts}分`);
   }
+}
+
+function tickTask(id,pkey,newCount){
+  const data=db();const t=(data.tasks||[]).find(x=>x.id===id);if(!t)return;
+  if(!pkey)pkey=getPeriodKey(t.frequency);
+  const isCurrent=pkey===getPeriodKey(t.frequency);
+  const target=t.target||1;
+  if(!t.completionCounts)t.completionCounts={};
+  const oldCount=t.completionCounts[pkey]||0;
+  const count=Math.max(0,Math.min(target,newCount));
+  t.completionCounts[pkey]=count;
+  const wasComplete=oldCount>=target,isComplete=count>=target;
+  if(isComplete&&!wasComplete){
+    if(!t.completedPeriods)t.completedPeriods=[];
+    if(!t.completedPeriods.includes(pkey))t.completedPeriods.push(pkey);
+    if(isCurrent)t.xpEarned=(t.xpEarned||0)+taskXPVal(t.frequency,t.difficulty||'medium');
+  }else if(!isComplete&&wasComplete){
+    t.completedPeriods=(t.completedPeriods||[]).filter(p=>p!==pkey);
+    if(isCurrent)t.xpEarned=Math.max(0,(t.xpEarned||0)-taskXPVal(t.frequency,t.difficulty||'medium'));
+  }
+  dbS(data);renderTasks();renderHome();
+  if(isComplete&&!wasComplete){
+    const pts=taskPtsPerDim(t.dimensions);
+    const dimIcons=t.dimensions.map(d=>DIMS.find(x=>x.key===d)?.icon||'').join('');
+    showToast(isCurrent?`🎉 ${t.title}！${dimIcons} 各 +${pts}分 · +${taskXPVal(t.frequency,t.difficulty||'medium')} XP`:`✅ ${t.title}（${_lang==='en'?'retro, no XP':'補完，不計 XP'}）${dimIcons} 各 +${pts}分`);
+  }
+}
+
+function taskItemHTML(t,pkey,isRetro){
+  const isDone=(t.completedPeriods||[]).includes(pkey);
+  const diff=t.difficulty||'medium';
+  const dc=DIFF_CFG[diff];
+  const pts=taskPtsPerDim(t.dimensions),xp=taskXPVal(t.frequency,diff);
+  const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);if(!dim)return'';return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
+  const diffBtn=`<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button>`;
+  const ptsSpan=`<span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span>`;
+  const xpSpan=isRetro?`<span class="task-xp" style="opacity:.4">${_lang==='en'?'no XP':'不計XP'}</span>`:`<span class="task-xp">+${xp}XP</span>`;
+  const target=t.target&&t.target>1?t.target:null;
+  if(target){
+    const count=(t.completionCounts||{})[pkey]||0;
+    const pct=Math.round(count/target*100);
+    const full=count>=target;
+    let innerHtml;
+    if(target<=7){
+      const ticks=Array.from({length:target},(_,i)=>{const idx=i+1;const done=count>=idx;const nc=count>=idx?idx-1:idx;return`<button class="task-tick${done?' done':''}" onclick="tickTask('${t.id}','${pkey}',${nc})">${done?'✓':''}</button>`;}).join('');
+      innerHtml=`<div class="task-ticks">${ticks}<div class="task-mini-bar-wrap"><div class="task-mini-bar"><div class="task-mini-fill${full?' full':''}" style="width:${pct}%"></div></div><span class="task-tick-pct${full?' full':''}">${pct}%</span></div></div>`;
+    }else{
+      innerHtml=`<div class="task-tick-counter"><button class="task-tick-btn" onclick="tickTask('${t.id}','${pkey}',${Math.max(0,count-1)})" ${count===0?'disabled':''}>−</button><span class="task-tick-label">${count}/${target}次</span><button class="task-tick-btn" onclick="tickTask('${t.id}','${pkey}',${Math.min(target,count+1)})" ${count>=target?'disabled':''}>＋</button><div class="task-mini-bar-wrap"><div class="task-mini-bar"><div class="task-mini-fill${full?' full':''}" style="width:${pct}%"></div></div><span class="task-tick-pct${full?' full':''}">${pct}%</span></div></div>`;
+    }
+    return`<div class="task-item${full?' done':''}"><div class="task-pct-badge${full?' full':''}">${full?'✓':pct+'%'}</div><div class="task-body"><div class="task-title">${t.title}</div>${innerHtml}<div class="task-meta">${dimChips}${diffBtn}${ptsSpan}${xpSpan}</div></div><button class="task-del" onclick="deleteTask('${t.id}')">✕</button></div>`;
+  }
+  const checkFn=isRetro?`completeTask('${t.id}','${pkey}')`:`completeTask('${t.id}')`;
+  return`<div class="task-item${isDone?' done':''}"><button class="task-check${isDone?' done':''}" onclick="${checkFn}">${isDone?'✓':''}</button><div class="task-body"><div class="task-title">${t.title}</div><div class="task-meta">${dimChips}${diffBtn}${ptsSpan}${xpSpan}</div></div><button class="task-del" onclick="deleteTask('${t.id}')">✕</button></div>`;
 }
 
 function cycleDiff(id){
@@ -2792,19 +2868,7 @@ function renderTasks(){
     // Uncompleted first
     [...group.filter(t=>!(t.completedPeriods||[]).includes(pkey)),
      ...group.filter(t=>(t.completedPeriods||[]).includes(pkey))].forEach(t=>{
-      const isDone=(t.completedPeriods||[]).includes(pkey);
-      const diff=t.difficulty||'medium';
-      const dc=DIFF_CFG[diff];
-      const pts=taskPtsPerDim(t.dimensions),xp=taskXPVal(t.frequency,diff);
-      const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);if(!dim)return'';return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
-      html+=`<div class="task-item${isDone?' done':''}">
-        <button class="task-check${isDone?' done':''}" onclick="completeTask('${t.id}')">${isDone?'✓':''}</button>
-        <div class="task-body">
-          <div class="task-title">${t.title}</div>
-          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button><span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span><span class="task-xp">+${xp}XP</span></div>
-        </div>
-        <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
-      </div>`;
+      html+=taskItemHTML(t,pkey,false);
     });
     html+='</div>';
   });
@@ -2821,18 +2885,7 @@ function renderTasks(){
     const retroLabel=_lang==='en'?'Last Week — Unfinished':'上週未完成';
     html+=`<div class="task-section task-section-retro"><div class="task-section-title">⏮ ${retroLabel} <span class="task-count">${prevDone}/${weeklyExisted.length}</span></div><div class="task-progress-wrap"><div class="task-progress-bar"><div class="task-progress-fill${prevFull?' full':''}" style="width:${prevPct}%"></div></div><span class="task-progress-pct${prevFull?' full':''}">${prevPct}%</span></div>`;
     prevIncomplete.forEach(t=>{
-      const diff=t.difficulty||'medium';
-      const dc=DIFF_CFG[diff];
-      const pts=taskPtsPerDim(t.dimensions),xp=taskXPVal(t.frequency,diff);
-      const dimChips=t.dimensions.map(d=>{const dim=DIMS.find(x=>x.key===d);if(!dim)return'';return`<span class="task-dim" style="background:${dim.color}20;color:${dim.color}">${dim.icon} ${dim.label}</span>`;}).join('');
-      html+=`<div class="task-item">
-        <button class="task-check" onclick="completeTask('${t.id}','${pwkey}')"></button>
-        <div class="task-body">
-          <div class="task-title">${t.title}</div>
-          <div class="task-meta">${dimChips}<button class="task-diff" style="background:${dc.bg};color:${dc.color}" onclick="cycleDiff('${t.id}')" title="${_lang==='en'?'Click to change difficulty':'點擊切換難度'}">${dc.icon} ${getDiffLabel(diff)}</button><span class="task-pts">${_lang==='en'?'each +'+pts+'pt':'各+'+pts+'分'}</span><span class="task-xp" style="opacity:.4">${_lang==='en'?'no XP':'不計XP'}</span></div>
-        </div>
-        <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
-      </div>`;
+      html+=taskItemHTML(t,pwkey,true);
     });
     html+='</div>';
   }
