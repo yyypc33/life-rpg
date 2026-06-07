@@ -219,6 +219,9 @@ hr{border:none;border-top:1px solid rgba(99,102,241,.15);margin:16px 0 18px}
 .task-mini-fill.full{background:linear-gradient(90deg,#059669,#34d399)}
 .task-tick-pct{font-size:.62rem;font-weight:700;color:#818cf8;min-width:26px;text-align:right}
 .task-tick-pct.full{color:#34d399}
+.task-link-row{display:flex;align-items:center;gap:6px;margin:5px 0 2px;flex-wrap:wrap}
+.task-link-badge{font-size:.6rem;font-weight:700;color:#818cf8;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);border-radius:6px;padding:1px 5px;flex-shrink:0}
+body.theme-warm .task-link-badge{background:rgba(160,71,28,.08);border-color:rgba(160,71,28,.2)}
 
 /* Pack panel */
 .btn-pack{padding:6px 12px;background:rgba(99,102,241,.15);color:#a5b4fc;border:1.5px solid rgba(99,102,241,.3);border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer}
@@ -445,6 +448,7 @@ body.theme-warm .add-form input[type=text]:focus{border-color:#b85c28;box-shadow
 body.theme-warm .add-form input[type=text]::placeholder{color:rgba(160,71,28,.38)}
 body.theme-warm .add-form input[type=number]{background:rgba(255,255,255,.92)!important;border-color:rgba(160,71,28,.2)!important;color:#2c1a0a!important}
 body.theme-warm .add-form input[type=number]::placeholder{color:rgba(160,71,28,.38)}
+body.theme-warm .add-form select{background:rgba(255,255,255,.9)!important;border-color:rgba(160,71,28,.2)!important}
 body.theme-warm .add-form .add-form-hint{color:rgba(122,58,20,.55)}
 body.theme-warm #goalForm input{background:rgba(255,255,255,.9)!important;border-color:rgba(160,71,28,.22)!important}
 body.theme-warm #goalForm input::placeholder{color:rgba(160,71,28,.38)!important}
@@ -846,6 +850,17 @@ body.theme-warm .welcome-btn{background:linear-gradient(135deg,#c97240,#9e4018);
           <span class="add-form-hint" style="font-size:.72rem">目標次數（選填）</span>
           <input type="number" id="taskTarget" min="2" max="31" placeholder="例：4" style="width:60px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:8px;color:#e0e7ff;font-size:.85rem;padding:4px 8px;text-align:center">
           <span class="add-form-hint" style="font-size:.7rem">次（不填＝單次完成）</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <span class="add-form-hint" style="font-size:.72rem">連動每日打卡</span>
+          <select id="taskLinkedDaily" style="flex:1;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.25);border-radius:8px;color:#e0e7ff;font-size:.82rem;padding:4px 8px">
+            <option value="">手動計次（不連動）</option>
+            <option value="exercise">🏃 運動打卡</option>
+            <option value="sleep">😴 睡眠打卡</option>
+            <option value="phoneOK">📵 手機控制</option>
+            <option value="socialToday">🤝 社交打卡</option>
+            <option value="fried">🥗 忌口（無炸物）</option>
+          </select>
         </div>
         <button class="btn-add-confirm" data-i18n="t_confirm_add" onclick="submitTask()">新增</button>
       </div>
@@ -1666,6 +1681,7 @@ const DIFF_CFG={
   medium:{label:'中等',icon:'⭐⭐',color:'#818cf8',bg:'rgba(129,140,248,.12)'},
   hard: {label:'難',  icon:'⭐⭐⭐',color:'#f87171',bg:'rgba(248,113,113,.12)'},
 };
+const DAILY_LINK_LABELS={exercise:'🏃 運動',sleep:'😴 睡眠',phoneOK:'📵 手機控制',socialToday:'🤝 社交',fried:'🥗 忌口'};
 function getDiffLabel(diff){const m={easy:'t_easy',medium:'t_medium',hard:'t_hard'};const k=m[diff];if(!k)return diff;const s=_T(k);return s.replace(/^⭐+\s*/,'');}
 
 function classifyDiff(title){
@@ -2752,11 +2768,13 @@ function submitTask(){
   const data=db();
   if(!data.tasks)data.tasks=[];
   const targetVal=parseInt(document.getElementById('taskTarget').value);
+  const linkedDaily=document.getElementById('taskLinkedDaily').value;
   const task={id:uid(),title,dimensions:selDims,frequency:taskFreq,difficulty:taskDiff,completedPeriods:[],xpEarned:0,created:dk()};
   if(targetVal>=2)task.target=targetVal;
+  if(linkedDaily&&targetVal>=2)task.linkedDaily=linkedDaily;
   data.tasks.push(task);
   dbS(data);
-  document.getElementById('taskInput').value='';document.getElementById('taskTarget').value='';selDims=[];taskFreq='weekly';taskDiff='medium';
+  document.getElementById('taskInput').value='';document.getElementById('taskTarget').value='';document.getElementById('taskLinkedDaily').value='';selDims=[];taskFreq='weekly';taskDiff='medium';
   toggleAddForm();
   document.querySelectorAll('.freq-btn').forEach((b,i)=>b.classList.toggle('on',i===0));
   setDiff('medium');
@@ -2812,6 +2830,37 @@ function tickTask(id,pkey,newCount){
   }
 }
 
+function computeLinkedCount(t,pkey,data){
+  const field=t.linkedDaily;
+  let days;
+  if(t.frequency==='weekly'){days=wDays(pkey);}
+  else if(t.frequency==='monthly'){const[yr,mo]=pkey.split('-').map(Number);days=Object.keys(data.daily||{}).filter(d=>{const p=d.split('-').map(Number);return p[0]===yr&&p[1]===mo;});}
+  else{days=Object.keys(data.daily||{}).filter(d=>d.startsWith(pkey));}
+  return days.filter(d=>{const log=data.daily[d];if(!log)return false;return field==='fried'?log.fried===false:!!log[field];}).length;
+}
+
+function syncLinkedTasks(data){
+  let changed=false;
+  (data.tasks||[]).forEach(t=>{
+    if(!t.linkedDaily||!t.target||t.target<2)return;
+    const pkey=getPeriodKey(t.frequency);
+    const count=computeLinkedCount(t,pkey,data);
+    if(!t.completionCounts)t.completionCounts={};
+    const old=t.completionCounts[pkey]||0;
+    if(old===count)return;
+    t.completionCounts[pkey]=count;changed=true;
+    const wasComplete=old>=t.target,isComplete=count>=t.target;
+    if(isComplete&&!wasComplete){
+      if(!t.completedPeriods)t.completedPeriods=[];
+      if(!t.completedPeriods.includes(pkey)){t.completedPeriods.push(pkey);t.xpEarned=(t.xpEarned||0)+taskXPVal(t.frequency,t.difficulty||'medium');}
+    }else if(!isComplete&&wasComplete){
+      t.completedPeriods=(t.completedPeriods||[]).filter(p=>p!==pkey);
+      t.xpEarned=Math.max(0,(t.xpEarned||0)-taskXPVal(t.frequency,t.difficulty||'medium'));
+    }
+  });
+  return changed;
+}
+
 function taskItemHTML(t,pkey,isRetro){
   const isDone=(t.completedPeriods||[]).includes(pkey);
   const diff=t.difficulty||'medium';
@@ -2823,11 +2872,15 @@ function taskItemHTML(t,pkey,isRetro){
   const xpSpan=isRetro?`<span class="task-xp" style="opacity:.4">${_lang==='en'?'no XP':'不計XP'}</span>`:`<span class="task-xp">+${xp}XP</span>`;
   const target=t.target&&t.target>1?t.target:null;
   if(target){
-    const count=(t.completionCounts||{})[pkey]||0;
+    const data2=db();
+    const count=t.linkedDaily?computeLinkedCount(t,pkey,data2):(t.completionCounts||{})[pkey]||0;
     const pct=Math.round(count/target*100);
     const full=count>=target;
     let innerHtml;
-    if(target<=7){
+    if(t.linkedDaily){
+      const lbl=DAILY_LINK_LABELS[t.linkedDaily]||t.linkedDaily;
+      innerHtml=`<div class="task-link-row"><span class="task-link-badge">⚡ 自動同步 ${lbl}</span><div class="task-mini-bar-wrap"><div class="task-mini-bar"><div class="task-mini-fill${full?' full':''}" style="width:${pct}%"></div></div><span class="task-tick-pct${full?' full':''}">${count}/${target} · ${pct}%</span></div></div>`;
+    }else if(target<=7){
       const ticks=Array.from({length:target},(_,i)=>{const idx=i+1;const done=count>=idx;const nc=count>=idx?idx-1:idx;return`<button class="task-tick${done?' done':''}" onclick="tickTask('${t.id}','${pkey}',${nc})">${done?'✓':''}</button>`;}).join('');
       innerHtml=`<div class="task-ticks">${ticks}<div class="task-mini-bar-wrap"><div class="task-mini-bar"><div class="task-mini-fill${full?' full':''}" style="width:${pct}%"></div></div><span class="task-tick-pct${full?' full':''}">${pct}%</span></div></div>`;
     }else{
@@ -3696,6 +3749,7 @@ function saveDaily(){
     savedAt:new Date().toISOString()
   };
   dbS(data);
+  if(syncLinkedTasks(data))dbS(data);
   if(isFirstSave&&!isRetro)checkLevelUp(beforeXP,getTotalXP()); // 只有今日首次存才檢查升級
   if(isRetro)editDay=today; // 補救完成後跳回今天；修改已存紀錄則留在原頁
   checkAndUnlockAchievements();
