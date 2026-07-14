@@ -17,7 +17,7 @@ YU 的個人成長量化追蹤器。概念是個人 RPG 角色成長系統：用
 life_rpg/
 ├── life_tracker.html    ← 主程式（純單檔，無後端）
 ├── index.html           ← GitHub Pages 版本（與 life_tracker.html 保持同步）
-├── sw.js                ← Service Worker（目前 cache: 'life-rpg-v3'）
+├── sw.js                ← Service Worker（目前 cache: 'life-rpg-v14'）
 ├── manifest.json        ← PWA manifest
 ├── icon.svg             ← App 圖示
 └── CLAUDE.md            ← 本文件

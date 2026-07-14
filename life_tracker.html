@@ -523,6 +523,11 @@ body.theme-warm #view-settle .ynb{color:#7a3a14!important}
 body.theme-warm #view-settle .yn-y{color:#166534!important}
 body.theme-warm #view-settle .yn-n{color:#b91c1c!important}
 body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,28,.1)!important;border-color:rgba(160,71,28,.3)!important}
+/* Quick mode */
+#view-daily.dq .qh{display:none!important}
+.quick-toggle{font-size:.68rem;font-weight:700;padding:3px 10px;border:1px solid rgba(99,102,241,.35);border-radius:14px;cursor:pointer;background:rgba(99,102,241,.12);color:#818cf8;transition:all .15s;flex-shrink:0}
+.quick-toggle.full{color:rgba(255,255,255,.4);background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.15)}
+.done-badge-quick{display:none;background:linear-gradient(135deg,rgba(217,119,6,.18),rgba(180,83,9,.12));border:1px solid rgba(217,119,6,.4);border-radius:12px;padding:8px 14px;margin-bottom:12px;font-size:.8rem;font-weight:700;color:#fcd34d;align-items:center;justify-content:center;gap:6px}
 </style>
 </head>
 <body>
@@ -590,6 +595,7 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
         <div class="rleg-item"><div class="rleg-dot" style="background:rgba(148,163,184,.6)"></div><span id="prvLbl">上週</span></div>
       </div>
     </div>
+    <div id="unsettledWarn" style="display:none;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:14px;padding:10px 14px;margin-bottom:12px;font-size:.78rem;color:#fbbf24;cursor:pointer" onclick="go('settle')"></div>
     <div class="card">
       <div class="ctitle" data-i18n="h_dim_detail">維度明細</div>
       <div class="dim-list" id="dimList"></div>
@@ -614,10 +620,14 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
   <!-- ── DAILY ── -->
   <div class="view" id="view-daily">
     <div class="done-badge" data-i18n="d_done" id="dDone" style="display:none">✅ 今日紀錄完成</div>
+    <div class="done-badge-quick" id="dDoneQuick">⚡ 快速紀錄完成</div>
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
         <div class="ctitle" data-i18n="d_title" style="margin-bottom:0">每日紀錄</div>
-        <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.45)">今天</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="quickToggleBtn" class="quick-toggle" onclick="toggleQuickMode()">⚡ 快速</button>
+          <div id="editDayInfo" style="font-size:.75rem;font-weight:600;color:rgba(255,255,255,.45)">今天</div>
+        </div>
       </div>
       <div id="retroBanner" style="display:none;background:#fef3c7;border-radius:10px;padding:9px 12px;margin-bottom:14px;font-size:.8rem;color:#92400e;font-weight:600">⏪ 補救紀錄 — 計分 ×0.8 <button onclick="backToToday()" data-i18n="d_retro_btn" style="float:right;border:none;background:none;color:#4f46e5;font-weight:700;cursor:pointer;font-size:.8rem">返回今日 →</button></div>
 
@@ -638,14 +648,14 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
             <button class="ynb yn-n" data-i18n="d_no" id="dsn" onclick="setD('sleep',false)">❌ 沒有</button>
           </div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl"><span data-i18n="d_junk_q">今天有吃垃圾食物嗎？</span><span data-i18n="d_junk_sub" style="font-size:.7rem;color:rgba(255,255,255,.38)">（炸物、甜食、重口味）</span></div>
           <div class="yn">
             <button class="ynb" data-i18n="d_yes_junk" id="dfy" onclick="setFried(true)">🍔 有吃</button>
             <button class="ynb" data-i18n="d_no" id="dfn" onclick="setFried(false)">✅ 沒有</button>
           </div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl"><span data-i18n="d_phone_q">手機使用 ≤ 7 小時？</span><span data-i18n="d_phone_sub" style="font-size:.7rem;color:#8b5cf6;font-weight:400"> 計入心理</span></div>
           <div class="yn">
             <button class="ynb" data-i18n="d_yes_phone" id="phy" onclick="setPhone(true)">✅ 有控制</button>
@@ -697,11 +707,11 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
             <button class="mood-btn" id="m5" onclick="setMood(5)">😄<br><span data-i18n="m_5">很好</span></button>
           </div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl" data-i18n="d_mood_tags_lbl">今天的心情關鍵詞（可多選）</div>
           <div class="tag-row" id="moodTags"></div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl"><span data-i18n="d_gratitude_lbl">今天的感恩紀錄</span> <span data-i18n="d_gratitude_sub" style="font-size:.7rem;color:rgba(255,255,255,.38);font-weight:400">（一件就夠，多寫更好）</span></div>
           <div class="gr-inputs">
             <input type="text" class="txt-input" id="gr1" data-i18n-ph="d_gr1_ph" placeholder="1. 今天有什麼值得感謝的事？">
@@ -709,7 +719,7 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
             <input type="text" class="txt-input" id="gr3" data-i18n-ph="d_gr3_ph" placeholder="3. （選填）">
           </div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl"><span data-i18n="d_notes_lbl">今日心得</span> <span data-i18n="d_notes_sub" style="color:rgba(255,255,255,.38);font-size:.72rem;font-weight:400">（選填）</span></div>
           <textarea class="txt-input" id="discomfort" data-i18n-ph="d_notes_ph" placeholder="今天的感受、想法、或任何想記下來的事…" rows="4"></textarea>
         </div>
@@ -719,7 +729,7 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
       <!-- 工作回顧 -->
       <div class="fblock">
         <div class="fbtitle"><span data-i18n="d_work">💼 工作回顧</span><span id="ds_work" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl" data-i18n="d_work_done">今天完成的重要事項</div>
           <div class="gr-inputs">
             <input type="text" class="txt-input" id="wd1" placeholder="1.">
@@ -727,7 +737,7 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
             <input type="text" class="txt-input" id="wd3" placeholder="3.">
           </div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl" data-i18n="d_work_state">今天的工作狀態</div>
           <div class="work-state-row">
             <button class="wst-btn" data-ws="🔥" data-i18n="d_ws_energy" onclick="setWorkState('🔥')">🔥 很有能量</button>
@@ -736,7 +746,7 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
             <button class="wst-btn" data-ws="😵" data-i18n="d_ws_stress" onclick="setWorkState('😵')">😵 壓力大</button>
           </div>
         </div>
-        <div class="frow">
+        <div class="frow qh">
           <div class="flbl" data-i18n="d_work_tmr">明天優先事項</div>
           <div class="gr-inputs">
             <input type="text" class="txt-input" id="wt1" placeholder="1.">
@@ -755,10 +765,10 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
           </div>
         </div>
       </div>
-      <hr>
+      <hr class="qh">
 
       <!-- 今日社交 -->
-      <div class="fblock">
+      <div class="fblock qh">
         <div class="fbtitle"><span data-i18n="d_social">🤝 今日社交</span><span id="ds_social" style="font-size:.68rem;font-weight:500;margin-left:auto"></span></div>
         <div class="frow">
           <div class="flbl" data-i18n="d_social_q">今天有社交互動嗎？</div>
@@ -2066,6 +2076,21 @@ function isDayComplete(log){
   return !!log.workScore&&log.socialToday!==undefined;
 }
 
+function isDayQuickComplete(log){
+  if(!log)return false;
+  return log.exercise!==undefined&&log.sleep!==undefined&&!!log.mood&&!!log.workScore&&log.spendAmount!==undefined;
+}
+
+let _quickMode=localStorage.getItem('life_rpg_quick')==='1';
+function toggleQuickMode(){_quickMode=!_quickMode;localStorage.setItem('life_rpg_quick',_quickMode?'1':'0');applyQuickMode();}
+function applyQuickMode(){
+  const v=document.getElementById('view-daily');const b=document.getElementById('quickToggleBtn');
+  if(!v||!b)return;
+  v.classList.toggle('dq',_quickMode);
+  b.textContent=_quickMode?'⚡ 快速':'📋 完整';
+  b.classList.toggle('full',!_quickMode);
+}
+
 function getMissingItems(log){
   if(!log)return['運動','睡眠','飲食','心情','感恩','花費','工作回顧','工作自評','社交打卡'];
   const m=[];
@@ -2411,7 +2436,7 @@ function showToast(msg,dur=2800){
 // ════════════════════════════════
 // RENDER HOME
 // ════════════════════════════════
-let RC=null,RV='week';
+let RC=null,RV='week',_lastRCTheme='',_lastRCRV='';
 function setRV(v){RV=v;document.querySelectorAll('.rtab').forEach((el,i)=>el.classList.toggle('active',['week','month'][i]===v));document.getElementById('curLbl').textContent=v==='week'?_T('h_this_week'):_T('h_this_month');document.getElementById('prvLbl').textContent=v==='week'?_T('h_prev_week'):_T('h_prev_month');renderHome();}
 
 function renderHome(){
@@ -2435,12 +2460,22 @@ function renderHome(){
 
   // Badges
   const data=db();
-  document.getElementById('dBadge').style.display=!isDayComplete(data.daily[dk()])?'block':'none';
+  const todayLog=data.daily[dk()];
+  document.getElementById('dBadge').style.display=(!isDayComplete(todayLog)&&!isDayQuickComplete(todayLog))?'block':'none';
   document.getElementById('sBadge').style.display=(!data.weekly[curWk]||!data.monthly[mk()])?'block':'none';
+  // Unsettled warning
+  const prevW=prevWk(curWk);
+  const warnEl=document.getElementById('unsettledWarn');
+  if(warnEl){
+    const prevSettled=data.weekly&&data.weekly[prevW];
+    if(!prevSettled&&calcWeek(prevW).total>0){
+      warnEl.style.display='block';
+      warnEl.innerHTML=`⚠️ ${wkLabel(prevW)} 尚未結算（工作 +1 / 心理 +1 可能未計入）→ <span style="text-decoration:underline dotted">去結算</span>`;
+    } else {warnEl.style.display='none';}
+  }
 
   // Radar
   const ctx=document.getElementById('rc').getContext('2d');
-  if(RC)RC.destroy();
   const tc=getThemeColors();
   const warmPts=['#16a34a','#b45309','#c2410c','#be185d','#7e22ce'];
   const ptColors=_theme==='warm'?warmPts:DIMS.map(d=>d.color);
@@ -2448,7 +2483,8 @@ function renderHome(){
   const cmpBg=_theme==='warm'?'rgba(160,71,28,.07)':_theme==='zen'?'rgba(200,203,214,.04)':'rgba(34,211,238,.07)';
   const ds=[{label:RV==='week'?_T('h_this_week'):_T('h_this_month'),data:DIMS.map(d=>cur?cur[d.key]:0),backgroundColor:tc.radarBg,borderColor:tc.radarBorder,pointBackgroundColor:ptColors,pointBorderColor:tc.radarPointBorder,pointRadius:5,borderWidth:2.5}];
   if(prv&&prv.total>0)ds.push({label:RV==='week'?_T('h_prev_week'):_T('h_prev_month'),data:DIMS.map(d=>prv[d.key]),backgroundColor:cmpBg,borderColor:cmpColor,pointBackgroundColor:cmpColor,pointRadius:3,borderWidth:1.5});
-  RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:15,ticks:{stepSize:3,font:{size:10},color:tc.radarTick,backdropColor:'transparent'},grid:{color:tc.radarGrid},angleLines:{color:tc.radarAngle},pointLabels:{font:{size:13,weight:'700'},color:tc.radarLabel}}},plugins:{legend:{display:false}}}});
+  if(RC&&_lastRCTheme===_theme&&_lastRCRV===RV){RC.data.datasets=ds;RC.update('none');}
+  else{if(RC)RC.destroy();RC=new Chart(ctx,{type:'radar',data:{labels:DIMS.map(d=>d.label),datasets:ds},options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:15,ticks:{stepSize:3,font:{size:10},color:tc.radarTick,backdropColor:'transparent'},grid:{color:tc.radarGrid},angleLines:{color:tc.radarAngle},pointLabels:{font:{size:13,weight:'700'},color:tc.radarLabel}}},plugins:{legend:{display:false}}}});_lastRCTheme=_theme;_lastRCRV=RV;}
 
   // Dim list
   const el=document.getElementById('dimList');
@@ -2511,7 +2547,9 @@ function renderDaily(){
 
   // Done badge
   const isComplete=isDayComplete(todayLog);
+  const isQuickDone=!isComplete&&isDayQuickComplete(todayLog);
   document.getElementById('dDone').style.display=isComplete?'flex':'none';
+  document.getElementById('dDoneQuick').style.display=isQuickDone?'flex':'none';
 
   // Reset all inputs to neutral before loading
   DS.exercise=null;DS.sleep=null;DS.mood=null;DS.fried=null;DS.phoneOK=null;
@@ -4614,7 +4652,10 @@ function _setupRealtimeSync(){
     const merged=_mergeData(db(),snapshot.data());
     localStorage.setItem(SK,JSON.stringify(merged));
     _syncState='synced';renderSyncStatus();
-    renderHome();renderTasks();renderDaily();
+    renderHome();
+    const _av=document.querySelector('.view.active')?.id;
+    if(_av==='view-tasks')renderTasks();
+    if(_av==='view-daily')renderDaily();
   },err=>{
     console.error('snapshot error',err);
     _syncState='error';renderSyncStatus();
@@ -4712,6 +4753,7 @@ function checkAndSendWeeklyReminder(){
 applyTheme();
 loadDimNames();
 applyUserName();
+applyQuickMode();
 if(!getUserName())showWelcome();
 const _initTab=TABS.includes(window.location.hash.slice(1))?window.location.hash.slice(1):'home';
 go(_initTab);
