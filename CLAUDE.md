@@ -17,7 +17,7 @@ YU 的個人成長量化追蹤器。概念是個人 RPG 角色成長系統：用
 life_rpg/
 ├── life_tracker.html    ← 主程式（純單檔，無後端）
 ├── index.html           ← GitHub Pages 版本（與 life_tracker.html 保持同步）
-├── sw.js                ← Service Worker（目前 cache: 'life-rpg-v14'）
+├── sw.js                ← Service Worker（目前 cache: 'life-rpg-v15'）
 ├── manifest.json        ← PWA manifest
 ├── icon.svg             ← App 圖示
 └── CLAUDE.md            ← 本文件
@@ -337,6 +337,13 @@ cd /Users/ypc25383230/Desktop/ypc_agent/life_rpg
 - 每次修改後執行：`cp life_tracker.html index.html`
 - 若 HTML 有更新，同步 bump `sw.js` 的 `CACHE` 版本號（如 v3 → v4）
 - GitHub Pages URL：`https://yyypc33.github.io/life-rpg/`
+
+**驗收 Checklist（改完之後必須確認）：**
+- [ ] `cp life_tracker.html index.html` 已執行
+- [ ] 兩個檔案都進入 commit
+- [ ] 如果改了 cache 內容 → SW 版號遞增
+- [ ] 用 Playwright `browser_snapshot` 或截圖確認視覺正確
+  - 本機開啟方式：`mcp__playwright__browser_navigate` → `file:///Users/ypc25383230/Desktop/ypc_agent/life_rpg/life_tracker.html`
 
 **測試方法：**
 直接雙擊 `life_tracker.html` 用瀏覽器開啟即可。Safari 或 Chrome 皆可。
