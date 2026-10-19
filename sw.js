@@ -1,4 +1,4 @@
-const CACHE = 'life-rpg-v14';
+const CACHE = 'life-rpg-v15';
 const PRECACHE = [
   './',
   './index.html',
@@ -28,7 +28,7 @@ self.addEventListener('fetch', e => {
     e.respondWith(
       caches.match(e.request).then(cached =>
         cached || fetch(e.request).then(res => {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+          if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
           return res;
         })
       )
@@ -42,7 +42,7 @@ self.addEventListener('fetch', e => {
       caches.open(CACHE).then(async cache => {
         const cached = await cache.match(e.request);
         const fetchPromise = fetch(e.request).then(res => {
-          cache.put(e.request, res.clone());
+          if (res.ok) cache.put(e.request, res.clone());
           return res;
         }).catch(() => cached);
         return cached || fetchPromise;
@@ -55,7 +55,7 @@ self.addEventListener('fetch', e => {
   e.respondWith(
     caches.match(e.request).then(cached =>
       cached || fetch(e.request).then(res => {
-        caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
         return res;
       })
     )

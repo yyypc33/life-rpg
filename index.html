@@ -1181,10 +1181,10 @@ body.theme-warm #notifToggleBtn{color:#a0471c!important;background:rgba(160,71,2
   <div class="ni" id="n-history" onclick="go('history')"><div class="ni-icon">📈</div><div class="ni-lbl" data-i18n="nav_history">歷史</div></div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" integrity="sha384-e6nUZLBkQ86NJ6TVVKAeSaK8jWa3NhkYWZFomE39AvDbQWeie9PlQqM3pmYW5d1g" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" integrity="sha384-sEVIly94UBRLKWdkYoPpSG7GD/e79YHMrxVyZaOk712Ga7+EAw6w1EFi+xBzBdd+" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" integrity="sha384-EkqK+ezBWJuvO3hfrSx2iVqr3YQbhmnzn8kPhOpBZ+0GMVU5oGSgptwIu8D84HjE" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js" integrity="sha384-M481iNZJtbpypKgvlvZ+78Giq0BsewFLk5r2k+MOcGXlwKCc27DQRZ+WCV/zpmpC" crossorigin="anonymous"></script>
 <script>
 // ════════════════════════════════
 // CONSTANTS
@@ -1231,7 +1231,7 @@ const DIM_NAMES_KEY='life_rpg_dim_names';
 function loadDimNames(){
   const saved=JSON.parse(localStorage.getItem(DIM_NAMES_KEY)||'{}');
   const defs=getDimDefaults();
-  DIMS.forEach(d=>{d.label=saved[d.key]||defs[d.key];});
+  DIMS.forEach(d=>{d.label=String(saved[d.key]||defs[d.key]).replace(/[<>"'&]/g,'');});
 }
 
 // Keyword classifier
@@ -1558,7 +1558,7 @@ function _buildWelcomeBoxHTML(name,budget){
         <div><div style="font-size:.8rem;font-weight:700;color:#e2e8f0">${_T('w_feat3')}</div><div style="font-size:.7rem;color:rgba(255,255,255,.42);margin-top:1px">${_T('w_feat3_sub')}</div></div>
       </div>
     </div>
-    <input class="welcome-input" id="welcomeNameInput" value="${name}" placeholder="${_T('w_name_ph')}" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
+    <input class="welcome-input" id="welcomeNameInput" value="${esc(name)}" placeholder="${_T('w_name_ph')}" maxlength="10" inputmode="text" enterkeyhint="done" style="margin-bottom:10px">
     <div style="text-align:left;font-size:.78rem;color:rgba(255,255,255,.5);margin-bottom:6px">${_T('w_budget_lbl')}</div>
     <input class="welcome-input" id="welcomeBudgetInput" type="number" value="${budget}" min="1000" max="200000" step="1000" inputmode="numeric" style="margin-bottom:8px">
     <div style="display:flex;gap:8px;margin-bottom:20px;justify-content:center">
@@ -1629,12 +1629,36 @@ function getThemeColors(){
 }
 
 const SK='life_rpg_yu3';
-var _fbUser=null,_syncState='idle',_syncTimer=null,_snapshotUnsub=null,_suppressSnapshotUntil=0,_syncError='';
+var _fbUser=null,_syncState='idle',_syncTimer=null,_snapshotUnsub=null,_syncError='';
 function db(){
   const DEF={daily:{},weekly:{},monthly:{},yearly:{},tasks:[]};
   try{return JSON.parse(localStorage.getItem(SK))||DEF;}catch{return DEF;}
 }
-function dbS(d){localStorage.setItem(SK,JSON.stringify(d));_scheduleSyncToCloud();}
+function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+// 同步用：每筆資料蓋 _u（最後修改時間），刪除留墓碑 _del，合併時以新的為準
+const _SYNC_MAPS=['daily','weekly','monthly','yearly'];
+// 內容簽章：忽略 _u、key 排序（Firestore 回傳的欄位順序不固定）
+function _sig(o){return JSON.stringify(o,(k,v)=>k==='_u'?undefined:(v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v));}
+function _stamp(prev,d){
+  const now=Date.now();
+  d._del={...(prev._del||{}),...(d._del||{})};
+  _SYNC_MAPS.forEach(k=>{
+    const p=prev[k]||{},n=d[k]||{};
+    Object.keys(n).forEach(key=>{if(n[key]&&typeof n[key]==='object'&&(!p[key]||_sig(p[key])!==_sig(n[key])))n[key]._u=now;});
+    Object.keys(p).forEach(key=>{if(!(key in n))d._del[k+':'+key]=now;});
+  });
+  const stampList=(pl,nl,pre)=>{
+    const pm={};(pl||[]).forEach(x=>{if(x&&x.id)pm[x.id]=x;});
+    const ids=new Set();
+    (nl||[]).forEach(x=>{if(!x||!x.id)return;ids.add(x.id);if(!pm[x.id]||_sig(pm[x.id])!==_sig(x))x._u=now;});
+    Object.keys(pm).forEach(id=>{if(!ids.has(id))d._del[pre+id]=now;});
+  };
+  stampList(prev.tasks,d.tasks,'task:');
+  const goalList=g=>['w','m','y'].flatMap(p=>Object.values((g||{})[p]||{}).flat());
+  stampList(goalList(prev.goals),goalList(d.goals),'goal:');
+  return d;
+}
+function dbS(d){localStorage.setItem(SK,JSON.stringify(_stamp(db(),d)));_scheduleSyncToCloud();}
 
 // ════════════════════════════════
 // DATE HELPERS
@@ -2932,10 +2956,10 @@ function taskItemHTML(t,pkey,isRetro){
     }else{
       innerHtml=`<div class="task-tick-counter"><button class="task-tick-btn" onclick="tickTask('${t.id}','${pkey}',${Math.max(0,count-1)})" ${count===0?'disabled':''}>−</button><span class="task-tick-label">${count}/${target}次</span><button class="task-tick-btn" onclick="tickTask('${t.id}','${pkey}',${Math.min(target,count+1)})" ${count>=target?'disabled':''}>＋</button><div class="task-mini-bar-wrap"><div class="task-mini-bar"><div class="task-mini-fill${full?' full':''}" style="width:${pct}%"></div></div><span class="task-tick-pct${full?' full':''}">${pct}%</span></div></div>`;
     }
-    return`<div class="task-item${full?' done':''}"><div class="task-pct-badge${full?' full':''}">${full?'✓':pct+'%'}</div><div class="task-body"><div class="task-title">${t.title}</div>${innerHtml}<div class="task-meta">${dimChips}${diffBtn}${ptsSpan}${xpSpan}</div></div><button class="task-del" onclick="deleteTask('${t.id}')">✕</button></div>`;
+    return`<div class="task-item${full?' done':''}"><div class="task-pct-badge${full?' full':''}">${full?'✓':pct+'%'}</div><div class="task-body"><div class="task-title">${esc(t.title)}</div>${innerHtml}<div class="task-meta">${dimChips}${diffBtn}${ptsSpan}${xpSpan}</div></div><button class="task-del" onclick="deleteTask('${t.id}')">✕</button></div>`;
   }
   const checkFn=isRetro?`completeTask('${t.id}','${pkey}')`:`completeTask('${t.id}')`;
-  return`<div class="task-item${isDone?' done':''}"><button class="task-check${isDone?' done':''}" onclick="${checkFn}">${isDone?'✓':''}</button><div class="task-body"><div class="task-title">${t.title}</div><div class="task-meta">${dimChips}${diffBtn}${ptsSpan}${xpSpan}</div></div><button class="task-del" onclick="deleteTask('${t.id}')">✕</button></div>`;
+  return`<div class="task-item${isDone?' done':''}"><button class="task-check${isDone?' done':''}" onclick="${checkFn}">${isDone?'✓':''}</button><div class="task-body"><div class="task-title">${esc(t.title)}</div><div class="task-meta">${dimChips}${diffBtn}${ptsSpan}${xpSpan}</div></div><button class="task-del" onclick="deleteTask('${t.id}')">✕</button></div>`;
 }
 
 function cycleDiff(id){
@@ -3323,7 +3347,7 @@ function renderMoodTagStats(){
       const pct=Math.round(count/maxCount*100);
       return`<div style="margin-bottom:9px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px">
-          <span style="font-size:.82rem;font-weight:600;color:${c}">${tagDisplay(tag)}</span>
+          <span style="font-size:.82rem;font-weight:600;color:${c}">${esc(tagDisplay(tag))}</span>
           <span style="font-size:.72rem;color:rgba(255,255,255,.4)">${count}${daysLbl}</span>
         </div>
         <div style="height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden">
@@ -3352,7 +3376,7 @@ function renderSpendStats(){
     const cnt=catMap[c];const pct=Math.round(cnt/total*100);const amt=catAmt[c];
     return`<div style="display:inline-flex;align-items:center;gap:5px;background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.25);border-radius:20px;padding:5px 12px;font-size:.8rem;font-weight:600">${CAT_ICONS[c]||'📦'} <span style="color:rgba(255,255,255,.7)">${catName(c)}</span>${hasAmounts&&amt?`<span style="color:#fbbf24">$${Math.round(amt).toLocaleString()}</span>`:`<span style="color:#fbbf24">${cnt}${_lang==='en'?' times':'次'}</span>`}<span style="color:rgba(255,255,255,.3);font-size:.7rem">${pct}%</span></div>`;
   }).join('');
-  const recentRows=spendLogs.slice(0,12).map(l=>{const cats=getCats(l);const catLabel=cats.map(c=>`${CAT_ICONS[c]||'📦'}${catName(c)}`).join(' ');return`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:52px;flex-shrink:0">${catLabel}</div>${l.spendAmount!==undefined?`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;min-width:56px">$${l.spendAmount.toLocaleString()}</div>`:''}<div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.spendDetail||'—'}</div></div>`;}).join('');
+  const recentRows=spendLogs.slice(0,12).map(l=>{const cats=getCats(l);const catLabel=cats.map(c=>`${CAT_ICONS[c]||'📦'}${catName(c)}`).join(' ');return`<div style="display:flex;align-items:center;gap:8px;padding:6px 2px;border-bottom:1px solid rgba(99,102,241,.1)"><div style="font-size:.72rem;color:rgba(255,255,255,.38);min-width:40px">${l.date.slice(5)}</div><div style="font-size:.72rem;color:#fcd34d;min-width:52px;flex-shrink:0">${catLabel}</div>${l.spendAmount!==undefined?`<div style="font-size:.78rem;font-weight:700;color:#fbbf24;min-width:56px">$${l.spendAmount.toLocaleString()}</div>`:''}<div style="font-size:.8rem;color:rgba(255,255,255,.65);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(l.spendDetail||'—')}</div></div>`;}).join('');
   const Y2=data.yearly[dk().slice(0,4)]||{};const mBudget=Y2.monthly_budget||25000;
   const thisMonth=dk().slice(0,7);const monthTotal=spendLogs.filter(l=>l.date.startsWith(thisMonth)&&l.spendAmount!==undefined).reduce((s,l)=>s+l.spendAmount,0);
   const monthBar=monthTotal>0?`<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:.75rem;color:rgba(255,255,255,.5);margin-bottom:4px"><span>${_T('spend_month')}</span><span style="color:${monthTotal>mBudget?'#f87171':'#34d399'};font-weight:700">NT$${monthTotal.toLocaleString()} / ${mBudget.toLocaleString()}</span></div><div style="height:5px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden"><div style="height:100%;border-radius:3px;background:${monthTotal>mBudget?'#f87171':'#34d399'};width:${Math.min(100,monthTotal/mBudget*100).toFixed(1)}%"></div></div></div>`:'';
@@ -3392,15 +3416,15 @@ function genWeeklySummary(wkey){
     `💰 本週花費 NT$${wkTotal.toLocaleString()} / ${Math.round(wkBudget).toLocaleString()}${wkTotal>wkBudget?` ⚠️超預算 NT$${(wkTotal-wkBudget).toLocaleString()}`:''}`);}
   else if(legacyUnderCnt+legacyOverCnt>0)lines.push(en?`💰 Under budget ${legacyUnderCnt}d  Over ${legacyOverCnt}d`:`💰 未超支 ${legacyUnderCnt}天　超支 ${legacyOverCnt}天`);
   if(stateBreakdown||workDones.length)lines.push(`💼 ${stateBreakdown||'—'}${workDones.length?`　${en?`Done ${workDones.length}`:`完成 ${workDones.length} 件`}`:''}`);
-  if(workDones.length)lines.push(`<span style="color:rgba(255,255,255,.55)">✅ ${workDones.slice(0,3).join('　')}</span>`);
-  if(lastTomorrow)lines.push(`<span style="color:rgba(255,255,255,.38)">→ ${en?'Next up:':'本週末待辦：'}${lastTomorrow}</span>`);
+  if(workDones.length)lines.push(`<span style="color:rgba(255,255,255,.55)">✅ ${workDones.slice(0,3).map(esc).join('　')}</span>`);
+  if(lastTomorrow)lines.push(`<span style="color:rgba(255,255,255,.38)">→ ${en?'Next up:':'本週末待辦：'}${esc(lastTomorrow)}</span>`);
   const socialLogs=logs.filter(l=>l.socialToday===true);
   if(socialLogs.length){
     const withList=[...new Set(socialLogs.map(l=>l.socialWith).filter(Boolean))];
-    lines.push(`🤝 ${en?`Social ${socialLogs.length}d`:`社交 ${socialLogs.length}天`}${withList.length?`　${withList.slice(0,4).join('、')}`:''}`);}
+    lines.push(`🤝 ${en?`Social ${socialLogs.length}d`:`社交 ${socialLogs.length}天`}${withList.length?`　${withList.slice(0,4).map(esc).join('、')}`:''}`);}
   const socialNotes=socialLogs.map(l=>l.socialNote).filter(Boolean);
-  if(socialNotes.length)lines.push(`<span style="color:rgba(165,180,252,.55)">💬 ${socialNotes.slice(0,2).map(n=>`「${n}」`).join(' ')}</span>`);
-  if(grList.length)lines.push(`<span style="color:rgba(255,255,255,.45)">🙏 ${grList.slice(0,3).map(g=>`「${g}」`).join(' ')}</span>`);
+  if(socialNotes.length)lines.push(`<span style="color:rgba(165,180,252,.55)">💬 ${socialNotes.slice(0,2).map(n=>`「${esc(n)}」`).join(' ')}</span>`);
+  if(grList.length)lines.push(`<span style="color:rgba(255,255,255,.45)">🙏 ${grList.slice(0,3).map(g=>`「${esc(g)}」`).join(' ')}</span>`);
   if(discList.length)lines.push(`<span style="color:rgba(255,255,255,.38)">💭 ${discList.slice(0,2).map(d=>`「${d}」`).join(' ')}</span>`);
   return lines.map(l=>`<div style="margin-bottom:5px;font-size:.8rem;line-height:1.5">${l}</div>`).join('');
 }
@@ -3423,19 +3447,19 @@ function renderHistory(){
         const log=data.daily[day];
         if(!log)return`<tr><td style="color:rgba(255,255,255,.38)"><b>${DLBLS[i]}</b> ${day.slice(5)}</td><td colspan="8" style="color:rgba(255,255,255,.2);font-size:.7rem">${_T('his_no_check')}</td></tr>`;
         const isDayExp=expandedDay===day;
-        const socialCell=log.socialToday===true?`<div>🤝</div>${log.socialWith?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(165,180,252,.65);font-size:.62rem">${log.socialWith}</div>`:''}`:log.socialToday===false?`<span style="color:rgba(255,255,255,.25)">—</span>`:`<span style="color:rgba(255,255,255,.15)">?</span>`;
-        const mainRow=`<tr style="cursor:pointer;${isDayExp?'background:rgba(99,102,241,.08)':''}" onclick="event.stopPropagation();toggleDayDetail('${day}')"><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span><div style="font-size:.55rem;color:rgba(99,102,241,.6);margin-top:2px">${isDayExp?'▲':'▼'}</div></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.phoneOK===true?'📵':log.phoneOK===false?'📱':'—'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${log.workDone||'—'}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${log.workTomorrow}</div>`:''}</td></tr>`;
+        const socialCell=log.socialToday===true?`<div>🤝</div>${log.socialWith?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(165,180,252,.65);font-size:.62rem">${esc(log.socialWith)}</div>`:''}`:log.socialToday===false?`<span style="color:rgba(255,255,255,.25)">—</span>`:`<span style="color:rgba(255,255,255,.15)">?</span>`;
+        const mainRow=`<tr style="cursor:pointer;${isDayExp?'background:rgba(99,102,241,.08)':''}" onclick="event.stopPropagation();toggleDayDetail('${day}')"><td><b>${DLBLS[i]}</b><br><span style="font-size:.6rem;color:rgba(255,255,255,.38)">${day.slice(5)}</span><div style="font-size:.55rem;color:rgba(99,102,241,.6);margin-top:2px">${isDayExp?'▲':'▼'}</div></td><td>${log.exercise?'🏃':'✕'}</td><td>${log.sleep?'😴':'✕'}</td><td>${log.phoneOK===true?'📵':log.phoneOK===false?'📱':'—'}</td><td>${log.mood?MJ[log.mood]:'—'}</td><td>${log.spendAmount!==undefined?(log.spendAmount===0?'<span style="color:#34d399">$0</span>':`<span style="color:#fbbf24">$${log.spendAmount.toLocaleString()}</span>`):(log.overBudget===false?'✅':log.overBudget===true?'💸':'—')}</td><td>${log.workState||'—'}</td><td style="max-width:60px;text-align:left;padding-left:2px">${socialCell}</td><td style="max-width:80px;text-align:left;padding-left:4px"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.55);font-size:.72rem">${esc(log.workDone||'—')}</div>${log.workTomorrow?`<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:rgba(255,255,255,.38);font-size:.62rem">→${esc(log.workTomorrow)}</div>`:''}</td></tr>`;
         if(!isDayExp)return mainRow;
         const gr=(log.gratitude||[]).filter(Boolean);
         const tags=(log.moodTags||[]);
         const lines=[];
-        if(tags.length){const tagLabels=tags.map(zh=>{const idx=MOOD_TAGS.indexOf(zh);return idx>=0?getMoodTags()[idx]:zh;});lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_mood_tags')}　</span>${tagLabels.map(tag=>`<span style="background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.3);border-radius:5px;padding:2px 7px;font-size:.72rem;color:#a5b4fc;margin-right:4px">${tag}</span>`).join('')}</div>`);}
-        if(gr.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_gratitude')}</span>${gr.map((g,ii)=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">${ii+1}. ${g}</div>`).join('')}</div>`);
-        if(log.workDone)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_work_done')}</span>${log.workDone.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">✅ ${l}</div>`).join('')}</div>`);
-        if(log.workTomorrow)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_tmr')}</span>${log.workTomorrow.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.5);padding:2px 0 2px 10px">→ ${l}</div>`).join('')}</div>`);
-        if(log.socialNote)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_social_note')}　</span><span style="font-size:.78rem;color:rgba(165,180,252,.8)">${log.socialNote}</span></div>`);
-        if(log.spendDetail)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_spend_detail')}　</span><span style="font-size:.78rem;color:rgba(251,191,36,.7)">${log.spendDetail}</span></div>`);
-        if(log.discomfort)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_discomfort')}　</span><span style="font-size:.78rem;color:rgba(255,255,255,.55)">${log.discomfort}</span></div>`);
+        if(tags.length){const tagLabels=tags.map(zh=>{const idx=MOOD_TAGS.indexOf(zh);return idx>=0?getMoodTags()[idx]:zh;});lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_mood_tags')}　</span>${tagLabels.map(tag=>`<span style="background:rgba(129,140,248,.15);border:1px solid rgba(129,140,248,.3);border-radius:5px;padding:2px 7px;font-size:.72rem;color:#a5b4fc;margin-right:4px">${esc(tag)}</span>`).join('')}</div>`);}
+        if(gr.length)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_gratitude')}</span>${gr.map((g,ii)=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">${ii+1}. ${esc(g)}</div>`).join('')}</div>`);
+        if(log.workDone)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_work_done')}</span>${log.workDone.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.7);padding:2px 0 2px 10px">✅ ${esc(l)}</div>`).join('')}</div>`);
+        if(log.workTomorrow)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_tmr')}</span>${log.workTomorrow.split('\n').filter(Boolean).map(l=>`<div style="font-size:.78rem;color:rgba(255,255,255,.5);padding:2px 0 2px 10px">→ ${esc(l)}</div>`).join('')}</div>`);
+        if(log.socialNote)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_social_note')}　</span><span style="font-size:.78rem;color:rgba(165,180,252,.8)">${esc(log.socialNote)}</span></div>`);
+        if(log.spendDetail)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_spend_detail')}　</span><span style="font-size:.78rem;color:rgba(251,191,36,.7)">${esc(log.spendDetail)}</span></div>`);
+        if(log.discomfort)lines.push(`<div style="margin-bottom:6px"><span style="color:rgba(255,255,255,.38);font-size:.7rem">${_T('his_discomfort')}　</span><span style="font-size:.78rem;color:rgba(255,255,255,.55)">${esc(log.discomfort)}</span></div>`);
         const detailRow=lines.length?`<tr><td colspan="9" style="padding:10px 8px 12px;background:rgba(99,102,241,.05);border-top:1px solid rgba(99,102,241,.15)">${lines.join('')}</td></tr>`:'';
         return mainRow+detailRow;
       }).join('');
@@ -3860,7 +3884,7 @@ function renderDimNameInputs(){
     <div class="frow" style="margin-bottom:8px">
       <div class="flbl" style="margin-bottom:4px">${d.icon} ${getDimDefaults()[d.key]}</div>
       <input type="text" id="dn_${d.key}" maxlength="8" placeholder="${getDimDefaults()[d.key]}"
-        value="${saved[d.key]||''}"
+        value="${esc(saved[d.key]||'')}"
         style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:8px 12px;color:#fff;font-size:.88rem;outline:none">
     </div>`).join('');
 }
@@ -3959,141 +3983,6 @@ function exportWeeklyCSV(){
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download=`life_rpg_weekly_${dk()}.csv`;a.click();
   showToast(`📈 週分數 CSV 已下載（${allWks.length} 週）`);
-}
-
-// ════════════════════════════════
-// GIST SYNC
-// ════════════════════════════════
-const SYNC_KEY='life_rpg_sync_cfg';
-function getSyncCfg(){try{return JSON.parse(localStorage.getItem(SYNC_KEY)||'{}')}catch{return {}}}
-
-function renderSyncPanel(){
-  const cfg=getSyncCfg();
-  const el=document.getElementById('syncPanel');
-  if(!el)return;
-  if(!cfg.token){
-    el.innerHTML=`
-      <div style="font-size:.78rem;color:rgba(255,255,255,.45);margin-bottom:12px;line-height:1.7">
-        需要 GitHub Personal Access Token（勾選 <b>gist</b> 權限）<br>
-        <a href="https://github.com/settings/tokens/new?scopes=gist&description=LifeRPG" target="_blank" style="color:#4f46e5;font-weight:700">點此建立 Token →</a>
-      </div>
-      <input type="password" id="syncTokenInput" placeholder="ghp_xxxx…"
-        style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:.9rem;margin-bottom:10px;outline:none">
-      <button class="btn-save" onclick="saveSyncToken()" style="width:100%;padding:12px;background:linear-gradient(135deg,#4f46e5,#6366f1)">💾 儲存 Token</button>`;
-  } else {
-    const shortId=cfg.gistId?cfg.gistId.slice(0,8)+'…':'';
-    const gistInfo=cfg.gistId
-      ?`<div style="margin-top:3px;display:flex;align-items:center;gap:8px">
-          <span style="font-size:.72rem;color:rgba(255,255,255,.38);font-family:monospace">${shortId}</span>
-          <button onclick="copyGistId()" style="font-size:.68rem;color:#4f46e5;background:none;border:1px solid #c7d2fe;border-radius:4px;cursor:pointer;padding:2px 6px">複製ID</button>
-          <a href="https://gist.github.com/${cfg.gistId}" target="_blank" style="color:#4f46e5;font-size:.72rem">查看→</a>
-        </div>`
-      :`<div style="font-size:.72rem;color:rgba(255,255,255,.38);margin-top:3px">尚未建立，推送後自動建立</div>`;
-    el.innerHTML=`
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div><div style="font-size:.82rem;font-weight:700">Token 已設定 ✅</div>${gistInfo}</div>
-        <button onclick="clearSyncToken()" style="font-size:.72rem;color:rgba(255,255,255,.38);background:none;border:1px solid #e2e8f0;border-radius:6px;cursor:pointer;padding:4px 8px">清除</button>
-      </div>
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <button class="btn-save" onclick="gistPush()" style="flex:1;padding:12px;background:linear-gradient(135deg,#10b981,#059669)">☁️ 推送</button>
-        <button class="btn-save" onclick="gistPull()" style="flex:1;padding:12px;background:linear-gradient(135deg,#6366f1,#4f46e5)">⬇️ 拉取</button>
-      </div>
-      ${!cfg.gistId?`
-      <div style="border-top:1px solid #f1f5f9;padding-top:10px;margin-top:2px">
-        <div style="font-size:.73rem;color:rgba(255,255,255,.38);margin-bottom:6px">或手動輸入舊裝置的 Gist ID：</div>
-        <div style="display:flex;gap:6px">
-          <input id="manualGistId" placeholder="20位英數字…"
-            style="flex:1;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.82rem;outline:none;font-family:monospace">
-          <button onclick="setGistIdManual()" style="padding:8px 12px;background:#4f46e5;color:#fff;border:none;border-radius:8px;font-size:.82rem;cursor:pointer;font-weight:700">確認</button>
-        </div>
-      </div>`:''}
-      <div id="gistSyncStatus" style="font-size:.75rem;color:rgba(255,255,255,.38);text-align:center;min-height:18px;margin-top:8px"></div>`;
-  }
-}
-
-function saveSyncToken(){
-  const t=document.getElementById('syncTokenInput').value.trim();
-  if(!t){showToast('❌ 請輸入 Token');return;}
-  const cfg=getSyncCfg();cfg.token=t;
-  localStorage.setItem(SYNC_KEY,JSON.stringify(cfg));
-  renderSyncPanel();showToast('✅ Token 已儲存');
-}
-
-function clearSyncToken(){
-  if(!confirm('確定清除 Token 與 Gist 設定？'))return;
-  localStorage.removeItem(SYNC_KEY);renderSyncPanel();
-}
-
-function copyGistId(){
-  const cfg=getSyncCfg();
-  if(!cfg.gistId)return;
-  navigator.clipboard.writeText(cfg.gistId).then(()=>showToast('✅ Gist ID 已複製')).catch(()=>{
-    prompt('手動複製 Gist ID：',cfg.gistId);
-  });
-}
-
-function setGistIdManual(){
-  const id=(document.getElementById('manualGistId').value||'').trim();
-  if(!id||id.length<16){showToast('❌ Gist ID 格式不正確');return;}
-  const cfg=getSyncCfg();cfg.gistId=id;
-  localStorage.setItem(SYNC_KEY,JSON.stringify(cfg));
-  renderSyncPanel();showToast('✅ Gist ID 已設定');
-}
-
-function setSyncStatus(msg){const el=document.getElementById('gistSyncStatus');if(el)el.textContent=msg;}
-
-async function findLifeRPGGist(token){
-  const res=await fetch('https://api.github.com/gists?per_page=100',
-    {headers:{'Authorization':`Bearer ${token}`}});
-  const list=await res.json();
-  if(!res.ok)throw new Error(list.message||res.status);
-  const found=list.filter(g=>g.files['life_rpg_data.json'])
-    .sort((a,b)=>new Date(b.updated_at)-new Date(a.updated_at));
-  return found[0]?.id||null;
-}
-
-async function gistPush(){
-  const cfg=getSyncCfg();
-  if(!cfg.token){showToast('❌ 請先設定 Token');return;}
-  setSyncStatus('上傳中…');
-  const body={description:"YU's Life RPG Data",public:false,
-    files:{'life_rpg_data.json':{content:localStorage.getItem(SK)||'{}'}}};
-  try{
-    const url=cfg.gistId?`https://api.github.com/gists/${cfg.gistId}`:'https://api.github.com/gists';
-    const res=await fetch(url,{method:cfg.gistId?'PATCH':'POST',
-      headers:{'Authorization':`Bearer ${cfg.token}`,'Content-Type':'application/json'},
-      body:JSON.stringify(body)});
-    const json=await res.json();
-    if(!res.ok)throw new Error(json.message||res.status);
-    cfg.gistId=json.id;localStorage.setItem(SYNC_KEY,JSON.stringify(cfg));
-    const t=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-    setSyncStatus(`✅ 已推送 ${t}`);showToast('☁️ 已推送到 Gist');renderSyncPanel();
-  }catch(e){setSyncStatus('❌ 失敗：'+e.message);showToast('❌ 推送失敗，請確認 Token 有效');}
-}
-
-async function gistPull(){
-  const cfg=getSyncCfg();
-  if(!cfg.token){showToast('❌ 請先設定 Token');return;}
-  setSyncStatus('搜尋中…');
-  try{
-    if(!cfg.gistId){
-      const found=await findLifeRPGGist(cfg.token);
-      if(!found){setSyncStatus('❌ 找不到 Life RPG Gist，請先從舊裝置推送');showToast('❌ 找不到 Gist');return;}
-      cfg.gistId=found;localStorage.setItem(SYNC_KEY,JSON.stringify(cfg));renderSyncPanel();
-    }
-    setSyncStatus('下載中…');
-    const res=await fetch(`https://api.github.com/gists/${cfg.gistId}`,
-      {headers:{'Authorization':`Bearer ${cfg.token}`}});
-    const json=await res.json();
-    if(!res.ok)throw new Error(json.message||res.status);
-    const content=json.files['life_rpg_data.json']?.content;
-    if(!content)throw new Error('找不到資料檔案');
-    JSON.parse(content);
-    if(!confirm('確定從雲端拉取？本地資料將被完整覆蓋。')){setSyncStatus('');return;}
-    localStorage.setItem(SK,content);
-    const t=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});
-    setSyncStatus(`✅ 已拉取 ${t}`);showToast('⬇️ 資料已從 Gist 還原');go('home');
-  }catch(e){setSyncStatus('❌ 失敗：'+e.message);showToast('❌ 拉取失敗');}
 }
 
 // ════════════════════════════════
@@ -4367,14 +4256,14 @@ function renderGoals(){
     const icons=dims.map(k=>DIMS.find(d=>d.key===k)?.icon||'').join('');
     const color=DIMS.find(d=>d.key===dims[0])?.color||'#818cf8';
     const dimLabel=dims.map(k=>DIMS.find(d=>d.key===k)?.label||'').join(' · ');
-    const badge=g.target!=null?`<span style="font-size:.7rem;color:rgba(255,255,255,.4);margin-left:4px">→ ${g.target} ${g.unit||''}</span>`:'';
+    const badge=g.target!=null?`<span style="font-size:.7rem;color:rgba(255,255,255,.4);margin-left:4px">→ ${esc(g.target)} ${esc(g.unit||'')}</span>`:'';
     const bonusBadge=`<span style="font-size:.68rem;color:#a5b4fc;margin-left:6px">${isMulti?'各+1':pts}</span>`;
     const done=(g.completedPeriods||[]).includes(pk);
     return`<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:${done?'rgba(52,211,153,.08)':'rgba(255,255,255,.05)'};border:1px solid ${done?'rgba(52,211,153,.25)':'transparent'};border-radius:10px;margin-bottom:6px">
       <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
         <span style="font-size:1rem;flex-shrink:0">${icons}</span>
         <div>
-          <div style="font-size:.85rem;color:${done?'#34d399':'#e2e8f0'};font-weight:600">${done?'✓ ':''} ${g.title}${badge}${bonusBadge}</div>
+          <div style="font-size:.85rem;color:${done?'#34d399':'#e2e8f0'};font-weight:600">${done?'✓ ':''} ${esc(g.title)}${badge}${bonusBadge}</div>
           <div style="font-size:.7rem;color:${color};margin-top:1px">${dimLabel}</div>
         </div>
       </div>
@@ -4500,7 +4389,7 @@ function _renderGoalRef(elId,period,pKey,dim){
   const dGoals=goals.filter(g=>g.dim===dim);
   const dimDef=DIMS.find(d=>d.key===dim);
   if(dGoals.length){
-    el.innerHTML=`<div style="padding:6px 0 2px">`+dGoals.map(g=>`<div style="font-size:.75rem;color:${dimDef?.color||'#818cf8'};margin-bottom:2px">🎯 ${g.title}${g.target!=null?` (${g.target} ${g.unit||''})`:''}</div>`).join('')+`</div>`;
+    el.innerHTML=`<div style="padding:6px 0 2px">`+dGoals.map(g=>`<div style="font-size:.75rem;color:${dimDef?.color||'#818cf8'};margin-bottom:2px">🎯 ${esc(g.title)}${g.target!=null?` (${esc(g.target)} ${esc(g.unit||'')})`:''}</div>`).join('')+`</div>`;
   }else{
     el.innerHTML=`<div style="font-size:.72rem;color:rgba(255,255,255,.3);padding:4px 0 2px">尚未設定目標 <span onclick="go('tasks')" style="cursor:pointer;color:#818cf8;text-decoration:underline dotted">→ 去設定</span></div>`;
   }
@@ -4526,51 +4415,56 @@ try{
 function _userDoc(){if(!_fs||!_fbUser)return null;return _fs.collection('users').doc(_fbUser.uid).collection('data').doc('main');}
 
 function _mergeData(local,cloud){
+  local=local||{};cloud=cloud||{};
   const m=(l={},c={})=>({...l,...c});
-  // Deep merge goals: for each period (w/m/y) → each key → merge arrays by id,
-  // taking the union of completedPeriods from both sides.
-  function mergeGoals(l={},c={}){
-    const out={};
-    const periods=['w','m','y'];
-    periods.forEach(p=>{
-      const lp=l[p]||{},cp=c[p]||{};
-      out[p]={};
-      const keys=new Set([...Object.keys(lp),...Object.keys(cp)]);
-      keys.forEach(k=>{
-        const lg=lp[k]||[],cg=cp[k]||[];
-        const byId={};
-        [...lg,...cg].forEach(g=>{
-          if(!byId[g.id]){byId[g.id]={...g,completedPeriods:[...( g.completedPeriods||[])]};}
-          else{
-            const merged=byId[g.id];
-            (g.completedPeriods||[]).forEach(p=>{if(!merged.completedPeriods.includes(p))merged.completedPeriods.push(p);});
-          }
-        });
-        out[p][k]=Object.values(byId);
-      });
+  // 刪除墓碑：兩邊聯集，同一筆取較晚時間
+  const del={...(local._del||{})};
+  Object.entries(cloud._del||{}).forEach(([k,t])=>{if(!(del[k]>=t))del[k]=t;});
+  const ts=e=>e?._u||Date.parse(e?.savedAt||'')||0;
+  const alive=(key,e)=>!(del[key]>=ts(e)&&del[key]);
+  // 兩邊都有：取 _u 較新的；都沒 _u（舊資料）→ 雲端為準
+  const pick=(l,c)=>!l?c:!c?l:(ts(l)>ts(c)?l:c);
+  function mergeMap(name){
+    const l=local[name]||{},c=cloud[name]||{},out={};
+    new Set([...Object.keys(l),...Object.keys(c)]).forEach(k=>{
+      const v=pick(l[k],c[k]);
+      if(alive(name+':'+k,v))out[k]=v;
     });
     return out;
   }
-  function mergeTasks(l=[],c=[]){
-    const map={};
-    [...l,...c].forEach(t=>{
-      if(!map[t.id]){map[t.id]={...t,completedPeriods:[...(t.completedPeriods||[])]};}
-      else{
-        (t.completedPeriods||[]).forEach(p=>{if(!map[t.id].completedPeriods.includes(p))map[t.id].completedPeriods.push(p);});
-        if((t.xpEarned||0)>(map[t.id].xpEarned||0))map[t.id].xpEarned=t.xpEarned;
-      }
+  // 舊資料（雙方都沒 _u）沿用聯集；有 _u 則整筆取較新的，取消完成才能同步
+  function mergeItem(a,b){
+    if(!a)return b;if(!b)return a;
+    if(a._u||b._u)return (a._u||0)>(b._u||0)?a:b;
+    const out={...a,completedPeriods:[...(a.completedPeriods||[])]};
+    (b.completedPeriods||[]).forEach(p=>{if(!out.completedPeriods.includes(p))out.completedPeriods.push(p);});
+    if((b.xpEarned||0)>(out.xpEarned||0))out.xpEarned=b.xpEarned;
+    return out;
+  }
+  function mergeList(l=[],c=[],pre){
+    const map={},order=[];
+    [...l,...c].forEach(x=>{if(!x||!x.id)return;if(!map[x.id])order.push(x.id);map[x.id]=mergeItem(map[x.id],x);});
+    return order.map(id=>map[id]).filter(x=>!(del[pre+x.id]&&del[pre+x.id]>=(x._u||0)));
+  }
+  function mergeGoals(l={},c={}){
+    const out={};
+    ['w','m','y'].forEach(p=>{
+      const lp=l[p]||{},cp=c[p]||{};
+      out[p]={};
+      new Set([...Object.keys(lp),...Object.keys(cp)]).forEach(k=>{out[p][k]=mergeList(lp[k],cp[k],'goal:');});
     });
-    return Object.values(map);
+    return out;
   }
   return{
-    daily:m(local.daily,cloud.daily),
-    weekly:m(local.weekly,cloud.weekly),
-    monthly:m(local.monthly,cloud.monthly),
-    yearly:m(local.yearly,cloud.yearly),
-    tasks:mergeTasks(local.tasks,cloud.tasks),
+    daily:mergeMap('daily'),
+    weekly:mergeMap('weekly'),
+    monthly:mergeMap('monthly'),
+    yearly:mergeMap('yearly'),
+    tasks:mergeList(local.tasks,cloud.tasks,'task:'),
     achievements:m(local.achievements,cloud.achievements),
     milestones:m(local.milestones,cloud.milestones),
     goals:mergeGoals(local.goals,cloud.goals),
+    _del:del,
   };
 }
 
@@ -4605,14 +4499,14 @@ function renderSyncStatus(){
       <button onclick="handleSyncBtn()" style="width:100%;padding:13px;background:linear-gradient(135deg,#4285f4,#1a73e8);color:#fff;border:none;border-radius:14px;font-size:.88rem;font-weight:800;cursor:pointer;letter-spacing:.3px">🔵 用 Google 帳號登入同步</button>`;
   }else{
     const name=_fbUser.displayName||_fbUser.email;
-    const avatar=_fbUser.photoURL?`<img src="${_fbUser.photoURL}" style="width:32px;height:32px;border-radius:50%;flex-shrink:0">`:`<div style="width:32px;height:32px;border-radius:50%;background:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem">${(name||'?')[0]}</div>`;
+    const avatar=_fbUser.photoURL?`<img src="${esc(_fbUser.photoURL)}" style="width:32px;height:32px;border-radius:50%;flex-shrink:0">`:`<div style="width:32px;height:32px;border-radius:50%;background:#4f46e5;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.85rem">${esc((name||'?')[0])}</div>`;
     const stateLabel=_syncState==='syncing'?'同步中…':_syncState==='synced'?'✓ 已同步':_syncState==='error'?'⚠️ 同步失敗':'已連線';
     const stateColor=_syncState==='syncing'?'#fbbf24':_syncState==='synced'?'#34d399':_syncState==='error'?'#f87171':'#a5b4fc';
     card.innerHTML=`
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
         ${avatar}
         <div style="flex:1">
-          <div style="font-size:.85rem;font-weight:700;color:#e2e8f0">${name}</div>
+          <div style="font-size:.85rem;font-weight:700;color:#e2e8f0">${esc(name)}</div>
           <div style="font-size:.72rem;color:${stateColor};margin-top:2px">${stateLabel}</div>
         </div>
       </div>
@@ -4626,12 +4520,29 @@ function _scheduleSyncToCloud(){
   clearTimeout(_syncTimer);
   _syncTimer=setTimeout(async()=>{
     try{
-      _suppressSnapshotUntil=Date.now()+3000; // 防止自己寫入觸發 snapshot 回調
-      await _userDoc().set(db());
-      _syncState='synced';
+      // 交易：先讀雲端、合併後再寫，避免蓋掉另一台裝置剛寫入的資料
+      const ref=_userDoc();
+      const merged=await _fs.runTransaction(async tx=>{
+        const snap=await tx.get(ref);
+        const m=JSON.parse(JSON.stringify(snap.exists?_mergeData(db(),snap.data()):db()));
+        tx.set(ref,m);
+        return m;
+      });
+      _applyMerged(merged);
+      _syncState='synced';_syncError='';
     }catch(e){_syncState='error';_syncError=e.message||String(e);}
     renderSyncStatus();
   },1500);
+}
+
+// 合併結果與本機不同時才寫回並重繪
+function _applyMerged(merged){
+  if(_sig(merged)===_sig(db()))return;
+  localStorage.setItem(SK,JSON.stringify(merged));
+  renderHome();
+  const _av=document.querySelector('.view.active')?.id;
+  if(_av==='view-tasks')renderTasks();
+  if(_av==='view-daily')renderDaily();
 }
 
 function _setupRealtimeSync(){
@@ -4639,28 +4550,20 @@ function _setupRealtimeSync(){
   const docRef=_userDoc();
   if(!docRef)return;
   _snapshotUnsub=docRef.onSnapshot(snapshot=>{
-    if(Date.now()<_suppressSnapshotUntil)return; // 忽略自己剛寫入的回調
-    if(!snapshot.exists){
-      // 第一次登入：把本機資料推上雲端
-      _userDoc().set(db()).catch(e=>{
-        _syncState='error';_syncError=e.message||String(e);
-        renderSyncStatus();
-        showToast('⚠️ 首次雲端備份失敗，資料仍在本機');
-      });
-      return;
-    }
-    const merged=_mergeData(db(),snapshot.data());
-    localStorage.setItem(SK,JSON.stringify(merged));
-    _syncState='synced';renderSyncStatus();
-    renderHome();
-    const _av=document.querySelector('.view.active')?.id;
-    if(_av==='view-tasks')renderTasks();
-    if(_av==='view-daily')renderDaily();
+    if(snapshot.metadata.hasPendingWrites)return; // 自己尚未送出的寫入
+    if(!snapshot.exists){_scheduleSyncToCloud();return;} // 第一次登入：把本機資料推上雲端
+    const cloud=snapshot.data();
+    const merged=_mergeData(db(),cloud);
+    _applyMerged(merged);
+    _syncState='synced';_syncError='';renderSyncStatus();
+    // 本機有雲端沒有的資料 → 推回雲端
+    if(_sig(JSON.parse(JSON.stringify(merged)))!==_sig(cloud))_scheduleSyncToCloud();
   },err=>{
     console.error('snapshot error',err);
-    _syncState='error';renderSyncStatus();
+    _syncState='error';_syncError=err.message||String(err);renderSyncStatus();
   });
 }
+window.addEventListener('online',()=>{if(_fbUser)_scheduleSyncToCloud();});
 
 if(_auth)_auth.onAuthStateChanged(user=>{
   _fbUser=user;
@@ -4750,6 +4653,7 @@ function checkAndSendWeeklyReminder(){
 }
 
 // INIT
+try{localStorage.removeItem('life_rpg_sync_cfg');}catch{} // 清除已移除的 Gist 同步留下的 GitHub token
 applyTheme();
 loadDimNames();
 applyUserName();
